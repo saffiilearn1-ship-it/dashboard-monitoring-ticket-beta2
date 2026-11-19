@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ticket & Provisioning Monitoring Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background-color: #09090b; color: #f4f4f5; font-family: system-ui, -apple-system, sans-serif; }
+    .card-bg { background-color: #141417; border: 1px solid #27272a; }
+    .card-bg:hover { border-color: #3f3f46; }
+    select, input, textarea { background-color: #1f1f23; color: #ffffff; border: 1px solid #3f3f46; }
+    select:focus, input:focus, textarea:focus { outline: none; border-color: #f97316; }
+    /* Custom scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #09090b; }
+    ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 3px; }
+  </style>
+</head>
+<body class="p-4 md:p-8 max-w-7xl mx-auto">
+
+  <!-- Top Navbar -->
+  <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 border-b border-zinc-800 pb-5">
+    <div>
+      <div class="flex items-center gap-2.5">
+        <span class="h-3 w-3 rounded-full bg-orange-500 animate-pulse"></span>
+        <h1 class="text-2xl font-bold text-white tracking-tight">Provisioning & Ticket Monitor</h1>
+      </div>
+      <p class="text-xs md:text-sm text-zinc-400 mt-1">Live Operational Tracker • Synced with Google Sheets & Telegram</p>
+    </div>
+    <div class="flex gap-2.5 w-full md:w-auto">
+      <button onclick="fetchTickets()" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 px-4 py-2.5 rounded-lg text-xs md:text-sm font-medium transition flex items-center justify-center gap-1.5">
+        <span>↻</span> Refresh Data
+      </button>
+      <button onclick="openAddModal()" class="bg-orange-600 hover:bg-orange-500 text-white px-4 py-2.5 rounded-lg text-xs md:text-sm font-semibold transition flex-1 md:flex-none shadow-lg shadow-orange-600/20">
+        + New Ticket
+      </button>
+    </div>
+  </div>
+
+  <!-- Summary KPI Cards -->
+  <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+    <div class="card-bg rounded-xl p-4">
+      <p class="text-xs text-zinc-400 font-medium">Total Tickets</p>
+      <p id="stat-total" class="text-2xl font-bold text-white mt-1">0</p>
+    </div>
+    <div class="card-bg rounded-xl p-4 border-l-4 border-l-orange-500">
+      <p class="text-xs text-orange-400 font-medium">Open (Active)</p>
+      <p id="stat-open" class="text-2xl font-bold text-white mt-1">0</p>
+    </div>
+    <div class="card-bg rounded-xl p-4 border-l-4 border-l-amber-500">
+      <p class="text-xs text-amber-400 font-medium">Pending</p>
+      <p id="stat-pending" class="text-2xl font-bold text-white mt-1">0</p>
+    </div>
+    <div class="card-bg rounded-xl p-4 border-l-4 border-l-emerald-500">
+      <p class="text-xs text-emerald-400 font-medium">Closed (Done)</p>
+      <p id="stat-closed" class="text-2xl font-bold text-white mt-1">0</p>
+    </div>
+    <div class="card-bg rounded-xl p-4 border-l-4 border-l-red-500 col-span-2 md:col-span-1">
+      <p class="text-xs text-red-400 font-medium">Cancel</p>
+      <p id="stat-cancel" class="text-2xl font-bold text-white mt-1">0</p>
+    </div>
+  </div>
+
+  <!-- Search & Filters -->
+  <div class="card-bg rounded-xl p-4 mb-6 flex flex-col md:flex-row gap-3 justify-between items-stretch md:items-center">
+    <!-- Status Tabs -->
+    <div class="flex gap-1.5 overflow-x-auto pb-1 md:pb-0">
+      <button onclick="setFilter('ALL')" id="btn-ALL" class="filter-btn bg-orange-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap">All</button>
+      <button onclick="setFilter('Open')" id="btn-Open" class="filter-btn bg-zinc-800 text-zinc-300 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap">Open</button>
+      <button onclick="setFilter('Pending')" id="btn-Pending" class="filter-btn bg-zinc-800 text-zinc-300 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap">Pending</button>
+      <button onclick="setFilter('Closed')" id="btn-Closed" class="filter-btn bg-zinc-800 text-zinc-300 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap">Closed</button>
+      <button onclick="setFilter('Cancel')" id="btn-Cancel" class="filter-btn bg-zinc-800 text-zinc-300 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap">Cancel</button>
+    </div>
+
+    <!-- Search & PIC Filter -->
+    <div class="flex flex-col sm:flex-row gap-2">
+      <select id="picFilter" onchange="renderTickets()" class="rounded-lg px-3 py-1.5 text-xs">
+        <option value="ALL">Filter PIC: Semua</option>
+      </select>
+      <input type="text" id="searchInput" oninput="renderTickets()" placeholder="Cari nama customer / notes..." class="rounded-lg px-3 py-1.5 text-xs w-full sm:w-56">
+    </div>
+  </div>
+
+  <!-- Loader -->
+  <div id="loader" class="text-center py-16 hidden">
+    <div class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-orange-500 mb-3"></div>
+    <p class="text-sm text-zinc-400">Sinkronisasi data dari Google Sheets...</p>
+  </div>
+
+  <!-- Ticket Grid -->
+  <div id="ticket-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <!-- Cards rendered via JS -->
+  </div>
+
+  <!-- Modal New Ticket -->
+  <div id="addModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+    <div class="card-bg rounded-2xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center mb-4 border-b border-zinc-800 pb-3">
+        <h2 class="text-lg font-bold text-white">Create New Ticket</h2>
+        <button onclick="closeAddModal()" class="text-zinc-400 hover:text-white text-xl leading-none">&times;</button>
+      </div>
+      
+      <div class="space-y-3 text-xs">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="text-zinc-400 block mb-1">Customer Name *</label>
+            <input type="text" id="newCustomer" placeholder="Contoh: Hotel Santika" class="w-full rounded-lg px-3 py-2">
+          </div>
+          <div>
+            <label class="text-zinc-400 block mb-1">PIC Name</label>
+            <input type="text" id="newPic" placeholder="Contoh: Budi / Andi" class="w-full rounded-lg px-3 py-2">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-zinc-400 block mb-1">Ticket Status</label>
+            <select id="newStatus" class="w-full rounded-lg px-3 py-2">
+              <option value="Open" selected>Open</option>
+              <option value="Pending">Pending</option>
+              <option value="Closed">Closed</option>
+              <option value="Cancel">Cancel</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-zinc-400 block mb-1">Survey Progress</label>
+            <select id="newSurvey" class="w-full rounded-lg px-3 py-2">
+              <option value="">-</option>
+              <option value="Done">Done</option>
+              <option value="On Progress">On Progress</option>
+              <option value="Pending">Pending</option>
+              <option value="Cancel">Cancel</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-zinc-400 block mb-1">Staging Status</label>
+            <select id="newStaging" class="w-full rounded-lg px-3 py-2">
+              <option value="">-</option>
+              <option value="Deal">Deal</option>
+              <option value="Not Deal">Not Deal</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-zinc-400 block mb-1">PO Procurement</label>
+            <select id="newPo" class="w-full rounded-lg px-3 py-2">
+              <option value="">-</option>
+              <option value="Done">Done</option>
+              <option value="Material Ready">Material Ready</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2">
+          <div>
+            <label class="text-zinc-400 block mb-1">Forward WO</label>
+            <select id="newForwardWo" class="w-full rounded-lg px-2 py-2">
+              <option value="">-</option>
+              <option value="Done">Done</option>
+              <option value="Pending">Pending</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-zinc-400 block mb-1">Installation</label>
+            <select id="newInstallation" class="w-full rounded-lg px-2 py-2">
+              <option value="">-</option>
+              <option value="Done">Done</option>
+              <option value="On Progress">On Progress</option>
+              <option value="Pending">Pending</option>
+              <option value="Cancel">Cancel</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-zinc-400 block mb-1">Online Billing</label>
+            <select id="newBilling" class="w-full rounded-lg px-2 py-2">
+              <option value="">-</option>
+              <option value="Done">Done</option>
+              <option value="Pending">Pending</option>
+              <option value="Cancel">Cancel</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="text-zinc-400 block mb-1">Notes / Remarks</label>
+          <input type="text" id="newNotes" placeholder="Catatan progres atau jadwal lapangan..." class="w-full rounded-lg px-3 py-2">
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-2 mt-6 pt-3 border-t border-zinc-800">
+        <button onclick="closeAddModal()" class="px-4 py-2 text-xs text-zinc-400 hover:text-white">Cancel</button>
+        <button onclick="submitNewTicket()" id="btnSubmitNew" class="bg-orange-600 hover:bg-orange-500 text-white px-5 py-2 rounded-lg text-xs font-semibold">Create & Notify</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // =================  =================
+    const API_URL = "https://script.google.com/macros/s/AKfycbyy9-44zG4rOt3MnsR8NCPY0NlTBQBTnkuCXoUeoJmbmiqw9dvjDQ8ueOrv09P4DDgR/exec";
+    // ================================================================
+
+    let allTickets = [];
+    let currentFilter = "ALL";
+
+    async function fetchTickets() {
+      document.getElementById("loader").classList.remove("hidden");
+      document.getElementById("ticket-container").innerHTML = "";
+      try {
+        const res = await fetch(API_URL);
+        allTickets = await res.json();
+        updateSummaryStats();
+        populatePicFilter();
+        renderTickets();
+      } catch (err) {
+        alert("Gagal terhubung ke Google Sheets. Pastikan API_URL sudah benar & akses deploy diset ke 'Anyone'.");
+      } finally {
+        document.getElementById("loader").classList.add("hidden");
+      }
+    }
+
+    function updateSummaryStats() {
+      document.getElementById("stat-total").innerText = allTickets.length;
+      document.getElementById("stat-open").innerText = allTickets.filter(t => t.status === "Open").length;
+      document.getElementById("stat-pending").innerText = allTickets.filter(t => t.status === "Pending").length;
+      document.getElementById("stat-closed").innerText = allTickets.filter(t => t.status === "Closed").length;
+      document.getElementById("stat-cancel").innerText = allTickets.filter(t => t.status === "Cancel").length;
+    }
+
+    function populatePicFilter() {
+      const select = document.getElementById("picFilter");
+      const currentVal = select.value;
+      const pics = [...new Set(allTickets.map(t => (t.pic || "").trim()).filter(p => p !== ""))];
+      
+      select.innerHTML = `<option value="ALL">Filter PIC: Semua (${pics.length})</option>`;
+      pics.forEach(pic => {
+        const opt = document.createElement("option");
+        opt.value = pic;
+        opt.innerText = `PIC: ${pic}`;
+        if (pic === currentVal) opt.selected = true;
+        select.appendChild(opt);
+      });
+    }
+
+    function setFilter(status) {
+      currentFilter = status;
+      document.querySelectorAll(".filter-btn").forEach(btn => {
+        btn.classList.remove("bg-orange-600", "text-white");
+        btn.classList.add("bg-zinc-800", "text-zinc-300");
+      });
+      document.getElementById(`btn-${status}`).classList.remove("bg-zinc-800", "text-zinc-300");
+      document.getElementById(`btn-${status}`).classList.add("bg-orange-600", "text-white");
+      renderTickets();
+    }
+
+    function getStatusBadge(status) {
+      if (status === "Open") return "bg-orange-500/15 text-orange-400 border-orange-500/40";
+      if (status === "Pending") return "bg-amber-500/15 text-amber-400 border-amber-500/40";
+      if (status === "Closed") return "bg-emerald-500/15 text-emerald-400 border-emerald-500/40";
+      if (status === "Cancel") return "bg-red-500/15 text-red-400 border-red-500/40";
+      return "bg-zinc-800 text-zinc-400 border-zinc-700";
+    }
+
+    function calculateProgress(t) {
+      let score = 0;
+      if (t.survey === "Done") score++;
+      if (t.staging === "Deal") score++;
+      if (t.po === "Done" || t.po === "Material Ready") score++;
+      if (t.forwardWo === "Done") score++;
+      if (t.installation === "Done") score++;
+      if (t.billing === "Done") score++;
+      return Math.round((score / 6) * 100);
+    }
+
+    function getStepDotColor(val, positiveValues) {
+      if (positiveValues.includes(val)) return "bg-emerald-500";
+      if (val === "On Progress") return "bg-orange-500";
+      if (val === "Pending") return "bg-amber-500";
+      if (val === "Cancel" || val === "Not Deal") return "bg-red-500";
+      return "bg-zinc-700";
+    }
+
+    function renderOptions(options, selectedVal) {
+      return options.map(opt => {
+        const val = opt === "-" ? "" : opt;
+        return `<option value="${val}" ${selectedVal === val ? "selected" : ""}>${opt}</option>`;
+      }).join("");
+    }
+
+    function renderTickets() {
+      const container = document.getElementById("ticket-container");
+      const searchQuery = document.getElementById("searchInput").value.toLowerCase();
+      const picQuery = document.getElementById("picFilter").value;
+      container.innerHTML = "";
+
+      const filtered = allTickets.filter(t => {
+        const matchStatus = currentFilter === "ALL" || t.status === currentFilter;
+        const matchPic = picQuery === "ALL" || (t.pic || "").trim() === picQuery;
+        const matchSearch = (t.customer || "").toLowerCase().includes(searchQuery) || 
+                            (t.notes || "").toLowerCase().includes(searchQuery);
+        return matchStatus && matchPic && matchSearch;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<div class="col-span-full text-center py-12 text-zinc-500 text-sm">Tidak ada data ticket yang sesuai filter.</div>`;
+        return;
+      }
+
+      filtered.forEach(t => {
+        const pct = calculateProgress(t);
+        const r = t.rowIndex;
+        const card = document.createElement("div");
+        card.className = "card-bg rounded-2xl p-5 flex flex-col justify-between gap-4 transition";
+
+        card.innerHTML = `
+          <div>
+            <!-- Card Header -->
+            <div class="flex justify-between items-start gap-2 mb-3">
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-mono text-zinc-500">#${t.no}</span>
+                  <span class="text-[11px] text-zinc-400 bg-zinc-800/80 px-2 py-0.5 rounded">PIC: <strong class="text-zinc-200">${t.pic || "-"}</strong></span>
+                </div>
+                <h3 class="font-bold text-white text-base mt-1 leading-snug">${t.customer}</h3>
+              </div>
+              <span class="text-xs px-2.5 py-1 rounded-full border font-semibold shrink-0 ${getStatusBadge(t.status)}">
+                ${t.status || "Empty"}
+              </span>
+            </div>
+
+            <!-- Visual Progress Bar & 6-Step Dots -->
+            <div class="mb-4 bg-zinc-900/90 p-3 rounded-xl border border-zinc-800/80">
+              <div class="flex justify-between text-[11px] mb-1.5">
+                <span class="text-zinc-400">Overall Completion</span>
+                <span class="font-bold text-orange-400">${pct}%</span>
+              </div>
+              <div class="w-full bg-zinc-800 h-1.5 rounded-full overflow-hidden mb-2.5">
+                <div class="bg-gradient-to-r from-orange-500 to-emerald-500 h-full transition-all duration-300" style="width: ${pct}%"></div>
+              </div>
+              <div class="grid grid-cols-6 gap-1 text-center text-[9px] text-zinc-400">
+                <div><span class="block h-1.5 w-full rounded mb-1 ${getStepDotColor(t.survey, ['Done'])}"></span>Survey</div>
+                <div><span class="block h-1.5 w-full rounded mb-1 ${getStepDotColor(t.staging, ['Deal'])}"></span>Staging</div>
+                <div><span class="block h-1.5 w-full rounded mb-1 ${getStepDotColor(t.po, ['Done', 'Material Ready'])}"></span>PO</div>
+                <div><span class="block h-1.5 w-full rounded mb-1 ${getStepDotColor(t.forwardWo, ['Done'])}"></span>WO</div>
+                <div><span class="block h-1.5 w-full rounded mb-1 ${getStepDotColor(t.installation, ['Done'])}"></span>Install</div>
+                <div><span class="block h-1.5 w-full rounded mb-1 ${getStepDotColor(t.billing, ['Done'])}"></span>Billing</div>
+              </div>
+            </div>
+
+            <!-- Editable Fields -->
+            <div class="space-y-2 text-xs">
+              <div class="flex justify-between items-center">
+                <span class="text-zinc-400">Ticket Status</span>
+                <select id="status-${r}" class="rounded-lg px-2 py-1 w-36 font-medium">
+                  ${renderOptions(["Open", "Pending", "Closed", "Cancel"], t.status)}
+                </select>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-zinc-400">Survey Progress</span>
+                <select id="survey-${r}" class="rounded-lg px-2 py-1 w-36">
+                  ${renderOptions(["-", "Done", "On Progress", "Pending", "Cancel"], t.survey)}
+                </select>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-zinc-400">Staging Status</span>
+                <select id="staging-${r}" class="rounded-lg px-2 py-1 w-36">
+                  ${renderOptions(["-", "Deal", "Not Deal"], t.staging)}
+                </select>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-zinc-400">PO Procurement</span>
+                <select id="po-${r}" class="rounded-lg px-2 py-1 w-36">
+                  ${renderOptions(["-", "Done", "Material Ready"], t.po)}
+                </select>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-zinc-400">Forward Install. WO</span>
+                <select id="forwardWo-${r}" class="rounded-lg px-2 py-1 w-36">
+                  ${renderOptions(["-", "Done", "Pending"], t.forwardWo)}
+                </select>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-zinc-400">Installation Progress</span>
+                <select id="installation-${r}" class="rounded-lg px-2 py-1 w-36">
+                  ${renderOptions(["-", "Done", "On Progress", "Pending", "Cancel"], t.installation)}
+                </select>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-zinc-400">Online Billing</span>
+                <select id="billing-${r}" class="rounded-lg px-2 py-1 w-36">
+                  ${renderOptions(["-", "Done", "Pending", "Cancel"], t.billing)}
+                </select>
+              </div>
+              
+              <div class="pt-2 border-t border-zinc-800/80 grid grid-cols-3 gap-2">
+                <div>
+                  <label class="text-[10px] text-zinc-500 block mb-0.5">PIC</label>
+                  <input type="text" id="pic-${r}" value="${t.pic || ""}" placeholder="Nama PIC" class="w-full rounded-lg px-2 py-1 text-xs">
+                </div>
+                <div class="col-span-2">
+                  <label class="text-[10px] text-zinc-500 block mb-0.5">Notes</label>
+                  <input type="text" id="notes-${r}" value="${t.notes || ""}" placeholder="Catatan progres..." class="w-full rounded-lg px-2 py-1 text-xs">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Footer & Save Button -->
+          <div class="pt-2">
+            <div class="flex justify-between items-center text-[10px] text-zinc-500 mb-2">
+              <span>Last updated:</span>
+              <span class="font-mono">${t.lastUpdated || "-"}</span>
+            </div>
+            <button onclick="updateTicket(${r}, this)" class="w-full bg-zinc-800 hover:bg-orange-600 text-white py-2.5 rounded-xl text-xs font-semibold transition">
+              Save & Notify Team
+            </button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    async function updateTicket(rowIndex, btnElement) {
+      const originalText = btnElement.innerText;
+      btnElement.innerText = "Saving & Syncing...";
+      btnElement.disabled = true;
+
+      const payload = {
+        action: "update",
+        rowIndex: rowIndex,
+        status: document.getElementById(`status-${rowIndex}`).value,
+        survey: document.getElementById(`survey-${rowIndex}`).value,
+        staging: document.getElementById(`staging-${rowIndex}`).value,
+        po: document.getElementById(`po-${rowIndex}`).value,
+        forwardWo: document.getElementById(`forwardWo-${rowIndex}`).value,
+        installation: document.getElementById(`installation-${rowIndex}`).value,
+        billing: document.getElementById(`billing-${rowIndex}`).value,
+        pic: document.getElementById(`pic-${rowIndex}`).value.trim(),
+        notes: document.getElementById(`notes-${rowIndex}`).value.trim()
+      };
+
+      try {
+        await fetch(API_URL, {
+          method: "POST",
+          body: JSON.stringify(payload)
+        });
+        btnElement.innerText = "✓ Updated!";
+        btnElement.classList.add("bg-emerald-600");
+        setTimeout(() => { fetchTickets(); }, 900);
+      } catch (err) {
+        alert("Gagal menyimpan update.");
+        btnElement.innerText = originalText;
+        btnElement.disabled = false;
+      }
+    }
+
+    function openAddModal() {
+      document.getElementById("addModal").classList.remove("hidden");
+      document.getElementById("addModal").classList.add("flex");
+    }
+
+    function closeAddModal() {
+      document.getElementById("addModal").classList.add("hidden");
+      document.getElementById("addModal").classList.remove("flex");
+    }
+
+    async function submitNewTicket() {
+      const customer = document.getElementById("newCustomer").value.trim();
+      if (!customer) return alert("Customer Name wajib diisi!");
+
+      const btn = document.getElementById("btnSubmitNew");
+      btn.innerText = "Saving...";
+      btn.disabled = true;
+
+      const payload = {
+        action: "add",
+        customer: customer,
+        pic: document.getElementById("newPic").value.trim(),
+        status: document.getElementById("newStatus").value,
+        survey: document.getElementById("newSurvey").value,
+        staging: document.getElementById("newStaging").value,
+        po: document.getElementById("newPo").value,
+        forwardWo: document.getElementById("newForwardWo").value,
+        installation: document.getElementById("newInstallation").value,
+        billing: document.getElementById("newBilling").value,
+        notes: document.getElementById("newNotes").value.trim()
+      };
+
+      try {
+        await fetch(API_URL, {
+          method: "POST",
+          body: JSON.stringify(payload)
+        });
+        document.getElementById("newCustomer").value = "";
+        document.getElementById("newNotes").value = "";
+        closeAddModal();
+        fetchTickets();
+      } catch (err) {
+        alert("Gagal membuat ticket baru.");
+      } finally {
+        btn.innerText = "Create & Notify";
+        btn.disabled = false;
+      }
+    }
+
+    // Initial load
+    fetchTickets();
+  </script>
+</body>
+</html>
