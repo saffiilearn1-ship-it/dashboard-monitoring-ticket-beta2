@@ -3,9 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ticket & Provisioning Monitoring Dashboard</title>
+  <title>BLiP Division Ticket Monitor v2.0 — Survey & Mapping</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <!-- jsPDF & AutoTable untuk Export PDF langsung -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
   <style>
     body { background-color: #09090b; color: #f4f4f5; font-family: system-ui, -apple-system, sans-serif; }
     .card-bg { background-color: #141417; border: 1px solid #27272a; }
@@ -21,19 +24,19 @@
 <body class="p-4 md:p-8 max-w-7xl mx-auto">
 
   <!-- Top Navbar -->
-  <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4 border-b border-zinc-800 pb-5">
+  <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-5 gap-4 border-b border-zinc-800 pb-5">
     <div>
       <div class="flex items-center gap-2.5 flex-wrap">
         <span class="h-3 w-3 rounded-full bg-orange-500 animate-pulse"></span>
-        <h1 class="text-2xl font-bold text-white tracking-tight">Provisioning & Ticket Monitor</h1>
+        <h1 class="text-2xl font-bold text-white tracking-tight">Division Ticket Monitor <span class="text-xs font-mono text-orange-400 bg-orange-500/10 px-2 py-0.5 rounded ml-1">v2.0</span></h1>
         <span id="modeBadge" class="text-[11px] px-2.5 py-0.5 rounded-full bg-zinc-800 text-zinc-400 border border-zinc-700 font-medium">
           👁️ Viewer Mode (Read-Only)
         </span>
       </div>
-      <p class="text-xs md:text-sm text-zinc-400 mt-1">Live Operational Tracker • Synced with Google Sheets & Telegram</p>
+      <p class="text-xs md:text-sm text-zinc-400 mt-1">Survey & Mapping Operational Tracker • Synced with Google Sheets & Telegram</p>
     </div>
 
-    <!-- Right Controls: Auth + Actions -->
+    <!-- Right Controls -->
     <div class="flex flex-wrap items-center gap-2.5 w-full lg:w-auto justify-between lg:justify-end">
       <div id="googleBtnWrapper"></div>
 
@@ -44,10 +47,9 @@
       </div>
 
       <div class="flex gap-2">
-        <button onclick="fetchTickets()" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 px-3.5 py-2 rounded-lg text-xs font-medium transition flex items-center gap-1.5">
+        <button onclick="fetchAllData()" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 px-3.5 py-2 rounded-lg text-xs font-medium transition flex items-center gap-1.5">
           <span>↻</span> Refresh
         </button>
-        <!-- Tombol New Ticket HANYA untuk Admin -->
         <button id="btnNewTicket" onclick="openAddModal()" class="hidden bg-orange-600 hover:bg-orange-500 text-white px-4 py-2 rounded-lg text-xs font-semibold transition shadow-lg shadow-orange-600/20">
           + New Ticket
         </button>
@@ -55,50 +57,32 @@
     </div>
   </div>
 
-  <!-- Summary KPI Cards -->
-  <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
-    <div class="card-bg rounded-xl p-4">
-      <p class="text-xs text-zinc-400 font-medium">Total Tickets</p>
-      <p id="stat-total" class="text-2xl font-bold text-white mt-1">0</p>
-    </div>
-    <div class="card-bg rounded-xl p-4 border-l-4 border-l-orange-500">
-      <p class="text-xs text-orange-400 font-medium">Open</p>
-      <p id="stat-open" class="text-2xl font-bold text-white mt-1">0</p>
-    </div>
-    <div class="card-bg rounded-xl p-4 border-l-4 border-l-sky-500">
-      <p class="text-xs text-sky-400 font-medium">On Progress</p>
-      <p id="stat-progress" class="text-2xl font-bold text-white mt-1">0</p>
-    </div>
-    <div class="card-bg rounded-xl p-4 border-l-4 border-l-amber-500">
-      <p class="text-xs text-amber-400 font-medium">Pending</p>
-      <p id="stat-pending" class="text-2xl font-bold text-white mt-1">0</p>
-    </div>
-    <div class="card-bg rounded-xl p-4 border-l-4 border-l-emerald-500">
-      <p class="text-xs text-emerald-400 font-medium">Closed (Done)</p>
-      <p id="stat-closed" class="text-2xl font-bold text-white mt-1">0</p>
-    </div>
-    <div class="card-bg rounded-xl p-4 border-l-4 border-l-red-500">
-      <p class="text-xs text-red-400 font-medium">Cancel</p>
-      <p id="stat-cancel" class="text-2xl font-bold text-white mt-1">0</p>
-    </div>
+  <!-- Division Switcher Tabs -->
+  <div class="flex gap-2 mb-6 bg-zinc-900/80 p-1.5 rounded-xl border border-zinc-800 w-fit">
+    <button onclick="switchDivision('Survey')" id="tab-Survey" class="px-4 py-2 rounded-lg text-xs font-bold transition bg-orange-600 text-white shadow">
+      📡 Ticket Survey (<span id="count-Survey">0</span>)
+    </button>
+    <button onclick="switchDivision('Mapping')" id="tab-Mapping" class="px-4 py-2 rounded-lg text-xs font-bold transition text-zinc-400 hover:text-white">
+      🗺️ Ticket Mapping (<span id="count-Mapping">0</span>)
+    </button>
   </div>
 
-  <!-- Search & Filters -->
+  <!-- Dynamic Summary KPI Cards -->
+  <div id="kpi-container" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
+    <!-- Rendered via JS -->
+  </div>
+
+  <!-- Dynamic Search & Status Filter Bar -->
   <div class="card-bg rounded-xl p-4 mb-6 flex flex-col md:flex-row gap-3 justify-between items-stretch md:items-center">
-    <div class="flex gap-1.5 overflow-x-auto pb-1 md:pb-0">
-      <button onclick="setFilter('ALL')" id="btn-ALL" class="filter-btn bg-orange-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap">All</button>
-      <button onclick="setFilter('Open')" id="btn-Open" class="filter-btn bg-zinc-800 text-zinc-300 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap">Open</button>
-      <button onclick="setFilter('On Progress')" id="btn-On Progress" class="filter-btn bg-zinc-800 text-zinc-300 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap">On Progress</button>
-      <button onclick="setFilter('Pending')" id="btn-Pending" class="filter-btn bg-zinc-800 text-zinc-300 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap">Pending</button>
-      <button onclick="setFilter('Cancel')" id="btn-Cancel" class="filter-btn bg-zinc-800 text-zinc-300 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap">Cancel</button>
-      <button onclick="setFilter('Closed')" id="btn-Closed" class="filter-btn bg-zinc-800 text-zinc-300 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap">Closed</button>
+    <div id="filter-buttons-container" class="flex gap-1.5 overflow-x-auto pb-1 md:pb-0">
+      <!-- Rendered via JS -->
     </div>
 
     <div class="flex flex-col sm:flex-row gap-2">
-      <select id="picFilter" onchange="renderTickets()" class="rounded-lg px-3 py-1.5 text-xs">
-        <option value="ALL">Filter PIC: Semua</option>
+      <select id="secondaryFilter" onchange="renderActiveDivision()" class="rounded-lg px-3 py-1.5 text-xs hidden">
+        <!-- Coverage filter for Mapping -->
       </select>
-      <input type="text" id="searchInput" oninput="renderTickets()" placeholder="Cari nama customer / notes..." class="rounded-lg px-3 py-1.5 text-xs w-full sm:w-56">
+      <input type="text" id="searchInput" oninput="renderActiveDivision()" placeholder="Cari nama pelanggan / keterangan..." class="rounded-lg px-3 py-1.5 text-xs w-full sm:w-64">
     </div>
   </div>
 
@@ -108,115 +92,129 @@
     <p class="text-sm text-zinc-400">Sinkronisasi data dari Google Sheets...</p>
   </div>
 
-  <!-- Ticket Grid -->
+  <!-- Ticket Cards Grid -->
   <div id="ticket-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
     <!-- Cards rendered via JS -->
   </div>
 
-  <!-- Modal New Ticket (Admin Only) -->
+  <!-- Modal New Ticket (Admin Only - Survey & Mapping) -->
   <div id="addModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
     <div class="card-bg rounded-2xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
       <div class="flex justify-between items-center mb-4 border-b border-zinc-800 pb-3">
         <h2 class="text-lg font-bold text-white">Create New Ticket</h2>
         <button onclick="closeAddModal()" class="text-zinc-400 hover:text-white text-xl leading-none">&times;</button>
       </div>
-      
+
       <div class="space-y-3 text-xs">
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label class="text-zinc-400 block mb-1">Customer Name *</label>
-            <input type="text" id="newCustomer" placeholder="Contoh: Hotel Santika" class="w-full rounded-lg px-3 py-2">
-          </div>
-          <div>
-            <label class="text-zinc-400 block mb-1">PIC Name</label>
-            <input type="text" id="newPic" placeholder="Contoh: Gibran / Budi" class="w-full rounded-lg px-3 py-2">
-          </div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="text-zinc-400 block mb-1">Ticket Status</label>
-            <select id="newStatus" class="w-full rounded-lg px-3 py-2">
-              <option value="Open" selected>Open</option>
-              <option value="On Progress">On Progress</option>
-              <option value="Pending">Pending</option>
-              <option value="Cancel">Cancel</option>
-              <option value="Closed">Closed</option>
-            </select>
-          </div>
-          <div>
-            <label class="text-zinc-400 block mb-1">Survey Progress</label>
-            <select id="newSurvey" class="w-full rounded-lg px-3 py-2">
-              <option value="">-</option>
-              <option value="Done">Done</option>
-              <option value="On Progress">On Progress</option>
-              <option value="Pending">Pending</option>
-              <option value="Cancel">Cancel</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-3 gap-2">
-          <div>
-            <label class="text-zinc-400 block mb-1">Staging Status</label>
-            <select id="newStaging" class="w-full rounded-lg px-2 py-2">
-              <option value="">-</option>
-              <option value="Deal">Deal</option>
-              <option value="Not Deal">Not Deal</option>
-            </select>
-          </div>
-          <div>
-            <label class="text-zinc-400 block mb-1">PO Procurement</label>
-            <select id="newPo" class="w-full rounded-lg px-2 py-2">
-              <option value="">-</option>
-              <option value="Done">Done</option>
-              <option value="Material Ready">Material Ready</option>
-            </select>
-          </div>
-          <div>
-            <label class="text-zinc-400 block mb-1">Proc. Progress</label>
-            <select id="newProcProgress" class="w-full rounded-lg px-2 py-2">
-              <option value="">-</option>
-              <option value="Done">Done</option>
-              <option value="On Progress">On Progress</option>
-              <option value="Cancel">Cancel</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-3 gap-2">
-          <div>
-            <label class="text-zinc-400 block mb-1">Forward WO</label>
-            <select id="newForwardWo" class="w-full rounded-lg px-2 py-2">
-              <option value="">-</option>
-              <option value="Done">Done</option>
-              <option value="Pending">Pending</option>
-            </select>
-          </div>
-          <div>
-            <label class="text-zinc-400 block mb-1">Installation</label>
-            <select id="newInstallation" class="w-full rounded-lg px-2 py-2">
-              <option value="">-</option>
-              <option value="Done">Done</option>
-              <option value="On Progress">On Progress</option>
-              <option value="Pending">Pending</option>
-              <option value="Cancel">Cancel</option>
-            </select>
-          </div>
-          <div>
-            <label class="text-zinc-400 block mb-1">Online Billing</label>
-            <select id="newBilling" class="w-full rounded-lg px-2 py-2">
-              <option value="">-</option>
-              <option value="Done">Done</option>
-              <option value="Pending">Pending</option>
-              <option value="Cancel">Cancel</option>
-            </select>
-          </div>
+        <div>
+          <label class="text-orange-400 font-semibold block mb-1">Jenis Ticket *</label>
+          <select id="newTicketType" onchange="toggleNewTicketFields()" class="w-full rounded-lg px-3 py-2 font-semibold border-orange-500/40">
+            <option value="Survey">📡 Survey (Provisioning s/d Forward WO)</option>
+            <option value="Mapping">🗺️ Mapping (Coverage & Deskripsi)</option>
+          </select>
         </div>
 
         <div>
-          <label class="text-zinc-400 block mb-1">Notes / Remarks</label>
-          <input type="text" id="newNotes" placeholder="Catatan progres atau jadwal lapangan..." class="w-full rounded-lg px-3 py-2">
+          <label class="text-zinc-400 block mb-1">Nama Pelanggan / Customer *</label>
+          <input type="text" id="newCustomer" placeholder="Contoh: Hotel Trio Indah 2 Malang" class="w-full rounded-lg px-3 py-2">
+        </div>
+
+        <!-- Form Khusus Survey -->
+        <div id="newSurveyFields" class="space-y-3">
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="text-zinc-400 block mb-1">Ticket Status</label>
+              <select id="newSurveyStatus" class="w-full rounded-lg px-3 py-2">
+                <option value="Open" selected>Open</option>
+                <option value="On Progress">On Progress</option>
+                <option value="Pending">Pending</option>
+                <option value="Cancel">Cancel</option>
+                <option value="Closed">Closed</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-zinc-400 block mb-1">Survey Progress</label>
+              <select id="newSurveyProg" class="w-full rounded-lg px-3 py-2">
+                <option value="">-</option>
+                <option value="Done">Done</option>
+                <option value="On Progress">On Progress</option>
+                <option value="Pending">Pending</option>
+                <option value="Cancel">Cancel</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="text-zinc-400 block mb-1">Staging Status</label>
+              <select id="newStaging" class="w-full rounded-lg px-3 py-2">
+                <option value="">-</option>
+                <option value="Deal">Deal</option>
+                <option value="Not Deal">Not Deal</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-zinc-400 block mb-1">PO Procurement</label>
+              <select id="newPo" class="w-full rounded-lg px-3 py-2">
+                <option value="">-</option>
+                <option value="Done">Done</option>
+                <option value="Material Ready">Material Ready</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="text-zinc-400 block mb-1">Procurement Progress</label>
+              <select id="newProcProgress" class="w-full rounded-lg px-3 py-2">
+                <option value="">-</option>
+                <option value="Done">Done</option>
+                <option value="On Progress">On Progress</option>
+                <option value="Cancel">Cancel</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-zinc-400 block mb-1">Forward Installation WO</label>
+              <select id="newForwardWo" class="w-full rounded-lg px-3 py-2">
+                <option value="">-</option>
+                <option value="Done">Done</option>
+                <option value="Pending">Pending</option>
+                <option value="Cancel">Cancel</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Form Khusus Mapping -->
+        <div id="newMappingFields" class="space-y-3 hidden">
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="text-zinc-400 block mb-1">Status Mapping</label>
+              <select id="newMappingStatus" class="w-full rounded-lg px-3 py-2">
+                <option value="On Progress" selected>On Progress</option>
+                <option value="Done">Done</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-zinc-400 block mb-1">Coverage</label>
+              <select id="newCoverage" class="w-full rounded-lg px-3 py-2">
+                <option value="">-</option>
+                <option value="Onet">Onet</option>
+                <option value="Partner">Partner</option>
+                <option value="Not Cover">Not Cover</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="text-zinc-400 block mb-1">PIC Mapping (Opsional)</label>
+            <input type="text" id="newMappingPic" placeholder="Nama PIC Mapping" class="w-full rounded-lg px-3 py-2">
+          </div>
+
+          <div>
+            <label class="text-zinc-400 block mb-1">Description</label>
+            <textarea id="newMappingDesc" rows="3" placeholder="Detail vendor, jarak tarik FO, koordinat, dll..." class="w-full rounded-lg px-3 py-2"></textarea>
+          </div>
         </div>
       </div>
 
@@ -227,16 +225,58 @@
     </div>
   </div>
 
+  <!-- Modal Ticket Progress History & Export PDF -->
+  <div id="historyModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+    <div class="card-bg rounded-2xl p-6 w-full max-w-3xl max-h-[88vh] flex flex-col">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 border-b border-zinc-800 pb-4">
+        <div>
+          <span id="historyDivisionLabel" class="text-[11px] uppercase tracking-wider text-orange-400 font-semibold">Audit Trail</span>
+          <h2 class="text-lg font-bold text-white mt-0.5">Ticket Progress History</h2>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
+          <!-- Filter per Customer -->
+          <select id="historyCustomerFilter" onchange="onHistoryFilterChange()" class="rounded-lg px-3 py-2 text-xs max-w-[220px]">
+            <!-- Populated dynamically -->
+          </select>
+
+          <button onclick="exportHistoryPDF()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 shadow-lg shadow-emerald-600/20">
+            <span>📄</span> Export PDF
+          </button>
+
+          <button onclick="closeHistoryModal()" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 px-3 py-1.5 rounded-lg text-sm font-bold">
+            &times;
+          </button>
+        </div>
+      </div>
+
+      <div id="historyLoader" class="text-center py-12 hidden">
+        <div class="inline-block animate-spin rounded-full h-7 w-7 border-t-2 border-b-2 border-orange-500 mb-2"></div>
+        <p class="text-xs text-zinc-400">Memuat Ticket Progress History...</p>
+      </div>
+
+      <div id="historyListContainer" class="overflow-y-auto space-y-3 pr-1 flex-1">
+        <!-- Rendered via JS -->
+      </div>
+    </div>
+  </div>
+
   <script>
     // ================= KONFIGURASI =================
     const API_URL = "https://script.google.com/macros/s/AKfycbyy9-44zG4rOt3MnsR8NCPY0NlTBQBTnkuCXoUeoJmbmiqw9dvjDQ8ueOrv09P4DDgR/exec";
     const GOOGLE_CLIENT_ID = "478985076311-eh3rsa1o4m9od56egthrj15o6pog0sta.apps.googleusercontent.com";
     // ===============================================
 
-    let allTickets = [];
-    let currentFilter = "ALL";
+    let appData = { survey: [], mapping: [] };
+    let activeDivision = "Survey"; // "Survey" | "Mapping"
+    let currentStatusFilter = "ALL";
     let authToken = localStorage.getItem("ticket_auth_token") || "";
-    let currentUser = null; // null = Viewer mode
+    let currentUser = null;
+
+    // State History Modal
+    let historyDivisionActive = "Survey";
+    let allHistoryForDivision = [];
+    let filteredHistoryLogs = [];
 
     window.onload = function () {
       google.accounts.id.initialize({
@@ -251,13 +291,12 @@
       if (authToken) {
         verifyStoredSession(authToken);
       } else {
-        fetchTickets();
+        fetchAllData();
       }
     };
 
     async function handleCredentialResponse(response) {
-      const token = response.credential;
-      await verifyStoredSession(token, true);
+      await verifyStoredSession(response.credential, true);
     }
 
     async function verifyStoredSession(token, isManualLogin = false) {
@@ -270,17 +309,15 @@
           currentUser = auth;
           localStorage.setItem("ticket_auth_token", token);
           updateAuthUI();
-          fetchTickets();
+          fetchAllData();
         } else {
           logoutUser(false);
-          if (isManualLogin) {
-            alert(auth.message || "Akun Google kamu tidak memiliki izin Edit.");
-          }
-          fetchTickets();
+          if (isManualLogin) alert(auth.message || "Akun Google tidak memiliki izin Edit.");
+          fetchAllData();
         }
       } catch (err) {
         logoutUser(false);
-        fetchTickets();
+        fetchAllData();
       }
     }
 
@@ -289,7 +326,7 @@
       currentUser = null;
       localStorage.removeItem("ticket_auth_token");
       updateAuthUI();
-      if (reload) renderTickets();
+      if (reload) renderActiveDivision();
     }
 
     function updateAuthUI() {
@@ -305,17 +342,11 @@
           ? "text-[11px] px-2.5 py-0.5 rounded-full bg-orange-500/15 text-orange-400 border border-orange-500/40 font-semibold"
           : "text-[11px] px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/40 font-semibold";
         
-        // Hanya Admin yang dapat melihat tombol + New Ticket
-        if (isAdmin) {
-          btnNew.classList.remove("hidden");
-        } else {
-          btnNew.classList.add("hidden");
-        }
-
+        btnNew.classList.toggle("hidden", !isAdmin);
         googleBtn.classList.add("hidden");
         userInfo.classList.remove("hidden");
         userInfo.classList.add("flex");
-        document.getElementById("loggedUserName").innerText = `${currentUser.name}`;
+        document.getElementById("loggedUserName").innerText = currentUser.name;
       } else {
         badge.innerHTML = `👁️ Viewer Mode (Read-Only)`;
         badge.className = "text-[11px] px-2.5 py-0.5 rounded-full bg-zinc-800 text-zinc-400 border border-zinc-700 font-medium";
@@ -326,15 +357,15 @@
       }
     }
 
-    async function fetchTickets() {
+    async function fetchAllData() {
       document.getElementById("loader").classList.remove("hidden");
       document.getElementById("ticket-container").innerHTML = "";
       try {
         const res = await fetch(API_URL);
-        allTickets = await res.json();
-        updateSummaryStats();
-        populatePicFilter();
-        renderTickets();
+        appData = await res.json();
+        document.getElementById("count-Survey").innerText = (appData.survey || []).length;
+        document.getElementById("count-Mapping").innerText = (appData.mapping || []).length;
+        renderActiveDivision();
       } catch (err) {
         alert("Gagal terhubung ke Google Sheets.");
       } finally {
@@ -342,76 +373,53 @@
       }
     }
 
-    function updateSummaryStats() {
-      document.getElementById("stat-total").innerText = allTickets.length;
-      document.getElementById("stat-open").innerText = allTickets.filter(t => t.status === "Open").length;
-      document.getElementById("stat-progress").innerText = allTickets.filter(t => t.status === "On Progress").length;
-      document.getElementById("stat-pending").innerText = allTickets.filter(t => t.status === "Pending").length;
-      document.getElementById("stat-closed").innerText = allTickets.filter(t => t.status === "Closed").length;
-      document.getElementById("stat-cancel").innerText = allTickets.filter(t => t.status === "Cancel").length;
+    function switchDivision(div) {
+      activeDivision = div;
+      currentStatusFilter = "ALL";
+      document.getElementById("searchInput").value = "";
+
+      const tabS = document.getElementById("tab-Survey");
+      const tabM = document.getElementById("tab-Mapping");
+      if (div === "Survey") {
+        tabS.className = "px-4 py-2 rounded-lg text-xs font-bold transition bg-orange-600 text-white shadow";
+        tabM.className = "px-4 py-2 rounded-lg text-xs font-bold transition text-zinc-400 hover:text-white";
+      } else {
+        tabM.className = "px-4 py-2 rounded-lg text-xs font-bold transition bg-orange-600 text-white shadow";
+        tabS.className = "px-4 py-2 rounded-lg text-xs font-bold transition text-zinc-400 hover:text-white";
+      }
+      renderActiveDivision();
     }
 
-    function populatePicFilter() {
-      const select = document.getElementById("picFilter");
-      const currentVal = select.value;
-      const pics = [...new Set(allTickets.map(t => (t.pic || "").trim()).filter(p => p !== ""))];
-      
-      select.innerHTML = `<option value="ALL">Filter PIC: Semua (${pics.length})</option>`;
-      pics.forEach(pic => {
-        const opt = document.createElement("option");
-        opt.value = pic;
-        opt.innerText = `PIC: ${pic}`;
-        if (pic === currentVal) opt.selected = true;
-        select.appendChild(opt);
-      });
+    function setStatusFilter(status) {
+      currentStatusFilter = status;
+      renderActiveDivision();
     }
 
-    function setFilter(status) {
-      currentFilter = status;
-      document.querySelectorAll(".filter-btn").forEach(btn => {
-        btn.classList.remove("bg-orange-600", "text-white");
-        btn.classList.add("bg-zinc-800", "text-zinc-300");
-      });
-      document.getElementById(`btn-${status}`).classList.remove("bg-zinc-800", "text-zinc-300");
-      document.getElementById(`btn-${status}`).classList.add("bg-orange-600", "text-white");
-      renderTickets();
+    function renderActiveDivision() {
+      if (activeDivision === "Survey") {
+        renderSurveyDashboard();
+      } else {
+        renderMappingDashboard();
+      }
     }
 
+    // ================= HELPER BADGE & OPTIONS =================
     function getStatusBadge(status) {
       if (status === "Open") return "bg-orange-500/15 text-orange-400 border-orange-500/40";
       if (status === "On Progress") return "bg-sky-500/15 text-sky-400 border-sky-500/40";
       if (status === "Pending") return "bg-amber-500/15 text-amber-400 border-amber-500/40";
-      if (status === "Closed") return "bg-emerald-500/15 text-emerald-400 border-emerald-500/40";
-      if (status === "Cancel") return "bg-red-500/15 text-red-400 border-red-500/40";
+      if (status === "Closed" || status === "Done" || status === "Onet") return "bg-emerald-500/15 text-emerald-400 border-emerald-500/40";
+      if (status === "Partner") return "bg-indigo-500/15 text-indigo-400 border-indigo-500/40";
+      if (status === "Cancel" || status === "Not Cover") return "bg-red-500/15 text-red-400 border-red-500/40";
       return "bg-zinc-800 text-zinc-400 border-zinc-700";
     }
 
     function getTextBadgeColor(val) {
-      if (["Done", "Closed", "Deal", "Material Ready"].includes(val)) return "text-emerald-400 font-semibold";
-      if (["Open", "On Progress"].includes(val)) return "text-sky-400 font-semibold";
+      if (["Done", "Closed", "Deal", "Material Ready", "Onet"].includes(val)) return "text-emerald-400 font-semibold";
+      if (["Open", "On Progress", "Partner"].includes(val)) return "text-sky-400 font-semibold";
       if (val === "Pending") return "text-amber-400 font-semibold";
-      if (["Cancel", "Not Deal"].includes(val)) return "text-red-400 font-semibold";
+      if (["Cancel", "Not Deal", "Not Cover"].includes(val)) return "text-red-400 font-semibold";
       return "text-zinc-500";
-    }
-
-    function calculateProgress(t) {
-      let score = 0;
-      if (t.survey === "Done") score++;
-      if (t.staging === "Deal") score++;
-      if (t.po === "Done" || t.po === "Material Ready") score++;
-      if (t.procProgress === "Done") score++;
-      if (t.forwardWo === "Done") score++;
-      if (t.installation === "Done") score++;
-      if (t.billing === "Done") score++;
-      return Math.round((score / 7) * 100);
-    }
-
-    function getStepDotColor(val, positiveValues) {
-      if (positiveValues.includes(val)) return "bg-emerald-500";
-      if (val === "On Progress") return "bg-sky-500";
-      if (val === "Pending") return "bg-amber-500";
-      if (val === "Cancel" || val === "Not Deal") return "bg-red-500";
-      return "bg-zinc-700";
     }
 
     function renderOptions(options, selectedVal) {
@@ -421,7 +429,6 @@
       }).join("");
     }
 
-    // Khusus Editor: opsi Closed & Cancel di-disable (kecuali tiket memang sudah berstatus Closed/Cancel dari Admin)
     function renderTicketStatusOptions(selectedVal, isAdmin) {
       const statuses = ["Open", "On Progress", "Pending", "Cancel", "Closed"];
       return statuses.map(st => {
@@ -430,217 +437,460 @@
       }).join("");
     }
 
-    function renderTickets() {
-      const container = document.getElementById("ticket-container");
-      const searchQuery = document.getElementById("searchInput").value.toLowerCase();
-      const picQuery = document.getElementById("picFilter").value;
-      const canEdit = Boolean(currentUser);
-      const isAdmin = currentUser && currentUser.role === "Admin";
-      container.innerHTML = "";
+    function toggleAccordion(id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.toggle("hidden");
+    }
 
-      const filtered = allTickets.filter(t => {
-        const matchStatus = currentFilter === "ALL" || t.status === currentFilter;
-        const matchPic = picQuery === "ALL" || (t.pic || "").trim() === picQuery;
-        const matchSearch = (t.customer || "").toLowerCase().includes(searchQuery) || 
-                            (t.notes || "").toLowerCase().includes(searchQuery);
-        return matchStatus && matchPic && matchSearch;
+    // ================= RENDER SURVEY DASHBOARD (5 TAHAPAN) =================
+    function renderSurveyDashboard() {
+      const list = appData.survey || [];
+      const secFilter = document.getElementById("secondaryFilter");
+      secFilter.classList.add("hidden");
+
+      // KPI Cards
+      document.getElementById("kpi-container").innerHTML = `
+        <div class="card-bg rounded-xl p-4"><p class="text-xs text-zinc-400">Total Survey</p><p class="text-2xl font-bold text-white mt-1">${list.length}</p></div>
+        <div class="card-bg rounded-xl p-4 border-l-4 border-l-orange-500"><p class="text-xs text-orange-400">Open</p><p class="text-2xl font-bold text-white mt-1">${list.filter(t => t.status === "Open").length}</p></div>
+        <div class="card-bg rounded-xl p-4 border-l-4 border-l-sky-500"><p class="text-xs text-sky-400">On Progress</p><p class="text-2xl font-bold text-white mt-1">${list.filter(t => t.status === "On Progress").length}</p></div>
+        <div class="card-bg rounded-xl p-4 border-l-4 border-l-amber-500"><p class="text-xs text-amber-400">Pending</p><p class="text-2xl font-bold text-white mt-1">${list.filter(t => t.status === "Pending").length}</p></div>
+        <div class="card-bg rounded-xl p-4 border-l-4 border-l-emerald-500"><p class="text-xs text-emerald-400">Closed (Done)</p><p class="text-2xl font-bold text-white mt-1">${list.filter(t => t.status === "Closed").length}</p></div>
+        <div class="card-bg rounded-xl p-4 border-l-4 border-l-red-500"><p class="text-xs text-red-400">Cancel</p><p class="text-2xl font-bold text-white mt-1">${list.filter(t => t.status === "Cancel").length}</p></div>
+      `;
+
+      // Filter Pills
+      const statuses = ["ALL", "Open", "On Progress", "Pending", "Cancel", "Closed"];
+      document.getElementById("filter-buttons-container").innerHTML = statuses.map(st => `
+        <button onclick="setStatusFilter('${st}')" class="${currentStatusFilter === st ? 'bg-orange-600 text-white' : 'bg-zinc-800 text-zinc-300'} px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap">
+          ${st === "ALL" ? "All" : st}
+        </button>
+      `).join("");
+
+      const searchQuery = document.getElementById("searchInput").value.toLowerCase();
+      const filtered = list.filter(t => {
+        const matchStatus = currentStatusFilter === "ALL" || t.status === currentStatusFilter;
+        const matchSearch = (t.customer || "").toLowerCase().includes(searchQuery);
+        return matchStatus && matchSearch;
       });
 
+      const container = document.getElementById("ticket-container");
       if (filtered.length === 0) {
-        container.innerHTML = `<div class="col-span-full text-center py-12 text-zinc-500 text-sm">Tidak ada data ticket yang sesuai filter.</div>`;
+        container.innerHTML = `<div class="col-span-full text-center py-12 text-zinc-500 text-sm">Tidak ada ticket Survey yang sesuai.</div>`;
         return;
       }
 
-      filtered.forEach(t => {
-        const pct = calculateProgress(t);
+      const canEdit = Boolean(currentUser);
+      const isAdmin = currentUser && currentUser.role === "Admin";
+
+      container.innerHTML = filtered.map(t => {
         const r = t.rowIndex;
-        const card = document.createElement("div");
-        card.className = "card-bg rounded-2xl p-5 flex flex-col justify-between gap-4 transition";
+        const sd = t.stageDetails || {};
+        let score = 0;
+        if (t.survey === "Done") score++;
+        if (t.staging === "Deal") score++;
+        if (t.po === "Done" || t.po === "Material Ready") score++;
+        if (t.procProgress === "Done") score++;
+        if (t.forwardWo === "Done") score++;
+        const pct = Math.round((score / 5) * 100);
 
-        // Jika tiket sudah Closed/Cancel oleh Admin, Editor tidak bisa mengubah Ticket Status-nya lagi
-        const lockTicketStatusForEditor = !isAdmin && (t.status === "Closed" || t.status === "Cancel");
+        const dotColor = (val, pos) => pos.includes(val) ? "bg-emerald-500" : val === "On Progress" ? "bg-sky-500" : val === "Pending" ? "bg-amber-500" : (val === "Cancel" || val === "Not Deal") ? "bg-red-500" : "bg-zinc-700";
 
-        const bodyFieldsHtml = canEdit ? `
-          <div class="space-y-2 text-xs">
-            <div class="flex justify-between items-center">
-              <span class="text-zinc-400">Ticket Status</span>
-              <select id="status-${r}" ${lockTicketStatusForEditor ? "disabled" : ""} class="rounded-lg px-2 py-1 w-36 font-medium">
-                ${renderTicketStatusOptions(t.status, isAdmin)}
-              </select>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-zinc-400">Survey Progress</span>
-              <select id="survey-${r}" class="rounded-lg px-2 py-1 w-36">
-                ${renderOptions(["-", "Done", "On Progress", "Pending", "Cancel"], t.survey)}
-              </select>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-zinc-400">Staging Status</span>
-              <select id="staging-${r}" class="rounded-lg px-2 py-1 w-36">
-                ${renderOptions(["-", "Deal", "Not Deal"], t.staging)}
-              </select>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-zinc-400">PO Procurement</span>
-              <select id="po-${r}" class="rounded-lg px-2 py-1 w-36">
-                ${renderOptions(["-", "Done", "Material Ready"], t.po)}
-              </select>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-zinc-400">Procurement Progress</span>
-              <select id="procProgress-${r}" class="rounded-lg px-2 py-1 w-36">
-                ${renderOptions(["-", "Done", "On Progress", "Cancel"], t.procProgress)}
-              </select>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-zinc-400">Forward Install. WO</span>
-              <select id="forwardWo-${r}" class="rounded-lg px-2 py-1 w-36">
-                ${renderOptions(["-", "Done", "Pending"], t.forwardWo)}
-              </select>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-zinc-400">Installation Progress</span>
-              <select id="installation-${r}" class="rounded-lg px-2 py-1 w-36">
-                ${renderOptions(["-", "Done", "On Progress", "Pending", "Cancel"], t.installation)}
-              </select>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-zinc-400">Online Billing</span>
-              <select id="billing-${r}" class="rounded-lg px-2 py-1 w-36">
-                ${renderOptions(["-", "Done", "Pending", "Cancel"], t.billing)}
-              </select>
-            </div>
-            
-            <div class="pt-2 border-t border-zinc-800/80 grid grid-cols-3 gap-2">
-              <div>
-                <label class="text-[10px] text-zinc-500 block mb-0.5">PIC</label>
-                <input type="text" id="pic-${r}" value="${t.pic || ""}" placeholder="Nama PIC" class="w-full rounded-lg px-2 py-1 text-xs">
-              </div>
-              <div class="col-span-2">
-                <label class="text-[10px] text-zinc-500 block mb-0.5">Notes</label>
-                <input type="text" id="notes-${r}" value="${t.notes || ""}" placeholder="Catatan progres..." class="w-full rounded-lg px-2 py-1 text-xs">
-              </div>
-            </div>
-          </div>
-        ` : `
-          <div class="space-y-2 text-xs">
-            <div class="flex justify-between items-center py-0.5 border-b border-zinc-800/50">
-              <span class="text-zinc-400">Survey Progress</span>
-              <span class="${getTextBadgeColor(t.survey)}">${t.survey || "-"}</span>
-            </div>
-            <div class="flex justify-between items-center py-0.5 border-b border-zinc-800/50">
-              <span class="text-zinc-400">Staging Status</span>
-              <span class="${getTextBadgeColor(t.staging)}">${t.staging || "-"}</span>
-            </div>
-            <div class="flex justify-between items-center py-0.5 border-b border-zinc-800/50">
-              <span class="text-zinc-400">PO Procurement</span>
-              <span class="${getTextBadgeColor(t.po)}">${t.po || "-"}</span>
-            </div>
-            <div class="flex justify-between items-center py-0.5 border-b border-zinc-800/50">
-              <span class="text-zinc-400">Procurement Progress</span>
-              <span class="${getTextBadgeColor(t.procProgress)}">${t.procProgress || "-"}</span>
-            </div>
-            <div class="flex justify-between items-center py-0.5 border-b border-zinc-800/50">
-              <span class="text-zinc-400">Forward Install. WO</span>
-              <span class="${getTextBadgeColor(t.forwardWo)}">${t.forwardWo || "-"}</span>
-            </div>
-            <div class="flex justify-between items-center py-0.5 border-b border-zinc-800/50">
-              <span class="text-zinc-400">Installation Progress</span>
-              <span class="${getTextBadgeColor(t.installation)}">${t.installation || "-"}</span>
-            </div>
-            <div class="flex justify-between items-center py-0.5">
-              <span class="text-zinc-400">Online Billing</span>
-              <span class="${getTextBadgeColor(t.billing)}">${t.billing || "-"}</span>
-            </div>
+        const stages = [
+          { key: "survey", label: "Survey Progress", opts: ["-", "Done", "On Progress", "Pending", "Cancel"], val: t.survey },
+          { key: "staging", label: "Staging Status", opts: ["-", "Deal", "Not Deal"], val: t.staging },
+          { key: "po", label: "PO Procurement", opts: ["-", "Done", "Material Ready"], val: t.po },
+          { key: "procProgress", label: "Procurement Progress", opts: ["-", "Done", "On Progress", "Cancel"], val: t.procProgress },
+          { key: "forwardWo", label: "Forward Install. WO", opts: ["-", "Done", "Pending", "Cancel"], val: t.forwardWo }
+        ];
 
-            <div class="mt-2 bg-zinc-900/70 rounded-lg p-2.5 border border-zinc-800/80">
-              <span class="text-[10px] text-zinc-500 block">Notes:</span>
-              <p class="text-zinc-300 text-xs mt-0.5">${t.notes || "-"}</p>
-            </div>
-          </div>
-        `;
+        const stagesHtml = stages.map(st => {
+          const det = sd[st.key] || { pic: "", note: "" };
+          const hasDetail = Boolean(det.pic || det.note);
+          const accId = `acc-${r}-${st.key}`;
 
-        const footerHtml = canEdit ? `
-          <div class="pt-2">
-            <div class="flex justify-between items-center text-[10px] text-zinc-500 mb-2">
-              <span>Last updated:</span>
-              <span class="font-mono">${t.lastUpdated || "-"}</span>
-            </div>
-            <button onclick="updateTicket(${r}, this)" class="w-full bg-zinc-800 hover:bg-orange-600 text-white py-2.5 rounded-xl text-xs font-semibold transition">
-              Save & Notify Team
-            </button>
-          </div>
-        ` : `
-          <div class="pt-2 border-t border-zinc-800/60 flex justify-between items-center text-[10px] text-zinc-500">
-            <span>Last updated:</span>
-            <span class="font-mono">${t.lastUpdated || "-"}</span>
-          </div>
-        `;
-
-        card.innerHTML = `
-          <div>
-            <div class="flex justify-between items-start gap-2 mb-3">
-              <div>
-                <div class="flex items-center gap-2">
-                  <span class="text-xs font-mono text-zinc-500">#${t.no}</span>
-                  <span class="text-[11px] text-zinc-400 bg-zinc-800/80 px-2 py-0.5 rounded">PIC: <strong class="text-zinc-200">${t.pic || "-"}</strong></span>
+          if (canEdit) {
+            return `
+              <div class="border-b border-zinc-800/60 pb-2">
+                <div class="flex justify-between items-center gap-2">
+                  <div class="flex items-center gap-1.5">
+                    <span class="text-zinc-300">${st.label}</span>
+                    <button type="button" onclick="toggleAccordion('${accId}')" class="text-[10px] px-1.5 py-0.5 rounded ${hasDetail ? 'bg-orange-500/20 text-orange-300 border border-orange-500/30' : 'bg-zinc-800 text-zinc-400 hover:text-white'}">
+                      ${hasDetail ? '✎ Detail' : '+ Detail'}
+                    </button>
+                  </div>
+                  <select id="${st.key}-${r}" class="rounded-lg px-2 py-1 w-32">
+                    ${renderOptions(st.opts, st.val)}
+                  </select>
                 </div>
-                <h3 class="font-bold text-white text-base mt-1 leading-snug">${t.customer}</h3>
+                <div id="${accId}" class="${hasDetail ? '' : 'hidden'} mt-2 bg-zinc-900/90 p-2.5 rounded-lg border border-zinc-800 space-y-1.5">
+                  <input type="text" id="pic-${st.key}-${r}" value="${det.pic || ''}" placeholder="PIC ${st.label} (opsional)" class="w-full rounded px-2 py-1 text-[11px]">
+                  <input type="text" id="note-${st.key}-${r}" value="${det.note || ''}" placeholder="Keterangan ${st.label} (opsional)" class="w-full rounded px-2 py-1 text-[11px]">
+                </div>
               </div>
-              <span class="text-xs px-2.5 py-1 rounded-full border font-semibold shrink-0 ${getStatusBadge(t.status)}">
-                ${t.status || "Empty"}
-              </span>
+            `;
+          } else {
+            return `
+              <div class="border-b border-zinc-800/50 py-1.5">
+                <div class="flex justify-between items-center">
+                  <span class="text-zinc-400">${st.label}</span>
+                  <span class="${getTextBadgeColor(st.val)}">${st.val || "-"}</span>
+                </div>
+                ${hasDetail ? `<p class="text-[10.5px] text-zinc-400 mt-0.5">PIC: <span class="text-zinc-200">${det.pic || '-'}</span> • ${det.note || '-'}</p>` : ''}
+              </div>
+            `;
+          }
+        }).join("");
+
+        const lockTicketStatus = !isAdmin && (t.status === "Closed" || t.status === "Cancel");
+
+        return `
+          <div class="card-bg rounded-2xl p-5 flex flex-col justify-between gap-4 transition">
+            <div>
+              <div class="flex justify-between items-start gap-2 mb-3">
+                <div>
+                  <span class="text-xs font-mono text-zinc-500">#${t.no} • Survey</span>
+                  <h3 class="font-bold text-white text-base mt-0.5 leading-snug">${t.customer}</h3>
+                </div>
+                <span class="text-xs px-2.5 py-1 rounded-full border font-semibold shrink-0 ${getStatusBadge(t.status)}">
+                  ${t.status || "Open"}
+                </span>
+              </div>
+
+              <!-- 5-Stage Progress Bar -->
+              <div class="mb-4 bg-zinc-900/90 p-3 rounded-xl border border-zinc-800/80">
+                <div class="flex justify-between text-[11px] mb-1.5">
+                  <span class="text-zinc-400">Progress s/d Forward WO</span>
+                  <span class="font-bold text-orange-400">${pct}%</span>
+                </div>
+                <div class="w-full bg-zinc-800 h-1.5 rounded-full overflow-hidden mb-2.5">
+                  <div class="bg-gradient-to-r from-orange-500 to-emerald-500 h-full transition-all duration-300" style="width: ${pct}%"></div>
+                </div>
+                <div class="grid grid-cols-5 gap-1 text-center text-[9px] text-zinc-400">
+                  <div><span class="block h-1.5 w-full rounded mb-1 ${dotColor(t.survey, ['Done'])}"></span>Survey</div>
+                  <div><span class="block h-1.5 w-full rounded mb-1 ${dotColor(t.staging, ['Deal'])}"></span>Staging</div>
+                  <div><span class="block h-1.5 w-full rounded mb-1 ${dotColor(t.po, ['Done', 'Material Ready'])}"></span>PO</div>
+                  <div><span class="block h-1.5 w-full rounded mb-1 ${dotColor(t.procProgress, ['Done'])}"></span>Proc.</div>
+                  <div><span class="block h-1.5 w-full rounded mb-1 ${dotColor(t.forwardWo, ['Done'])}"></span>Fwd WO</div>
+                </div>
+              </div>
+
+              <div class="space-y-2 text-xs">
+                ${canEdit ? `
+                  <div class="flex justify-between items-center pb-2 border-b border-zinc-800/60">
+                    <span class="text-zinc-400 font-medium">Ticket Status</span>
+                    <select id="status-${r}" ${lockTicketStatus ? "disabled" : ""} class="rounded-lg px-2 py-1 w-32 font-semibold">
+                      ${renderTicketStatusOptions(t.status, isAdmin)}
+                    </select>
+                  </div>
+                ` : ''}
+                ${stagesHtml}
+              </div>
             </div>
 
-            <div class="mb-4 bg-zinc-900/90 p-3 rounded-xl border border-zinc-800/80">
-              <div class="flex justify-between text-[11px] mb-1.5">
-                <span class="text-zinc-400">Overall Completion</span>
-                <span class="font-bold text-orange-400">${pct}%</span>
+            <div class="pt-2">
+              <div class="flex justify-between items-center text-[10px] text-zinc-500 mb-2.5">
+                <span>Last updated: <span class="font-mono text-zinc-400">${t.lastUpdated || "-"}</span></span>
+                <button onclick="openHistoryModal('Survey', '${t.no}')" class="text-amber-400 hover:text-amber-300 font-semibold flex items-center gap-1 underline">
+                  🕒 Ticket Progress History
+                </button>
               </div>
-              <div class="w-full bg-zinc-800 h-1.5 rounded-full overflow-hidden mb-2.5">
-                <div class="bg-gradient-to-r from-orange-500 to-emerald-500 h-full transition-all duration-300" style="width: ${pct}%"></div>
-              </div>
-              <div class="grid grid-cols-7 gap-1 text-center text-[8.5px] text-zinc-400">
-                <div><span class="block h-1.5 w-full rounded mb-1 ${getStepDotColor(t.survey, ['Done'])}"></span>Survey</div>
-                <div><span class="block h-1.5 w-full rounded mb-1 ${getStepDotColor(t.staging, ['Deal'])}"></span>Staging</div>
-                <div><span class="block h-1.5 w-full rounded mb-1 ${getStepDotColor(t.po, ['Done', 'Material Ready'])}"></span>PO</div>
-                <div><span class="block h-1.5 w-full rounded mb-1 ${getStepDotColor(t.procProgress, ['Done'])}"></span>Proc.</div>
-                <div><span class="block h-1.5 w-full rounded mb-1 ${getStepDotColor(t.forwardWo, ['Done'])}"></span>WO</div>
-                <div><span class="block h-1.5 w-full rounded mb-1 ${getStepDotColor(t.installation, ['Done'])}"></span>Install</div>
-                <div><span class="block h-1.5 w-full rounded mb-1 ${getStepDotColor(t.billing, ['Done'])}"></span>Billing</div>
-              </div>
+              ${canEdit ? `
+                <button onclick="updateSurveyTicket(${r}, this)" class="w-full bg-zinc-800 hover:bg-orange-600 text-white py-2.5 rounded-xl text-xs font-semibold transition">
+                  Save & Notify Team
+                </button>
+              ` : ''}
             </div>
-
-            ${bodyFieldsHtml}
           </div>
-
-          ${footerHtml}
         `;
-        container.appendChild(card);
-      });
+      }).join("");
     }
 
-    async function updateTicket(rowIndex, btnElement) {
-      if (!authToken) return alert("Sesi habis, silakan login ulang.");
+    // ================= RENDER MAPPING DASHBOARD =================
+    function renderMappingDashboard() {
+      const list = appData.mapping || [];
+      const secFilter = document.getElementById("secondaryFilter");
+      secFilter.classList.remove("hidden");
+      if (secFilter.options.length === 0) {
+        secFilter.innerHTML = `
+          <option value="ALL">Coverage: Semua</option>
+          <option value="Onet">Coverage: Onet</option>
+          <option value="Partner">Coverage: Partner</option>
+          <option value="Not Cover">Coverage: Not Cover</option>
+        `;
+      }
 
-      const originalText = btnElement.innerText;
-      btnElement.innerText = "Saving & Syncing...";
-      btnElement.disabled = true;
+      document.getElementById("kpi-container").innerHTML = `
+        <div class="card-bg rounded-xl p-4"><p class="text-xs text-zinc-400">Total Mapping</p><p class="text-2xl font-bold text-white mt-1">${list.length}</p></div>
+        <div class="card-bg rounded-xl p-4 border-l-4 border-l-sky-500"><p class="text-xs text-sky-400">On Progress</p><p class="text-2xl font-bold text-white mt-1">${list.filter(t => t.status === "On Progress").length}</p></div>
+        <div class="card-bg rounded-xl p-4 border-l-4 border-l-emerald-500"><p class="text-xs text-emerald-400">Done</p><p class="text-2xl font-bold text-white mt-1">${list.filter(t => t.status === "Done").length}</p></div>
+        <div class="card-bg rounded-xl p-4 border-l-4 border-l-teal-500"><p class="text-xs text-teal-400">Onet</p><p class="text-2xl font-bold text-white mt-1">${list.filter(t => t.coverage === "Onet").length}</p></div>
+        <div class="card-bg rounded-xl p-4 border-l-4 border-l-indigo-500"><p class="text-xs text-indigo-400">Partner</p><p class="text-2xl font-bold text-white mt-1">${list.filter(t => t.coverage === "Partner").length}</p></div>
+        <div class="card-bg rounded-xl p-4 border-l-4 border-l-red-500"><p class="text-xs text-red-400">Not Cover</p><p class="text-2xl font-bold text-white mt-1">${list.filter(t => t.coverage === "Not Cover").length}</p></div>
+      `;
+
+      const statuses = ["ALL", "On Progress", "Done"];
+      document.getElementById("filter-buttons-container").innerHTML = statuses.map(st => `
+        <button onclick="setStatusFilter('${st}')" class="${currentStatusFilter === st ? 'bg-orange-600 text-white' : 'bg-zinc-800 text-zinc-300'} px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap">
+          ${st === "ALL" ? "All Status" : st}
+        </button>
+      `).join("");
+
+      const covQuery = secFilter.value || "ALL";
+      const searchQuery = document.getElementById("searchInput").value.toLowerCase();
+      const filtered = list.filter(t => {
+        const matchStatus = currentStatusFilter === "ALL" || t.status === currentStatusFilter;
+        const matchCov = covQuery === "ALL" || t.coverage === covQuery;
+        const matchSearch = (t.customer || "").toLowerCase().includes(searchQuery) || (t.description || "").toLowerCase().includes(searchQuery);
+        return matchStatus && matchCov && matchSearch;
+      });
+
+      const container = document.getElementById("ticket-container");
+      if (filtered.length === 0) {
+        container.innerHTML = `<div class="col-span-full text-center py-12 text-zinc-500 text-sm">Tidak ada ticket Mapping yang sesuai.</div>`;
+        return;
+      }
+
+      const canEdit = Boolean(currentUser);
+
+      container.innerHTML = filtered.map(t => {
+        const r = t.rowIndex;
+        return `
+          <div class="card-bg rounded-2xl p-5 flex flex-col justify-between gap-4 transition">
+            <div>
+              <div class="flex justify-between items-start gap-2 mb-3">
+                <div>
+                  <span class="text-xs font-mono text-zinc-500">#${t.no} • Mapping</span>
+                  <h3 class="font-bold text-white text-base mt-0.5 leading-snug">${t.customer}</h3>
+                </div>
+                <div class="flex flex-col items-end gap-1 shrink-0">
+                  <span class="text-[11px] px-2.5 py-0.5 rounded-full border font-semibold ${getStatusBadge(t.status)}">${t.status || "On Progress"}</span>
+                  <span class="text-[11px] px-2.5 py-0.5 rounded-full border font-semibold ${getStatusBadge(t.coverage)}">${t.coverage || "-"}</span>
+                </div>
+              </div>
+
+              ${canEdit ? `
+                <div class="space-y-2.5 text-xs">
+                  <div class="grid grid-cols-2 gap-2">
+                    <div>
+                      <label class="text-[10px] text-zinc-400 block mb-1">Status Mapping</label>
+                      <select id="map-status-${r}" class="w-full rounded-lg px-2.5 py-1.5 font-medium">
+                        ${renderOptions(["On Progress", "Done"], t.status)}
+                      </select>
+                    </div>
+                    <div>
+                      <label class="text-[10px] text-zinc-400 block mb-1">Coverage</label>
+                      <select id="map-cov-${r}" class="w-full rounded-lg px-2.5 py-1.5 font-medium">
+                        ${renderOptions(["-", "Onet", "Partner", "Not Cover"], t.coverage)}
+                      </select>
+                    </div>
+                  </div>
+                  <div>
+                    <label class="text-[10px] text-zinc-400 block mb-1">PIC Mapping (Opsional)</label>
+                    <input type="text" id="map-pic-${r}" value="${t.pic || ''}" placeholder="Nama PIC Mapping" class="w-full rounded-lg px-2.5 py-1.5">
+                  </div>
+                  <div>
+                    <label class="text-[10px] text-zinc-400 block mb-1">Description</label>
+                    <textarea id="map-desc-${r}" rows="4" placeholder="Detail vendor, jarak penarikan, koordinat..." class="w-full rounded-lg px-2.5 py-1.5 leading-relaxed">${t.description || ''}</textarea>
+                  </div>
+                </div>
+              ` : `
+                <div class="space-y-2 text-xs">
+                  <div class="bg-zinc-900/80 rounded-xl p-3 border border-zinc-800">
+                    <span class="text-[10px] text-zinc-500 block mb-1">Description:</span>
+                    <p class="text-zinc-200 whitespace-pre-line leading-relaxed">${t.description || "-"}</p>
+                  </div>
+                </div>
+              `}
+            </div>
+
+            <div class="pt-2">
+              <div class="flex justify-between items-center text-[10px] text-zinc-500 mb-2.5">
+                <span>Last updated: <span class="font-mono text-zinc-400">${t.lastUpdated || "-"}</span></span>
+                <button onclick="openHistoryModal('Mapping', '${t.no}')" class="text-amber-400 hover:text-amber-300 font-semibold flex items-center gap-1 underline">
+                  🕒 Ticket Progress History
+                </button>
+              </div>
+              ${canEdit ? `
+                <button onclick="updateMappingTicket(${r}, this)" class="w-full bg-zinc-800 hover:bg-orange-600 text-white py-2.5 rounded-xl text-xs font-semibold transition">
+                  Save & Notify Team
+                </button>
+              ` : ''}
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    // ================= TICKET PROGRESS HISTORY & PDF =================
+    async function openHistoryModal(division, selectedTicketNo) {
+      historyDivisionActive = division;
+      document.getElementById("historyDivisionLabel").innerText = `Division: ${division}`;
+      document.getElementById("historyListContainer").innerHTML = "";
+      document.getElementById("historyLoader").classList.remove("hidden");
+      document.getElementById("historyModal").classList.remove("hidden");
+      document.getElementById("historyModal").classList.add("flex");
+
+      // Populate dropdown Filter per Customer
+      const custSelect = document.getElementById("historyCustomerFilter");
+      const sourceList = division === "Survey" ? (appData.survey || []) : (appData.mapping || []);
+      custSelect.innerHTML = `<option value="ALL">Semua Customer (${division})</option>` +
+        sourceList.map(item => `<option value="${item.no}" ${String(item.no) === String(selectedTicketNo) ? "selected" : ""}>#${item.no} - ${item.customer}</option>`).join("");
+
+      try {
+        const res = await fetch(`${API_URL}?action=getHistory&division=${encodeURIComponent(division)}`);
+        allHistoryForDivision = await res.json();
+        onHistoryFilterChange();
+      } catch (err) {
+        document.getElementById("historyListContainer").innerHTML = `<p class="text-center text-xs text-red-400 py-8">Gagal memuat Ticket Progress History.</p>`;
+      } finally {
+        document.getElementById("historyLoader").classList.add("hidden");
+      }
+    }
+
+    function closeHistoryModal() {
+      document.getElementById("historyModal").classList.add("hidden");
+      document.getElementById("historyModal").classList.remove("flex");
+    }
+
+    function onHistoryFilterChange() {
+      const selectedNo = document.getElementById("historyCustomerFilter").value;
+      filteredHistoryLogs = selectedNo === "ALL"
+        ? allHistoryForDivision
+        : allHistoryForDivision.filter(log => String(log.ticketNo) === String(selectedNo));
+
+      renderHistoryTimeline();
+    }
+
+    function renderHistoryTimeline() {
+      const container = document.getElementById("historyListContainer");
+      if (filteredHistoryLogs.length === 0) {
+        container.innerHTML = `<div class="text-center py-12 text-zinc-500 text-xs">Belum ada riwayat perubahan untuk customer ini.</div>`;
+        return;
+      }
+
+      container.innerHTML = filteredHistoryLogs.map(item => {
+        // Pembeda visual: Badges untuk Status vs Blok Keterangan/Notes
+        const badgesHtml = (item.badges && item.badges.length > 0)
+          ? `<div class="flex flex-wrap gap-1.5 my-2">
+              ${item.badges.map(b => `<span class="text-[11px] font-semibold px-2.5 py-0.5 rounded-md bg-sky-500/15 text-sky-300 border border-sky-500/30">${b}</span>`).join("")}
+            </div>`
+          : "";
+
+        const notesHtml = (item.notesList && item.notesList.length > 0)
+          ? `<div class="bg-zinc-950/70 border border-zinc-800 rounded-lg p-2.5 my-2 space-y-1 text-zinc-300 text-[11.5px]">
+              ${item.notesList.map(n => `<p class="whitespace-pre-line">📝 ${n}</p>`).join("")}
+            </div>`
+          : `<p class="text-zinc-300 my-1.5">${item.detail}</p>`;
+
+        return `
+          <div class="bg-zinc-900/90 border border-zinc-800 rounded-xl p-4 text-xs">
+            <div class="flex flex-wrap justify-between items-center gap-2 pb-2 border-b border-zinc-800/70">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="font-mono text-[11px] text-orange-400 bg-orange-500/10 px-2 py-0.5 rounded font-bold">#${item.ticketNo}</span>
+                <span class="font-bold text-white text-sm">${item.customer}</span>
+                <span class="text-[10px] px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 border border-zinc-700">${item.action}</span>
+              </div>
+              <span class="font-mono text-[11px] text-zinc-400">🕒 ${item.timestamp} WIB</span>
+            </div>
+
+            ${badgesHtml}
+            ${notesHtml}
+
+            <div class="flex flex-wrap justify-between items-center gap-2 text-[11px] text-zinc-400 pt-2 border-t border-zinc-800/70">
+              <span>PIC: <strong class="text-amber-300">${item.pic || "-"}</strong></span>
+              <span>Updated by: <strong class="text-emerald-400">${item.updatedBy || "-"}</strong></span>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function exportHistoryPDF() {
+      if (filteredHistoryLogs.length === 0) {
+        return alert("Tidak ada data history untuk di-export ke PDF.");
+      }
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+
+      const filterSelect = document.getElementById("historyCustomerFilter");
+      const targetLabel = filterSelect.options[filterSelect.selectedIndex].text;
+
+      // Header PDF
+      doc.setFillColor(20, 20, 23);
+      doc.rect(0, 0, 297, 25, "F");
+      doc.setTextColor(249, 115, 22);
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text(`TICKET PROGRESS HISTORY REPORT (${historyDivisionActive.toUpperCase()})`, 14, 11);
+
+      doc.setTextColor(225, 225, 225);
+      doc.setFontSize(9.5);
+      doc.setFont("helvetica", "normal");
+      doc.text(`Filter: ${targetLabel}`, 14, 18);
+      doc.text(`Dicetak: ${new Date().toLocaleString("id-ID")} WIB`, 220, 18);
+
+      const rows = filteredHistoryLogs.map((log, i) => [
+        i + 1,
+        log.timestamp,
+        `#${log.ticketNo} - ${log.customer}`,
+        log.status || "-",
+        log.pic || "-",
+        log.updatedBy || "-",
+        log.detail
+      ]);
+
+      doc.autoTable({
+        startY: 30,
+        head: [["No", "Timestamp", "Customer", "Status", "PIC", "Updated By", "Detail Perubahan & Keterangan"]],
+        body: rows,
+        theme: "grid",
+        styles: { fontSize: 8, cellPadding: 2.5, valign: "middle" },
+        headStyles: { fillColor: [249, 115, 22], textColor: [255, 255, 255], fontStyle: "bold" },
+        alternateRowStyles: { fillColor: [248, 248, 250] },
+        columnStyles: {
+          0: { cellWidth: 10, halign: "center" },
+          1: { cellWidth: 28 },
+          2: { cellWidth: 44, fontStyle: "bold" },
+          3: { cellWidth: 24 },
+          4: { cellWidth: 28 },
+          5: { cellWidth: 34 },
+          6: { cellWidth: "auto" }
+        }
+      });
+
+      const safeFile = targetLabel.replace(/[^a-zA-Z0-9-_]/g, "_");
+      doc.save(`Ticket_Progress_History_${historyDivisionActive}_${safeFile}.pdf`);
+    }
+
+    // ================= UPDATE & ADD ACTIONS =================
+    async function updateSurveyTicket(r, btn) {
+      if (!authToken) return alert("Silakan login ulang.");
+      const orig = btn.innerText;
+      btn.innerText = "Saving...";
+      btn.disabled = true;
+
+      const stageKeys = ["survey", "staging", "po", "procProgress", "forwardWo"];
+      const stageDetails = {};
+      stageKeys.forEach(k => {
+        stageDetails[k] = {
+          pic: document.getElementById(`pic-${k}-${r}`).value.trim(),
+          note: document.getElementById(`note-${k}-${r}`).value.trim()
+        };
+      });
 
       const payload = {
+        division: "Survey",
         action: "update",
         token: authToken,
-        rowIndex: rowIndex,
-        status: document.getElementById(`status-${rowIndex}`).value,
-        survey: document.getElementById(`survey-${rowIndex}`).value,
-        staging: document.getElementById(`staging-${rowIndex}`).value,
-        po: document.getElementById(`po-${rowIndex}`).value,
-        procProgress: document.getElementById(`procProgress-${rowIndex}`).value,
-        forwardWo: document.getElementById(`forwardWo-${rowIndex}`).value,
-        installation: document.getElementById(`installation-${rowIndex}`).value,
-        billing: document.getElementById(`billing-${rowIndex}`).value,
-        pic: document.getElementById(`pic-${rowIndex}`).value.trim(),
-        notes: document.getElementById(`notes-${rowIndex}`).value.trim()
+        rowIndex: r,
+        status: document.getElementById(`status-${r}`).value,
+        survey: document.getElementById(`survey-${r}`).value,
+        staging: document.getElementById(`staging-${r}`).value,
+        po: document.getElementById(`po-${r}`).value,
+        procProgress: document.getElementById(`procProgress-${r}`).value,
+        forwardWo: document.getElementById(`forwardWo-${r}`).value,
+        stageDetails: stageDetails
       };
 
       try {
@@ -650,20 +900,54 @@
           headers: { "Content-Type": "text/plain" },
           body: JSON.stringify(payload)
         });
-        btnElement.innerText = "✓ Updated!";
-        btnElement.classList.add("bg-emerald-600");
-        setTimeout(() => { fetchTickets(); }, 1200);
+        btn.innerText = "✓ Saved!";
+        btn.classList.add("bg-emerald-600");
+        setTimeout(() => fetchAllData(), 1200);
       } catch (err) {
-        alert("Gagal menyimpan update.");
-        btnElement.innerText = originalText;
-        btnElement.disabled = false;
+        alert("Gagal menyimpan update Survey.");
+        btn.innerText = orig;
+        btn.disabled = false;
+      }
+    }
+
+    async function updateMappingTicket(r, btn) {
+      if (!authToken) return alert("Silakan login ulang.");
+      const orig = btn.innerText;
+      btn.innerText = "Saving...";
+      btn.disabled = true;
+
+      const payload = {
+        division: "Mapping",
+        action: "update",
+        token: authToken,
+        rowIndex: r,
+        status: document.getElementById(`map-status-${r}`).value,
+        coverage: document.getElementById(`map-cov-${r}`).value,
+        pic: document.getElementById(`map-pic-${r}`).value.trim(),
+        description: document.getElementById(`map-desc-${r}`).value.trim()
+      };
+
+      try {
+        await fetch(API_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "text/plain" },
+          body: JSON.stringify(payload)
+        });
+        btn.innerText = "✓ Saved!";
+        btn.classList.add("bg-emerald-600");
+        setTimeout(() => fetchAllData(), 1200);
+      } catch (err) {
+        alert("Gagal menyimpan update Mapping.");
+        btn.innerText = orig;
+        btn.disabled = false;
       }
     }
 
     function openAddModal() {
-      if (!currentUser || currentUser.role !== "Admin") {
-        return alert("Hanya Admin yang memiliki izin membuat tiket baru.");
-      }
+      if (!currentUser || currentUser.role !== "Admin") return alert("Khusus Admin.");
+      document.getElementById("newTicketType").value = activeDivision;
+      toggleNewTicketFields();
       document.getElementById("addModal").classList.remove("hidden");
       document.getElementById("addModal").classList.add("flex");
     }
@@ -673,30 +957,37 @@
       document.getElementById("addModal").classList.remove("flex");
     }
 
+    function toggleNewTicketFields() {
+      const type = document.getElementById("newTicketType").value;
+      document.getElementById("newSurveyFields").classList.toggle("hidden", type !== "Survey");
+      document.getElementById("newMappingFields").classList.toggle("hidden", type !== "Mapping");
+    }
+
     async function submitNewTicket() {
       if (!currentUser || currentUser.role !== "Admin") return alert("Akses ditolak.");
       const customer = document.getElementById("newCustomer").value.trim();
-      if (!customer) return alert("Customer Name wajib diisi!");
+      if (!customer) return alert("Nama Pelanggan wajib diisi!");
 
+      const type = document.getElementById("newTicketType").value;
       const btn = document.getElementById("btnSubmitNew");
-      btn.innerText = "Saving...";
+      btn.innerText = "Creating...";
       btn.disabled = true;
 
-      const payload = {
-        action: "add",
-        token: authToken,
-        customer: customer,
-        pic: document.getElementById("newPic").value.trim(),
-        status: document.getElementById("newStatus").value,
-        survey: document.getElementById("newSurvey").value,
-        staging: document.getElementById("newStaging").value,
-        po: document.getElementById("newPo").value,
-        procProgress: document.getElementById("newProcProgress").value,
-        forwardWo: document.getElementById("newForwardWo").value,
-        installation: document.getElementById("newInstallation").value,
-        billing: document.getElementById("newBilling").value,
-        notes: document.getElementById("newNotes").value.trim()
-      };
+      let payload = { division: type, action: "add", token: authToken, customer: customer };
+
+      if (type === "Survey") {
+        payload.status = document.getElementById("newSurveyStatus").value;
+        payload.survey = document.getElementById("newSurveyProg").value;
+        payload.staging = document.getElementById("newStaging").value;
+        payload.po = document.getElementById("newPo").value;
+        payload.procProgress = document.getElementById("newProcProgress").value;
+        payload.forwardWo = document.getElementById("newForwardWo").value;
+      } else {
+        payload.status = document.getElementById("newMappingStatus").value;
+        payload.coverage = document.getElementById("newCoverage").value;
+        payload.pic = document.getElementById("newMappingPic").value.trim();
+        payload.description = document.getElementById("newMappingDesc").value.trim();
+      }
 
       try {
         await fetch(API_URL, {
@@ -706,9 +997,9 @@
           body: JSON.stringify(payload)
         });
         document.getElementById("newCustomer").value = "";
-        document.getElementById("newNotes").value = "";
+        document.getElementById("newMappingDesc").value = "";
         closeAddModal();
-        setTimeout(() => { fetchTickets(); }, 1200);
+        setTimeout(() => fetchAllData(), 1200);
       } catch (err) {
         alert("Gagal membuat ticket baru.");
       } finally {
