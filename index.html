@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BLiP Ticket Monitoring Dashboard v3.2 — Horizontal Dark Edition</title>
+  <title>BLiP Ticket Monitoring Dashboard v3.4 — Horizontal Dark Edition</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -36,7 +36,7 @@
     <div class="flex flex-col md:flex-row items-center gap-6 w-full lg:w-auto">
       <div class="flex items-center gap-2.5 shrink-0 select-none">
         <span class="tracking-tighter font-extrabold text-3xl text-white">BL<span class="text-orange-500">i</span>P</span>
-        <span class="text-[10px] bg-orange-500/20 border border-orange-500/40 px-2 py-0.5 rounded text-orange-400 font-mono font-bold">v3.2</span>
+        <span class="text-[10px] bg-orange-500/20 border border-orange-500/40 px-2 py-0.5 rounded text-orange-400 font-mono font-bold">v3.4</span>
       </div>
 
       <nav class="flex gap-1.5 overflow-x-auto w-full md:w-auto pb-1 md:pb-0">
@@ -285,7 +285,7 @@
         </div>
         <div class="bg-zinc-950 p-3.5 rounded-xl border border-zinc-800">
           <p class="text-zinc-500 text-[10px]">Versi Aplikasi</p>
-          <p class="font-semibold text-white mt-0.5">BLiP Ticket Monitoring Dashboard v3.2 (Horizontal Edition)</p>
+          <p class="font-semibold text-white mt-0.5">BLiP Ticket Monitoring Dashboard v3.4 (Horizontal Edition)</p>
           <p class="text-[10px] text-zinc-500 mt-1">Database: Google Sheets (Survey, Mapping, History, Users)</p>
         </div>
       </div>
@@ -499,12 +499,94 @@
 
     function formatDisplayDate(tsStr) {
       if (!tsStr || tsStr === "-") return "-";
-      const parts = String(tsStr).split(" ");
-      if (parts.length < 2) return tsStr;
-      const d = new Date(parts[0] + "T" + parts[1] + ":00");
-      if (isNaN(d.getTime())) return tsStr;
-      const datePart = d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-      return `${datePart}<br><span class="text-zinc-500 text-[10.5px]">${parts[1]} WIB</span>`;
+      const str = String(tsStr).trim();
+      const parts = str.split(" ");
+      if (parts.length >= 2 && /^\d{4}-\d{2}-\d{2}$/.test(parts[0])) {
+        const d = new Date(parts[0] + "T" + parts[1].substring(0, 5) + ":00");
+        if (!isNaN(d.getTime())) {
+          const datePart = d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+          return `${datePart}<br><span class="text-zinc-500 text-[10.5px]">${parts[1].substring(0, 5)} WIB</span>`;
+        }
+      }
+      return cleanTimestamp(str);
+    }
+
+    // Rapikan timestamp panjang "Sat Nov 21 2026 10:24:00 GMT+0700 (Waktu Indonesia Barat)" menjadi "21 Nov 2026, 10:24 WIB"
+    function cleanTimestamp(rawTs) {
+      if (!rawTs || rawTs === "-") return "-";
+      const str = String(rawTs).trim();
+      if (/^\d{4}-\d{2}-\d{2}/.test(str)) {
+        const p = str.split(" ");
+        const d = new Date(p[0] + "T" + (p[1] || "00:00").substring(0, 5) + ":00");
+        if (!isNaN(d.getTime())) {
+          const dp = d.toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" });
+          return `${dp}, ${(p[1] || "").substring(0, 5)} WIB`;
+        }
+      }
+      const parsed = new Date(str);
+      if (!isNaN(parsed.getTime())) {
+        const dp = parsed.toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" });
+        const tp = parsed.toTimeString().substring(0, 5);
+        return `${dp}, ${tp} WIB`;
+      }
+      return str.replace(/GMT[+-]\d{4}.*$/i, "").trim() + " WIB";
+    }
+
+    // Ekstrak PIC & Notes khusus untuk tahapan yang sedang diklik
+    function extractStageInfoFromLog(log, stageObj, fallbackPic, fallbackNote) {
+      const detail = String(log.detail || "");
+      const picFull = String(log.pic || "");
+
+      let extractedPic = "";
+      let extractedNote = "";
+      let extractedStatus = "";
+
+      const bracketBlocks = detail.split(";").map(s => s.trim());
+      for (const blk of bracketBlocks) {
+        const bLower = blk.toLowerCase();
+        const isMatchBlock = stageObj.bracketTags.some(tag => bLower.startsWith(`[${tag}]`));
+        if (isMatchBlock) {
+          const picMatch = blk.match(/PIC:\s*([^|;]+)/i);
+          if (picMatch && picMatch[1].trim() && picMatch[1].trim() !== "-") {
+            extractedPic = picMatch[1].trim();
+          }
+          const ketMatch = blk.match(/Ket:\s*([^;]+)/i);
+          if (ketMatch && ketMatch[1].trim() && ketMatch[1].trim() !== "-") {
+            extractedNote = ketMatch[1].trim();
+          }
+        }
+      }
+
+      for (const kw of stageObj.keywords) {
+        const stRegex = new RegExp(`${kw}\\s*:\\s*([^|;—\\n]+)`, "i");
+        const stMatch = detail.match(stRegex);
+        if (stMatch && stMatch[1].trim()) {
+          extractedStatus = stMatch[1].trim();
+          break;
+        }
+      }
+
+      if (!extractedPic && picFull) {
+        const picParts = picFull.split(",");
+        for (const p of picParts) {
+          const pLower = p.trim().toLowerCase();
+          if (stageObj.bracketTags.some(tag => pLower.startsWith(tag + ":"))) {
+            const val = p.split(":").slice(1).join(":").trim();
+            if (val && val !== "-") extractedPic = val;
+          }
+        }
+      }
+
+      if (!extractedNote && !detail.includes("[")) {
+        const cleanBody = detail.includes(" — ") ? detail.split(" — ").pop().trim() : detail;
+        extractedNote = cleanBody;
+      }
+
+      return {
+        pic: extractedPic || fallbackPic || "-",
+        note: extractedNote || fallbackNote || "-",
+        stageStatus: extractedStatus
+      };
     }
 
     function getStatusPillHtml(status) {
@@ -614,14 +696,13 @@
       }
 
       const stageDefs = [
-        { key: "survey", label: "Survey", fullLabel: "Survey Progress", keywords: ["survey"], opts: ["-", "Done", "On Progress", "Pending", "Cancel"] },
-        { key: "staging", label: "Staging", fullLabel: "Staging Status", keywords: ["staging"], opts: ["-", "Deal", "Not Deal"] },
-        { key: "po", label: "PO Procurement", fullLabel: "PO Procurement", keywords: ["po:", "po procurement", "po "], opts: ["-", "Done", "Material Ready"] },
-        { key: "procProgress", label: "Procurement", fullLabel: "Procurement Progress", keywords: ["procurement"], opts: ["-", "Done", "On Progress", "Cancel"] },
-        { key: "forwardWo", label: "Installation WO", fullLabel: "Forward Installation WO", keywords: ["forward wo", "installation wo"], opts: ["-", "Done", "Pending", "Cancel"] }
+        { key: "survey", label: "Survey", fullLabel: "Survey Progress", bracketTags: ["survey"], keywords: ["survey progress", "survey"], opts: ["-", "Done", "On Progress", "Pending", "Cancel"] },
+        { key: "staging", label: "Staging", fullLabel: "Staging Status", bracketTags: ["staging"], keywords: ["staging status", "staging"], opts: ["-", "Deal", "Not Deal"] },
+        { key: "po", label: "PO Procurement", fullLabel: "PO Procurement", bracketTags: ["po procurement", "po"], keywords: ["po procurement", "po"], opts: ["-", "Done", "Material Ready"] },
+        { key: "procProgress", label: "Procurement", fullLabel: "Procurement Progress", bracketTags: ["procurement"], keywords: ["procurement progress", "procurement"], opts: ["-", "Done", "On Progress", "Cancel"] },
+        { key: "forwardWo", label: "Installation WO", fullLabel: "Forward Installation WO", bracketTags: ["forward wo", "installation wo"], keywords: ["forward wo", "installation wo"], opts: ["-", "Done", "Pending", "Cancel"] }
       ];
 
-      // SVG Icons murni (tanpa angka)
       const checkSvg = `<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>`;
       const clockSvg = `<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 7v5l3 2"/></svg>`;
       const crossSvg = `<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>`;
@@ -642,7 +723,6 @@
               const isPending = ["Pending", "On Progress"].includes(val);
               const isCancel = ["Cancel", "Not Deal"].includes(val);
 
-              // Cek apakah tahapan ini sedang berjalan / aktif (harus kelip-kelip oranye)
               let isOngoingStep = false;
               if (isPending) {
                 isOngoingStep = true;
@@ -653,12 +733,10 @@
                 if (["Done", "Deal", "Material Ready"].includes(prevVal)) isOngoingStep = true;
               }
 
-              // Cek status tahap sebelumnya untuk mewarnai garis penghubung kiri
               const prevStageDone = sIdx > 0 && ["Done", "Deal", "Material Ready"].includes(t[stageDefs[sIdx - 1].key] || "");
               const leftLineColor = prevStageDone ? "bg-emerald-500" : "bg-zinc-700";
               const rightLineColor = isDone ? "bg-emerald-500" : "bg-zinc-700";
 
-              // Bullet Style: Centang jika Done, Jam jika On Progress / Pending / Not Yet
               let circleStyle = "bg-zinc-900 border-2 border-zinc-600 text-zinc-400";
               let iconHtml = clockSvg;
               let labelColor = "text-zinc-300";
@@ -692,7 +770,6 @@
 
               return `
                 <div class="flex-1 flex flex-col items-center text-center select-none">
-                  <!-- Baris Lingkaran + Garis Penghubung Horizontal Flex (Pasti Nyambung!) -->
                   <div class="w-full flex items-center">
                     <div class="h-[2.5px] flex-1 ${sIdx === 0 ? 'opacity-0' : leftLineColor}"></div>
                     <button onclick="clickStepperPoint('${t.ticketId}', '${st.key}')"
@@ -703,11 +780,9 @@
                     <div class="h-[2.5px] flex-1 ${sIdx === stageDefs.length - 1 ? 'opacity-0' : rightLineColor}"></div>
                   </div>
 
-                  <!-- Label Tahapan & Status -->
                   <span class="text-[11px] font-bold mt-2 leading-tight px-1 ${labelColor}">${st.label}</span>
                   <span class="text-[10px] mt-0.5 leading-tight ${subColor}">${subText}</span>
 
-                  <!-- Panah Ganda Oranye Besar & Jelas -->
                   <button onclick="clickStepperPoint('${t.ticketId}', '${st.key}')"
                     class="mt-1.5 px-2.5 py-1 rounded-lg hover:bg-orange-500/15 transition-transform duration-200 cursor-pointer ${isSelectedStage ? 'rotate-180 text-orange-400' : 'text-orange-500 hover:text-orange-400'}"
                     title="Expand detail ${st.label}">
@@ -721,18 +796,27 @@
           </div>
         `;
 
-        // Expanded Panel (Left-Accent Bordered History Cards + Notes)
+        // Expanded Section Area
         let expandedPanelHtml = "";
         if (isExpanded) {
           const activeStageObj = stageDefs.find(s => s.key === activeStageKey) || stageDefs[0];
           const currentStageVal = t[activeStageKey] || "";
           const stageDetailObj = (t.stageDetails && t.stageDetails[activeStageKey]) || { pic: "", note: "" };
 
+          const activeStageIdx = stageDefs.findIndex(s => s.key === activeStageKey);
+          let headerDisplayStatus = currentStageVal;
+          if (!headerDisplayStatus) {
+            const prevOk = activeStageIdx === 0 || ["Done", "Deal", "Material Ready"].includes(t[stageDefs[activeStageIdx - 1].key] || "");
+            headerDisplayStatus = prevOk && (t.status === "Open" || t.status === "On Progress") ? "On Progress" : "Not Yet";
+          }
+
           const ticketLogs = (cachedHistory.Survey || []).filter(log => String(log.ticketId).trim() === String(t.ticketId).trim());
+
           const stageLogs = ticketLogs.filter(log => {
             const dLower = (log.detail || "").toLowerCase();
-            const matchKeyword = activeStageObj.keywords.some(kw => dLower.includes(kw));
-            return matchKeyword || log.action === "Created" || dLower.includes("ticket status");
+            const hasBracket = activeStageObj.bracketTags.some(tag => dLower.includes(`[${tag}]`));
+            const hasKeyword = activeStageObj.keywords.some(kw => dLower.includes(kw));
+            return hasBracket || hasKeyword || log.action === "Created";
           });
 
           const logsToShow = stageLogs.length > 0 ? stageLogs : ticketLogs;
@@ -744,29 +828,42 @@
           const logsFeedHtml = loadingHistoryTicket[t.ticketId]
             ? `<div class="py-6 text-center"><div class="inline-block animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-orange-500"></div></div>`
             : (logsToShow.length > 0
-                ? logsToShow.map(log => `
-                    <div class="bg-zinc-950 border border-zinc-800 border-l-4 ${leftAccentBorderColor} rounded-xl p-3.5 text-xs space-y-2 shadow-sm">
-                      <div class="flex items-center justify-between gap-2">
-                        <span class="font-extrabold text-white text-sm">${activeStageObj.label}</span>
-                        ${getStatusPillHtml(log.status)}
+                ? logsToShow.map(log => {
+                    const parsed = extractStageInfoFromLog(log, activeStageObj, stageDetailObj.pic, stageDetailObj.note);
+                    const pillToRender = parsed.stageStatus || headerDisplayStatus || log.status;
+                    return `
+                      <div class="bg-zinc-950 border border-zinc-800 border-l-4 ${leftAccentBorderColor} rounded-xl p-3.5 text-xs space-y-2 shadow-sm">
+                        <div class="flex items-center justify-between gap-2">
+                          <span class="font-extrabold text-white text-sm">${activeStageObj.label}</span>
+                          ${getStatusPillHtml(pillToRender)}
+                        </div>
+                        <div class="space-y-1 text-[11px] text-zinc-400">
+                          <div class="flex items-center gap-1.5">
+                            <span>🕒</span>
+                            <span class="font-mono text-zinc-300">${cleanTimestamp(log.timestamp)}</span>
+                          </div>
+                          <div class="flex items-center gap-1.5">
+                            <span>👤</span>
+                            <span>PIC : <strong class="text-white">${parsed.pic}</strong> <span class="text-zinc-600">•</span> <span class="text-emerald-400">${log.updatedBy}</span></span>
+                          </div>
+                          <div class="flex items-start gap-1.5 pt-0.5">
+                            <span class="mt-0.5">📝</span>
+                            <p class="text-zinc-200 font-medium whitespace-pre-line leading-relaxed">${parsed.note}</p>
+                          </div>
+                        </div>
                       </div>
-                      <div class="space-y-1 text-[11px] text-zinc-400">
-                        <div class="flex items-center gap-1.5">
-                          <span>🕒</span>
-                          <span class="font-mono text-zinc-300">${log.timestamp} WIB</span>
-                        </div>
-                        <div class="flex items-center gap-1.5">
-                          <span>👤</span>
-                          <span>PIC : <strong class="text-white">${log.pic || "-"}</strong> <span class="text-zinc-600">•</span> <span class="text-emerald-400">${log.updatedBy}</span></span>
-                        </div>
-                        <div class="flex items-start gap-1.5 pt-0.5">
-                          <span class="mt-0.5">📝</span>
-                          <p class="text-zinc-200 font-medium whitespace-pre-line leading-relaxed">${log.detail.includes(" — ") ? log.detail.split(" — ").pop() : log.detail}</p>
-                        </div>
-                      </div>
+                    `;
+                  }).join("")
+                : `<div class="bg-zinc-950 border border-zinc-800 border-l-4 ${leftAccentBorderColor} rounded-xl p-3.5 text-xs space-y-2">
+                    <div class="flex items-center justify-between gap-2">
+                      <span class="font-extrabold text-white text-sm">${activeStageObj.label}</span>
+                      ${getStatusPillHtml(headerDisplayStatus)}
                     </div>
-                  `).join("")
-                : `<div class="text-center py-6 text-zinc-500 text-xs italic bg-zinc-950/60 border border-zinc-800/80 rounded-xl">Belum ada riwayat log tersimpan untuk tahapan ${activeStageObj.label}.</div>`
+                    <div class="space-y-1 text-[11px] text-zinc-400">
+                      <div class="flex items-center gap-1.5"><span>👤</span><span>PIC : <strong class="text-white">${stageDetailObj.pic || "-"}</strong></span></div>
+                      <div class="flex items-start gap-1.5"><span>📝</span><p class="text-zinc-200 font-medium">${stageDetailObj.note || "Belum ada catatan untuk tahapan ini."}</p></div>
+                    </div>
+                  </div>`
               );
 
           const editorFormHtml = canEdit ? `
@@ -817,7 +914,7 @@
               <div class="flex items-center justify-between border-b border-zinc-800 pb-2.5">
                 <div class="flex items-center gap-2">
                   <span class="text-xs font-bold text-zinc-300">Detail Tahapan: <span class="text-orange-400">${activeStageObj.fullLabel}</span></span>
-                  ${getStatusPillHtml(currentStageVal || "Not Yet")}
+                  ${getStatusPillHtml(headerDisplayStatus)}
                 </div>
                 <button onclick="openHistoryModal('Survey', '${t.ticketId}')" class="text-[11px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/25 px-2.5 py-1 rounded-lg hover:bg-emerald-500/20 transition">
                   📄 Export PDF History
@@ -1165,7 +1262,7 @@
                 <span class="font-bold text-white text-sm">${item.customer}</span>
                 <span class="text-[9.5px] px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 font-bold uppercase tracking-wider">${item.action}</span>
               </div>
-              <span class="font-mono text-[10px] text-zinc-400 font-semibold">🕒 ${item.timestamp} WIB</span>
+              <span class="font-mono text-[10px] text-zinc-400 font-semibold">🕒 ${cleanTimestamp(item.timestamp)}</span>
             </div>
 
             ${badgesHtml}
@@ -1206,7 +1303,7 @@
 
       const rows = filteredHistoryLogs.map((log, i) => [
         i + 1,
-        log.timestamp,
+        cleanTimestamp(log.timestamp),
         log.ticketId,
         log.customer,
         log.status || "-",
