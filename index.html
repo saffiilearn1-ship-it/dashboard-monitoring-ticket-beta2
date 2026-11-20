@@ -11,7 +11,6 @@
     .card-bg:hover { border-color: #3f3f46; }
     select, input, textarea { background-color: #1f1f23; color: #ffffff; border: 1px solid #3f3f46; }
     select:focus, input:focus, textarea:focus { outline: none; border-color: #f97316; }
-    /* Custom scrollbar */
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: #09090b; }
     ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 3px; }
@@ -38,15 +37,19 @@
     </div>
   </div>
 
-  <!-- Summary KPI Cards -->
-  <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+  <!-- Summary KPI Cards (6 Cards) -->
+  <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
     <div class="card-bg rounded-xl p-4">
       <p class="text-xs text-zinc-400 font-medium">Total Tickets</p>
       <p id="stat-total" class="text-2xl font-bold text-white mt-1">0</p>
     </div>
     <div class="card-bg rounded-xl p-4 border-l-4 border-l-orange-500">
-      <p class="text-xs text-orange-400 font-medium">Open (Active)</p>
+      <p class="text-xs text-orange-400 font-medium">Open</p>
       <p id="stat-open" class="text-2xl font-bold text-white mt-1">0</p>
+    </div>
+    <div class="card-bg rounded-xl p-4 border-l-4 border-l-sky-500">
+      <p class="text-xs text-sky-400 font-medium">On Progress</p>
+      <p id="stat-progress" class="text-2xl font-bold text-white mt-1">0</p>
     </div>
     <div class="card-bg rounded-xl p-4 border-l-4 border-l-amber-500">
       <p class="text-xs text-amber-400 font-medium">Pending</p>
@@ -56,7 +59,7 @@
       <p class="text-xs text-emerald-400 font-medium">Closed (Done)</p>
       <p id="stat-closed" class="text-2xl font-bold text-white mt-1">0</p>
     </div>
-    <div class="card-bg rounded-xl p-4 border-l-4 border-l-red-500 col-span-2 md:col-span-1">
+    <div class="card-bg rounded-xl p-4 border-l-4 border-l-red-500">
       <p class="text-xs text-red-400 font-medium">Cancel</p>
       <p id="stat-cancel" class="text-2xl font-bold text-white mt-1">0</p>
     </div>
@@ -64,16 +67,15 @@
 
   <!-- Search & Filters -->
   <div class="card-bg rounded-xl p-4 mb-6 flex flex-col md:flex-row gap-3 justify-between items-stretch md:items-center">
-    <!-- Status Tabs -->
     <div class="flex gap-1.5 overflow-x-auto pb-1 md:pb-0">
       <button onclick="setFilter('ALL')" id="btn-ALL" class="filter-btn bg-orange-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap">All</button>
       <button onclick="setFilter('Open')" id="btn-Open" class="filter-btn bg-zinc-800 text-zinc-300 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap">Open</button>
+      <button onclick="setFilter('On Progress')" id="btn-On Progress" class="filter-btn bg-zinc-800 text-zinc-300 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap">On Progress</button>
       <button onclick="setFilter('Pending')" id="btn-Pending" class="filter-btn bg-zinc-800 text-zinc-300 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap">Pending</button>
-      <button onclick="setFilter('Closed')" id="btn-Closed" class="filter-btn bg-zinc-800 text-zinc-300 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap">Closed</button>
       <button onclick="setFilter('Cancel')" id="btn-Cancel" class="filter-btn bg-zinc-800 text-zinc-300 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap">Cancel</button>
+      <button onclick="setFilter('Closed')" id="btn-Closed" class="filter-btn bg-zinc-800 text-zinc-300 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap">Closed</button>
     </div>
 
-    <!-- Search & PIC Filter -->
     <div class="flex flex-col sm:flex-row gap-2">
       <select id="picFilter" onchange="renderTickets()" class="rounded-lg px-3 py-1.5 text-xs">
         <option value="ALL">Filter PIC: Semua</option>
@@ -109,7 +111,7 @@
           </div>
           <div>
             <label class="text-zinc-400 block mb-1">PIC Name</label>
-            <input type="text" id="newPic" placeholder="Contoh: Budi / Andi" class="w-full rounded-lg px-3 py-2">
+            <input type="text" id="newPic" placeholder="Contoh: Gibran / Budi" class="w-full rounded-lg px-3 py-2">
           </div>
         </div>
 
@@ -118,9 +120,10 @@
             <label class="text-zinc-400 block mb-1">Ticket Status</label>
             <select id="newStatus" class="w-full rounded-lg px-3 py-2">
               <option value="Open" selected>Open</option>
+              <option value="On Progress">On Progress</option>
               <option value="Pending">Pending</option>
-              <option value="Closed">Closed</option>
               <option value="Cancel">Cancel</option>
+              <option value="Closed">Closed</option>
             </select>
           </div>
           <div>
@@ -135,10 +138,10 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-3 gap-2">
           <div>
             <label class="text-zinc-400 block mb-1">Staging Status</label>
-            <select id="newStaging" class="w-full rounded-lg px-3 py-2">
+            <select id="newStaging" class="w-full rounded-lg px-2 py-2">
               <option value="">-</option>
               <option value="Deal">Deal</option>
               <option value="Not Deal">Not Deal</option>
@@ -146,10 +149,19 @@
           </div>
           <div>
             <label class="text-zinc-400 block mb-1">PO Procurement</label>
-            <select id="newPo" class="w-full rounded-lg px-3 py-2">
+            <select id="newPo" class="w-full rounded-lg px-2 py-2">
               <option value="">-</option>
               <option value="Done">Done</option>
               <option value="Material Ready">Material Ready</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-zinc-400 block mb-1">Proc. Progress</label>
+            <select id="newProcProgress" class="w-full rounded-lg px-2 py-2">
+              <option value="">-</option>
+              <option value="Done">Done</option>
+              <option value="On Progress">On Progress</option>
+              <option value="Cancel">Cancel</option>
             </select>
           </div>
         </div>
@@ -198,7 +210,7 @@
   </div>
 
   <script>
-    // =================  =================
+    // ==================================
     const API_URL = "https://script.google.com/macros/s/AKfycbyy9-44zG4rOt3MnsR8NCPY0NlTBQBTnkuCXoUeoJmbmiqw9dvjDQ8ueOrv09P4DDgR/exec";
     // ================================================================
 
@@ -224,6 +236,7 @@
     function updateSummaryStats() {
       document.getElementById("stat-total").innerText = allTickets.length;
       document.getElementById("stat-open").innerText = allTickets.filter(t => t.status === "Open").length;
+      document.getElementById("stat-progress").innerText = allTickets.filter(t => t.status === "On Progress").length;
       document.getElementById("stat-pending").innerText = allTickets.filter(t => t.status === "Pending").length;
       document.getElementById("stat-closed").innerText = allTickets.filter(t => t.status === "Closed").length;
       document.getElementById("stat-cancel").innerText = allTickets.filter(t => t.status === "Cancel").length;
@@ -257,6 +270,7 @@
 
     function getStatusBadge(status) {
       if (status === "Open") return "bg-orange-500/15 text-orange-400 border-orange-500/40";
+      if (status === "On Progress") return "bg-sky-500/15 text-sky-400 border-sky-500/40";
       if (status === "Pending") return "bg-amber-500/15 text-amber-400 border-amber-500/40";
       if (status === "Closed") return "bg-emerald-500/15 text-emerald-400 border-emerald-500/40";
       if (status === "Cancel") return "bg-red-500/15 text-red-400 border-red-500/40";
@@ -268,15 +282,16 @@
       if (t.survey === "Done") score++;
       if (t.staging === "Deal") score++;
       if (t.po === "Done" || t.po === "Material Ready") score++;
+      if (t.procProgress === "Done") score++;
       if (t.forwardWo === "Done") score++;
       if (t.installation === "Done") score++;
       if (t.billing === "Done") score++;
-      return Math.round((score / 6) * 100);
+      return Math.round((score / 7) * 100);
     }
 
     function getStepDotColor(val, positiveValues) {
       if (positiveValues.includes(val)) return "bg-emerald-500";
-      if (val === "On Progress") return "bg-orange-500";
+      if (val === "On Progress") return "bg-sky-500";
       if (val === "Pending") return "bg-amber-500";
       if (val === "Cancel" || val === "Not Deal") return "bg-red-500";
       return "bg-zinc-700";
@@ -330,7 +345,7 @@
               </span>
             </div>
 
-            <!-- Visual Progress Bar & 6-Step Dots -->
+            <!-- Visual Progress Bar & 7-Step Dots -->
             <div class="mb-4 bg-zinc-900/90 p-3 rounded-xl border border-zinc-800/80">
               <div class="flex justify-between text-[11px] mb-1.5">
                 <span class="text-zinc-400">Overall Completion</span>
@@ -339,10 +354,11 @@
               <div class="w-full bg-zinc-800 h-1.5 rounded-full overflow-hidden mb-2.5">
                 <div class="bg-gradient-to-r from-orange-500 to-emerald-500 h-full transition-all duration-300" style="width: ${pct}%"></div>
               </div>
-              <div class="grid grid-cols-6 gap-1 text-center text-[9px] text-zinc-400">
+              <div class="grid grid-cols-7 gap-1 text-center text-[8.5px] text-zinc-400">
                 <div><span class="block h-1.5 w-full rounded mb-1 ${getStepDotColor(t.survey, ['Done'])}"></span>Survey</div>
                 <div><span class="block h-1.5 w-full rounded mb-1 ${getStepDotColor(t.staging, ['Deal'])}"></span>Staging</div>
                 <div><span class="block h-1.5 w-full rounded mb-1 ${getStepDotColor(t.po, ['Done', 'Material Ready'])}"></span>PO</div>
+                <div><span class="block h-1.5 w-full rounded mb-1 ${getStepDotColor(t.procProgress, ['Done'])}"></span>Proc.</div>
                 <div><span class="block h-1.5 w-full rounded mb-1 ${getStepDotColor(t.forwardWo, ['Done'])}"></span>WO</div>
                 <div><span class="block h-1.5 w-full rounded mb-1 ${getStepDotColor(t.installation, ['Done'])}"></span>Install</div>
                 <div><span class="block h-1.5 w-full rounded mb-1 ${getStepDotColor(t.billing, ['Done'])}"></span>Billing</div>
@@ -354,7 +370,7 @@
               <div class="flex justify-between items-center">
                 <span class="text-zinc-400">Ticket Status</span>
                 <select id="status-${r}" class="rounded-lg px-2 py-1 w-36 font-medium">
-                  ${renderOptions(["Open", "Pending", "Closed", "Cancel"], t.status)}
+                  ${renderOptions(["Open", "On Progress", "Pending", "Cancel", "Closed"], t.status)}
                 </select>
               </div>
               <div class="flex justify-between items-center">
@@ -373,6 +389,12 @@
                 <span class="text-zinc-400">PO Procurement</span>
                 <select id="po-${r}" class="rounded-lg px-2 py-1 w-36">
                   ${renderOptions(["-", "Done", "Material Ready"], t.po)}
+                </select>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-zinc-400">Procurement Progress</span>
+                <select id="procProgress-${r}" class="rounded-lg px-2 py-1 w-36">
+                  ${renderOptions(["-", "Done", "On Progress", "Cancel"], t.procProgress)}
                 </select>
               </div>
               <div class="flex justify-between items-center">
@@ -434,6 +456,7 @@
         survey: document.getElementById(`survey-${rowIndex}`).value,
         staging: document.getElementById(`staging-${rowIndex}`).value,
         po: document.getElementById(`po-${rowIndex}`).value,
+        procProgress: document.getElementById(`procProgress-${rowIndex}`).value,
         forwardWo: document.getElementById(`forwardWo-${rowIndex}`).value,
         installation: document.getElementById(`installation-${rowIndex}`).value,
         billing: document.getElementById(`billing-${rowIndex}`).value,
@@ -444,11 +467,13 @@
       try {
         await fetch(API_URL, {
           method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "text/plain" },
           body: JSON.stringify(payload)
         });
         btnElement.innerText = "✓ Updated!";
         btnElement.classList.add("bg-emerald-600");
-        setTimeout(() => { fetchTickets(); }, 900);
+        setTimeout(() => { fetchTickets(); }, 1200);
       } catch (err) {
         alert("Gagal menyimpan update.");
         btnElement.innerText = originalText;
@@ -482,6 +507,7 @@
         survey: document.getElementById("newSurvey").value,
         staging: document.getElementById("newStaging").value,
         po: document.getElementById("newPo").value,
+        procProgress: document.getElementById("newProcProgress").value,
         forwardWo: document.getElementById("newForwardWo").value,
         installation: document.getElementById("newInstallation").value,
         billing: document.getElementById("newBilling").value,
@@ -491,12 +517,14 @@
       try {
         await fetch(API_URL, {
           method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "text/plain" },
           body: JSON.stringify(payload)
         });
         document.getElementById("newCustomer").value = "";
         document.getElementById("newNotes").value = "";
         closeAddModal();
-        fetchTickets();
+        setTimeout(() => { fetchTickets(); }, 1200);
       } catch (err) {
         alert("Gagal membuat ticket baru.");
       } finally {
