@@ -504,7 +504,10 @@
       btnClear.classList.remove("hidden");
 
       if (!lastUpdatedStr || lastUpdatedStr === "-") return false;
-      const itemDate = String(lastUpdatedStr).substring(0, 10);
+      const d = parseLocalTimestamp(lastUpdatedStr);
+      const itemDate = d
+        ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
+        : String(lastUpdatedStr).substring(0, 10);
       if (startVal && itemDate < startVal) return false;
       if (endVal && itemDate > endVal) return false;
       return true;
@@ -513,7 +516,8 @@
     function parseLocalTimestamp(rawTs) {
       if (!rawTs || rawTs === "-") return null;
       const str = String(rawTs).trim();
-      const m = str.match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2}))?/);
+      // Mendukung format YYYY-MM-DD H:mm:ss maupun YYYY-MM-DD HH:mm:ss
+      const m = str.match(/^(\d{4})-(\d{1,2})-(\d{1,2})[T ](\d{1,2}):(\d{1,2})(?::(\d{1,2}))?/);
       if (m) {
         return new Date(
           Number(m[1]),
@@ -555,7 +559,7 @@
     function formatPicLabel(rawPic) {
       const p = String(rawPic || "").trim();
       if (!p || p === "-") return "-";
-      return p;
+      return p.replace(/(\([^)]+\))\s*\1$/i, "$1");
     }
 
     function extractStageInfoFromLog(log, stageObj, fallbackPic, fallbackNote) {
@@ -759,7 +763,7 @@
 
       const canEdit = Boolean(currentUser);
       const isAdmin = currentUser && currentUser.role === "Admin";
-      const autoPicName = currentUser ? currentUser.name : "";
+      const autoPicName = currentUser ? formatPicLabel(currentUser.name) : "";
 
       let rowsHtml = filtered.map(t => {
         const isExpanded = Boolean(expandedRows[t.ticketId]);
@@ -1045,7 +1049,7 @@
       btn.disabled = true;
 
       const updatedStageVal = document.getElementById(`exp-stageval-${rowIndex}`).value;
-      const autoPic = currentUser.name;
+      const autoPic = formatPicLabel(currentUser.name);
       const updatedNote = document.getElementById(`exp-note-${rowIndex}`).value.trim();
       const updatedMainStatus = document.getElementById(`exp-mainstatus-${rowIndex}`).value;
 
@@ -1145,7 +1149,7 @@
       }
 
       const canEdit = Boolean(currentUser);
-      const autoPicName = currentUser ? currentUser.name : "";
+      const autoPicName = currentUser ? formatPicLabel(currentUser.name) : "";
 
       const rowsHtml = filtered.map(t => {
         const r = t.rowIndex;
@@ -1226,7 +1230,7 @@
         rowIndex: r,
         status: document.getElementById(`map-status-${r}`).value,
         coverage: document.getElementById(`map-cov-${r}`).value,
-        pic: currentUser.name,
+        pic: formatPicLabel(currentUser.name),
         description: document.getElementById(`map-desc-${r}`).value.trim()
       };
 
@@ -1443,7 +1447,7 @@
       } else {
         payload.status = document.getElementById("newMappingStatus").value;
         payload.coverage = document.getElementById("newCoverage").value;
-        payload.pic = currentUser.name;
+        payload.pic = formatPicLabel(currentUser.name);
         payload.description = document.getElementById("newMappingDesc").value.trim();
       }
 
