@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BLiP Ticket Monitoring Dashboard v3.7 — Horizontal Dark Edition</title>
+  <title>BLiP Ticket Monitoring Dashboard v3.8.1 — Horizontal Dark Edition</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -44,7 +44,7 @@
     <div class="flex flex-col md:flex-row items-center gap-6 w-full lg:w-auto">
       <div class="flex items-center gap-2.5 shrink-0 select-none">
         <span class="tracking-tighter font-extrabold text-3xl text-white">BL<span class="text-orange-500">i</span>P</span>
-        <span class="text-[10px] bg-orange-500/20 border border-orange-500/50 px-2 py-0.5 rounded text-orange-400 font-mono font-bold">v3.7</span>
+        <span class="text-[10px] bg-orange-500/20 border border-orange-500/50 px-2 py-0.5 rounded text-orange-400 font-mono font-bold">v3.8.1</span>
       </div>
 
       <nav class="flex gap-1.5 overflow-x-auto w-full md:w-auto pb-1 md:pb-0">
@@ -200,7 +200,7 @@
               </select>
             </div>
             <div>
-              <label class="text-zinc-400 font-semibold block mb-1">4. Material & Equipment</label>
+              <label class="text-zinc-400 font-semibold block mb-1">4. Preparing Network Materials and Equipment</label>
               <select id="newMaterialEquip" class="w-full bg-zinc-900 border border-white/20 rounded-xl px-3 py-2 text-white">
                 <option value="">-</option>
                 <option value="Done">Done</option>
@@ -298,8 +298,8 @@
         </div>
         <div class="bg-zinc-950 p-3.5 rounded-xl border border-white/15">
           <p class="text-zinc-500 text-[10px]">Versi Aplikasi</p>
-          <p class="font-semibold text-white mt-0.5">BLiP Ticket Monitoring Dashboard v3.7 (Horizontal Edition)</p>
-          <p class="text-[10px] text-zinc-500 mt-1">Alur: Survey → Report Survey → BOQ → Material & Equipment → Forward WO Installation</p>
+          <p class="font-semibold text-white mt-0.5">BLiP Ticket Monitoring Dashboard v3.8.1 (Horizontal Edition)</p>
+          <p class="text-[10px] text-zinc-500 mt-1">Alur: Survey → Report Survey → BOQ → Preparing Network Materials and Equipment → Forward WO Installation</p>
         </div>
       </div>
       <div class="mt-5 flex justify-end">
@@ -404,8 +404,8 @@
         googleBtn.classList.add("hidden");
         headerBadge.classList.remove("hidden");
         headerBadge.classList.add("flex");
-        document.getElementById("headerUserName").innerText = `${currentUser.name} (${currentUser.role})`;
-        settingsStatus.innerText = `${currentUser.name} — ${currentUser.role} (${currentUser.email})`;
+        document.getElementById("headerUserName").innerText = currentUser.name;
+        settingsStatus.innerText = `${currentUser.name} (${currentUser.email})`;
       } else {
         btnNew.classList.add("hidden");
         googleBtn.classList.remove("hidden");
@@ -510,52 +510,65 @@
       return true;
     }
 
+    function parseLocalTimestamp(rawTs) {
+      if (!rawTs || rawTs === "-") return null;
+      const str = String(rawTs).trim();
+      const m = str.match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2}))?/);
+      if (m) {
+        return new Date(
+          Number(m[1]),
+          Number(m[2]) - 1,
+          Number(m[3]),
+          Number(m[4]),
+          Number(m[5]),
+          Number(m[6] || 0)
+        );
+      }
+      const d = new Date(str);
+      return isNaN(d.getTime()) ? null : d;
+    }
+
     function formatDisplayDate(tsStr) {
       if (!tsStr || tsStr === "-") return "-";
-      const str = String(tsStr).trim();
-      const parts = str.split(" ");
-      if (parts.length >= 2 && /^\d{4}-\d{2}-\d{2}$/.test(parts[0])) {
-        const d = new Date(parts[0] + "T" + parts[1].substring(0, 5) + ":00");
-        if (!isNaN(d.getTime())) {
-          const datePart = d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-          return `${datePart}<br><span class="text-zinc-500 text-[10.5px]">${parts[1].substring(0, 5)} WIB</span>`;
-        }
+      const d = parseLocalTimestamp(tsStr);
+      if (d) {
+        const datePart = d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+        const hh = String(d.getHours()).padStart(2, "0");
+        const mm = String(d.getMinutes()).padStart(2, "0");
+        return `${datePart}<br><span class="text-zinc-500 text-[10.5px]">${hh}:${mm} WIB</span>`;
       }
-      return cleanTimestamp(str);
+      return String(tsStr);
     }
 
     function cleanTimestamp(rawTs) {
       if (!rawTs || rawTs === "-") return "-";
-      const str = String(rawTs).trim();
-      if (/^\d{4}-\d{2}-\d{2}/.test(str)) {
-        const p = str.split(" ");
-        const d = new Date(p[0] + "T" + (p[1] || "00:00").substring(0, 5) + ":00");
-        if (!isNaN(d.getTime())) {
-          const dp = d.toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" });
-          return `${dp}, ${(p[1] || "").substring(0, 5)} WIB`;
-        }
+      const d = parseLocalTimestamp(rawTs);
+      if (d) {
+        const dp = d.toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" });
+        const hh = String(d.getHours()).padStart(2, "0");
+        const mm = String(d.getMinutes()).padStart(2, "0");
+        return `${dp}, ${hh}:${mm} WIB`;
       }
-      const parsed = new Date(str);
-      if (!isNaN(parsed.getTime())) {
-        const dp = parsed.toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" });
-        const tp = parsed.toTimeString().substring(0, 5);
-        return `${dp}, ${tp} WIB`;
-      }
-      return str.replace(/GMT[+-]\d{4}.*$/i, "").trim() + " WIB";
+      return String(rawTs).replace(/GMT[+-]\d{4}.*$/i, "").trim();
+    }
+
+    function formatPicLabel(rawPic) {
+      const p = String(rawPic || "").trim();
+      if (!p || p === "-") return "-";
+      return p;
     }
 
     function extractStageInfoFromLog(log, stageObj, fallbackPic, fallbackNote) {
       const detail = String(log.detail || "");
-      const picFull = String(log.pic || "");
 
       let extractedPic = "";
       let extractedNote = "";
-      let extractedStatus = "";
+      let extractedTransition = "";
 
-      const bracketBlocks = detail.split(";").map(s => s.trim());
-      for (const blk of bracketBlocks) {
+      const blocks = detail.split(";").map(s => s.trim()).filter(Boolean);
+      for (const blk of blocks) {
         const bLower = blk.toLowerCase();
-        const isMatchBlock = stageObj.bracketTags.some(tag => bLower.startsWith(`[${tag}]`));
+        const isMatchBlock = stageObj.bracketTags.some(tag => bLower.includes(`[${tag}]`) || bLower.includes(`${tag}:`));
         if (isMatchBlock) {
           const picMatch = blk.match(/PIC:\s*([^|;]+)/i);
           if (picMatch && picMatch[1].trim() && picMatch[1].trim() !== "-") {
@@ -565,25 +578,9 @@
           if (ketMatch && ketMatch[1].trim() && ketMatch[1].trim() !== "-") {
             extractedNote = ketMatch[1].trim();
           }
-        }
-      }
-
-      for (const kw of stageObj.keywords) {
-        const stRegex = new RegExp(`${kw}\\s*:\\s*([^|;—\\n]+)`, "i");
-        const stMatch = detail.match(stRegex);
-        if (stMatch && stMatch[1].trim()) {
-          extractedStatus = stMatch[1].trim();
-          break;
-        }
-      }
-
-      if (!extractedPic && picFull) {
-        const picParts = picFull.split(",");
-        for (const p of picParts) {
-          const pLower = p.trim().toLowerCase();
-          if (stageObj.bracketTags.some(tag => pLower.startsWith(tag + ":"))) {
-            const val = p.split(":").slice(1).join(":").trim();
-            if (val && val !== "-") extractedPic = val;
+          const transMatch = blk.match(/:\s*([^|]+?)\s*\|/);
+          if (transMatch && transMatch[1].trim()) {
+            extractedTransition = transMatch[1].trim();
           }
         }
       }
@@ -594,9 +591,9 @@
       }
 
       return {
-        pic: extractedPic || fallbackPic || log.updatedBy || "-",
+        pic: formatPicLabel(extractedPic || log.pic || fallbackPic || "-"),
         note: extractedNote || fallbackNote || "-",
-        stageStatus: extractedStatus
+        transitionText: extractedTransition
       };
     }
 
@@ -713,7 +710,6 @@
         return;
       }
 
-      // 5 Tahapan Bullet Processing Sesuai Kesepakatan
       const stageDefs = [
         {
           key: "survey",
@@ -741,10 +737,10 @@
         },
         {
           key: "materialEquip",
-          label: "Material & Equipment",
-          fullLabel: "Material & Equipment",
-          bracketTags: ["material & equipment", "material", "procurement"],
-          keywords: ["material & equipment", "material", "procurement"],
+          label: "Preparing Network Materials and Equipment",
+          fullLabel: "Preparing Network Materials and Equipment",
+          bracketTags: ["preparing network materials and equipment", "material & equipment", "material", "procurement"],
+          keywords: ["preparing network materials and equipment", "material & equipment", "material", "procurement"],
           opts: ["-", "Done", "On Progress", "Pending", "Waiting Approval", "Cancel"]
         },
         {
@@ -862,19 +858,18 @@
           let headerDisplayStatus = currentStageVal;
           if (!headerDisplayStatus) {
             const prevOk = activeStageIdx === 0 || ["Done", "Deal", "Material Ready"].includes(t[stageDefs[activeStageIdx - 1].key] || "");
-            headerDisplayStatus = prevOk && (t.status === "Open" || t.status === "On Progress") ? "On Progress" : "Not Yet";
+            headerDisplayStatus = prevOk && (t.status === "Open" || t.status === "On Progress") ? "On Progress" : "-";
           }
 
           const ticketLogs = (cachedHistory.Survey || []).filter(log => String(log.ticketId).trim() === String(t.ticketId).trim());
 
           const stageLogs = ticketLogs.filter(log => {
             const dLower = (log.detail || "").toLowerCase();
-            const hasBracket = activeStageObj.bracketTags.some(tag => dLower.includes(`[${tag}]`));
-            const hasKeyword = activeStageObj.keywords.some(kw => dLower.includes(kw));
-            return hasBracket || hasKeyword || log.action === "Created";
+            const hasBracket = activeStageObj.bracketTags.some(tag => dLower.includes(`[${tag}]`) || dLower.includes(`${tag}:`));
+            return hasBracket;
           });
 
-          const logsToShow = stageLogs.length > 0 ? stageLogs : ticketLogs;
+          const logsToShow = stageLogs.length > 0 ? stageLogs : ticketLogs.slice(0, 1);
 
           const leftAccentBorderColor = ["Done", "Deal", "Material Ready"].includes(currentStageVal)
             ? "border-l-emerald-500"
@@ -885,12 +880,12 @@
             : (logsToShow.length > 0
                 ? logsToShow.map(log => {
                     const parsed = extractStageInfoFromLog(log, activeStageObj, stageDetailObj.pic, stageDetailObj.note);
-                    const pillToRender = parsed.stageStatus || headerDisplayStatus || log.status;
+                    const badgeLabel = parsed.transitionText || headerDisplayStatus;
                     return `
                       <div class="bg-zinc-950 border border-white/15 border-l-4 ${leftAccentBorderColor} rounded-xl p-3.5 text-xs space-y-2 shadow-sm">
                         <div class="flex items-center justify-between gap-2">
                           <span class="font-extrabold text-white text-sm">${activeStageObj.label}</span>
-                          ${getStatusPillHtml(pillToRender)}
+                          <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-orange-500/15 text-orange-300 border border-orange-500/35">${badgeLabel}</span>
                         </div>
                         <div class="space-y-1 text-[11px] text-zinc-400">
                           <div class="flex items-center gap-1.5">
@@ -899,7 +894,7 @@
                           </div>
                           <div class="flex items-center gap-1.5">
                             <span>👤</span>
-                            <span>PIC : <strong class="text-white">${parsed.pic}</strong> <span class="text-zinc-600">•</span> <span class="text-emerald-400">${log.updatedBy}</span></span>
+                            <span>PIC : <strong class="text-white">${parsed.pic}</strong></span>
                           </div>
                           <div class="flex items-start gap-1.5 pt-0.5">
                             <span class="mt-0.5">📝</span>
@@ -915,8 +910,8 @@
                       ${getStatusPillHtml(headerDisplayStatus)}
                     </div>
                     <div class="space-y-1 text-[11px] text-zinc-400">
-                      <div class="flex items-center gap-1.5"><span>👤</span><span>PIC : <strong class="text-white">${stageDetailObj.pic || "-"}</strong></span></div>
-                      <div class="flex items-start gap-1.5"><span>📝</span><p class="text-zinc-200 font-medium">${stageDetailObj.note || "Belum ada catatan untuk tahapan ini."}</p></div>
+                      <div class="flex items-center gap-1.5"><span>👤</span><span>PIC : <strong class="text-white">${formatPicLabel(stageDetailObj.pic)}</strong></span></div>
+                      <div class="flex items-start gap-1.5"><span>📝</span><p class="text-zinc-200 font-medium">${stageDetailObj.note || "-"}</p></div>
                     </div>
                   </div>`
               );
@@ -946,7 +941,7 @@
                   </select>
                 </div>
                 <div class="bg-zinc-900/90 border border-white/15 rounded-xl px-3 py-2 flex items-center justify-between">
-                  <span class="text-[10px] font-bold text-zinc-400 uppercase">PIC (Akun Gmail)</span>
+                  <span class="text-[10px] font-bold text-zinc-400 uppercase">PIC</span>
                   <span class="text-xs font-extrabold text-orange-400 flex items-center gap-1">👤 ${autoPicName}</span>
                 </div>
               </div>
@@ -1064,9 +1059,9 @@
         rowIndex: rowIndex,
         status: updatedMainStatus,
         survey: stageKey === "survey" ? updatedStageVal : ticket.survey,
-        reportSurvey: stageKey === "reportSurvey" ? updatedStageVal : (ticket.reportSurvey || ticket.staging || ""),
-        boq: stageKey === "boq" ? updatedStageVal : (ticket.boq || ticket.po || ""),
-        materialEquip: stageKey === "materialEquip" ? updatedStageVal : (ticket.materialEquip || ticket.procProgress || ""),
+        reportSurvey: stageKey === "reportSurvey" ? updatedStageVal : (ticket.reportSurvey || ""),
+        boq: stageKey === "boq" ? updatedStageVal : (ticket.boq || ""),
+        materialEquip: stageKey === "materialEquip" ? updatedStageVal : (ticket.materialEquip || ""),
         forwardWo: stageKey === "forwardWo" ? updatedStageVal : ticket.forwardWo,
         stageDetails: sd
       };
@@ -1080,7 +1075,7 @@
         });
         btn.innerText = "✓ Saved!";
         btn.classList.replace("bg-orange-600", "bg-emerald-600");
-        setTimeout(() => fetchAllData(), 2000);
+        setTimeout(() => fetchAllData(), 2200);
       } catch (err) {
         alert("Gagal menyimpan perubahan.");
         btn.innerText = origText;
@@ -1188,7 +1183,7 @@
               ${canEdit ? `
                 <div class="space-y-2">
                   <div class="flex items-center justify-between bg-zinc-900/80 border border-white/15 rounded-lg px-2.5 py-1 text-[10.5px]">
-                    <span class="text-zinc-400">PIC Otomatis:</span>
+                    <span class="text-zinc-400">PIC:</span>
                     <span class="font-bold text-orange-400">👤 ${autoPicName}</span>
                   </div>
                   <textarea id="map-desc-${r}" rows="2" placeholder="Description..." class="w-full bg-zinc-900 border border-white/20 rounded-lg px-2.5 py-1.5 text-xs text-white focus:border-orange-500 focus:outline-none">${t.description || ''}</textarea>
@@ -1244,7 +1239,7 @@
         });
         btn.innerText = "✓ Saved!";
         btn.classList.replace("bg-orange-600", "bg-emerald-600");
-        setTimeout(() => fetchAllData(), 2000);
+        setTimeout(() => fetchAllData(), 2200);
       } catch (err) {
         alert("Gagal menyimpan Mapping.");
         btn.innerText = orig;
@@ -1313,6 +1308,8 @@
             </div>`
           : `<p class="text-zinc-300 my-1.5 whitespace-pre-line bg-zinc-950 border border-white/15 rounded-xl p-3 leading-relaxed font-medium">${item.detail}</p>`;
 
+        const picDisplay = formatPicLabel(item.pic || item.updatedBy || "-");
+
         return `
           <div class="bg-zinc-900/60 border border-white/15 border-l-4 border-l-orange-500 rounded-2xl p-4 text-xs">
             <div class="flex flex-wrap justify-between items-center gap-2 pb-2 border-b border-white/15">
@@ -1328,8 +1325,8 @@
             ${notesHtml}
 
             <div class="flex flex-wrap justify-between items-center gap-2 text-[10.5px] text-zinc-400 pt-2 border-t border-white/15 font-medium">
-              <span>PIC: <strong class="text-amber-300">${item.pic || "-"}</strong></span>
-              <span>Updated by: <strong class="text-emerald-400">${item.updatedBy || "-"}</strong></span>
+              <span>PIC : <strong class="text-amber-300">${picDisplay}</strong></span>
+              ${item.status ? getStatusPillHtml(item.status) : ""}
             </div>
           </div>
         `;
@@ -1366,14 +1363,13 @@
         log.ticketId,
         log.customer,
         log.status || "-",
-        log.pic || "-",
-        log.updatedBy || "-",
+        formatPicLabel(log.pic || log.updatedBy || "-"),
         log.detail
       ]);
 
       doc.autoTable({
         startY: 30,
-        head: [["No", "Timestamp", "ID", "Customer Name", "Status", "PIC", "Updated By", "Detail Perubahan & Notes"]],
+        head: [["No", "Timestamp", "ID", "Customer Name", "Status", "PIC", "Detail Perubahan & Notes"]],
         body: rows,
         theme: "grid",
         styles: { fontSize: 8, cellPadding: 2.5, valign: "middle" },
@@ -1381,13 +1377,12 @@
         alternateRowStyles: { fillColor: [248, 250, 252] },
         columnStyles: {
           0: { cellWidth: 10, halign: "center" },
-          1: { cellWidth: 26 },
-          2: { cellWidth: 15, halign: "center", fontStyle: "bold" },
-          3: { cellWidth: 36, fontStyle: "bold" },
-          4: { cellWidth: 22 },
-          5: { cellWidth: 28 },
-          6: { cellWidth: 32 },
-          7: { cellWidth: "auto" }
+          1: { cellWidth: 28 },
+          2: { cellWidth: 18, halign: "center", fontStyle: "bold" },
+          3: { cellWidth: 38, fontStyle: "bold" },
+          4: { cellWidth: 24 },
+          5: { cellWidth: 34 },
+          6: { cellWidth: "auto" }
         }
       });
 
@@ -1462,7 +1457,7 @@
         document.getElementById("newCustomer").value = "";
         document.getElementById("newMappingDesc").value = "";
         closeAddModal();
-        setTimeout(() => fetchAllData(), 2000);
+        setTimeout(() => fetchAllData(), 2200);
       } catch (err) {
         alert("Gagal membuat ticket baru.");
       } finally {
