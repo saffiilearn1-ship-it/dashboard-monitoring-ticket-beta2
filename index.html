@@ -3,185 +3,147 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BLiP Ticket Monitoring Dashboard v2.1 — Dark Edition</title>
+  <title>BLiP Ticket Monitoring Dashboard v3.0 — Horizontal Dark Edition</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
   <style>
     body { background-color: #09090b; color: #f4f4f5; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
-    .sidebar-dark { background-color: #0d0d11; border-right: 1px solid #27272a; }
     .card-dark { background-color: #141418; border: 1px solid #27272a; }
     .table-header-dark { background-color: #18181f; color: #e4e4e7; border-bottom: 1px solid #27272a; }
-    .chevron-tab {
-      position: relative;
-      clip-path: polygon(0% 0%, calc(100% - 14px) 0%, 100% 50%, calc(100% - 14px) 100%, 0% 100%, 14px 50%);
-      transition: all 0.2s ease;
+    
+    /* Animasi Kelip-kelip (Pulse & Glow) untuk bullet aktif */
+    @keyframes pulse-glow {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.7); }
+      70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(249, 115, 22, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(249, 115, 22, 0); }
     }
-    .chevron-tab-first {
-      clip-path: polygon(0% 0%, calc(100% - 14px) 0%, 100% 50%, calc(100% - 14px) 100%, 0% 100%);
+    .active-pulse {
+      animation: pulse-glow 1.8s infinite ease-in-out;
     }
+    
+    /* Animasi panah ganda memantul halus */
+    @keyframes double-bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(2px); }
+    }
+    .chevron-bounce {
+      animation: double-bounce 2s infinite ease-in-out;
+    }
+
     input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: #09090b; }
     ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 3px; }
   </style>
 </head>
-<body class="min-h-screen flex flex-col lg:flex-row">
+<body class="min-h-screen flex flex-col p-4 md:p-6 lg:px-8">
 
-  <!-- Left Dark Sidebar -->
-  <aside class="sidebar-dark text-white w-full lg:w-64 shrink-0 flex flex-col justify-between p-5 z-20">
-    <div>
-      <!-- BLiP Brand Logo -->
-      <div class="flex items-center justify-between lg:justify-start gap-3 mb-8 px-1">
-        <div class="flex items-center gap-1 tracking-tighter font-extrabold text-3xl text-white select-none">
-          <span>BL</span><span class="text-orange-500">i</span><span>P</span>
-        </div>
-        <span class="text-[11px] bg-orange-500/15 border border-orange-500/30 px-2.5 py-0.5 rounded-full text-orange-400 font-mono font-semibold">v2.1</span>
+  <!-- Top Horizontal Brand Bar & Navigation -->
+  <header class="card-dark rounded-2xl p-4 mb-6 flex flex-col lg:flex-row justify-between items-center gap-4">
+    <!-- Brand Logo & Nav Tabs -->
+    <div class="flex flex-col md:flex-row items-center gap-6 w-full lg:w-auto">
+      <div class="flex items-center gap-2.5 shrink-0 select-none">
+        <span class="tracking-tighter font-extrabold text-3xl text-white">BL<span class="text-orange-500">i</span>P</span>
+        <span class="text-[10px] bg-orange-500/15 border border-orange-500/30 px-2 py-0.5 rounded text-orange-400 font-mono font-bold">v3.0</span>
       </div>
-
-      <!-- Navigation Menu -->
-      <nav class="flex lg:flex-col gap-1.5 overflow-x-auto pb-2 lg:pb-0">
-        <button onclick="setActiveNav('dashboard')" id="nav-dashboard" class="nav-btn flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold bg-orange-600 text-white shadow-lg shadow-orange-600/20 whitespace-nowrap">
-          <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+      
+      <!-- Nav Menu Horizontal -->
+      <nav class="flex gap-1 overflow-x-auto w-full md:w-auto pb-1 md:pb-0">
+        <button onclick="setActiveNav('dashboard')" id="nav-dashboard" class="nav-btn flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold bg-orange-600 text-white shadow shadow-orange-600/20 whitespace-nowrap">
           <span>Dashboard</span>
         </button>
-
-        <button onclick="setActiveNav('monitor')" id="nav-monitor" class="nav-btn flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-zinc-400 hover:bg-zinc-800/80 hover:text-white transition whitespace-nowrap">
-          <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+        <button onclick="setActiveNav('monitor')" id="nav-monitor" class="nav-btn flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:bg-zinc-800/80 hover:text-white transition whitespace-nowrap">
           <span>Ticket Monitor</span>
         </button>
-
-        <button onclick="openHistoryModal(activeTab, 'ALL')" id="nav-report" class="nav-btn flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-zinc-400 hover:bg-zinc-800/80 hover:text-white transition whitespace-nowrap">
-          <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        <button onclick="openHistoryModal(activeTab, 'ALL')" id="nav-report" class="nav-btn flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:bg-zinc-800/80 hover:text-white transition whitespace-nowrap">
           <span>Report & History</span>
         </button>
-
-        <button onclick="openSettingsModal()" id="nav-settings" class="nav-btn flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-zinc-400 hover:bg-zinc-800/80 hover:text-white transition whitespace-nowrap">
-          <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
+        <button onclick="openSettingsModal()" id="nav-settings" class="nav-btn flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:bg-zinc-800/80 hover:text-white transition whitespace-nowrap">
           <span>Settings</span>
         </button>
       </nav>
     </div>
 
-    <!-- Bottom User Profile & Version -->
-    <div class="hidden lg:block pt-6 border-t border-zinc-800">
-      <div class="flex items-center gap-3 mb-3">
-        <div class="w-9 h-9 rounded-full bg-orange-500/15 border border-orange-500/40 flex items-center justify-center text-orange-400 font-bold text-sm">
-          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-        </div>
-        <div class="overflow-hidden">
-          <p id="sidebarUserTitle" class="text-xs font-bold text-white truncate">PT. BLIP</p>
-          <p id="sidebarUserRole" class="text-[10px] text-zinc-400 uppercase tracking-wider truncate">Viewer Mode</p>
-        </div>
+    <!-- Right Controls Widget -->
+    <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto justify-end">
+      <!-- Date Range Filter -->
+      <div class="flex items-center gap-1.5 bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-1.5 text-xs">
+        <svg class="w-3.5 h-3.5 text-orange-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <input type="date" id="dateStart" onchange="renderActiveTab()" title="Tanggal Mulai" class="bg-transparent text-zinc-200 font-medium focus:outline-none text-xs">
+        <span class="text-zinc-500">–</span>
+        <input type="date" id="dateEnd" onchange="renderActiveTab()" title="Tanggal Akhir" class="bg-transparent text-zinc-200 font-medium focus:outline-none text-xs">
+        <button onclick="clearDateFilter()" id="btnClearDate" class="hidden text-[10px] text-rose-400 hover:text-rose-300 font-semibold ml-1">Reset</button>
       </div>
-      <div class="flex items-center justify-between text-[11px] text-zinc-500">
-        <span>v2.1.2 Dark</span>
-        <button id="sidebarLogoutBtn" onclick="logoutUser()" class="hidden text-rose-400 hover:text-rose-300 underline">Logout</button>
+
+      <!-- Google login & User profile info -->
+      <div id="googleBtnWrapper"></div>
+      <div id="headerUserBadge" class="hidden items-center gap-2 bg-zinc-900 border border-zinc-700 px-3 py-1.5 rounded-xl text-xs">
+        <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
+        <span id="headerUserName" class="font-semibold text-white"></span>
+        <button onclick="logoutUser()" class="text-rose-400 hover:underline ml-1">Logout</button>
       </div>
+
+      <button onclick="fetchAllData()" class="bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-850 px-3 py-1.5 rounded-xl text-xs font-semibold transition">↻ Refresh</button>
+      <button id="btnNewTicket" onclick="openAddModal()" class="hidden bg-orange-600 hover:bg-orange-500 text-white px-4 py-1.5 rounded-xl text-xs font-bold shadow-md shadow-orange-600/10 transition">+ New Ticket</button>
     </div>
-  </aside>
+  </header>
 
-  <!-- Main Content Area -->
-  <main class="flex-1 p-4 md:p-7 overflow-x-hidden">
+  <!-- KPI Cards (4 Cards Horizontal) -->
+  <div id="kpi-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6"></div>
 
-    <!-- Header Bar -->
-    <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 mb-6">
-      <div class="flex items-start gap-3">
-        <div class="w-1.5 h-12 rounded-full bg-gradient-to-b from-orange-500 to-amber-500 shrink-0 mt-0.5"></div>
-        <div>
-          <h1 class="text-xl md:text-2xl font-extrabold text-white tracking-tight">Ticket Monitoring Dashboard</h1>
-          <p class="text-xs md:text-sm text-zinc-400">Real-Time Monitoring for Faster Resolution • Survey & Mapping Division</p>
-        </div>
-      </div>
-
-      <!-- Right Controls: Date Range Filter + Google Auth + Add Ticket -->
-      <div class="flex flex-wrap items-center gap-2.5 w-full xl:w-auto justify-start xl:justify-end">
-        <!-- Date Range Filter Widget -->
-        <div class="flex items-center gap-1.5 bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-1.5 text-xs">
-          <svg class="w-4 h-4 text-orange-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-          <input type="date" id="dateStart" onchange="renderActiveTab()" title="Tanggal Mulai" class="bg-transparent text-zinc-200 font-medium focus:outline-none text-xs">
-          <span class="text-zinc-500">–</span>
-          <input type="date" id="dateEnd" onchange="renderActiveTab()" title="Tanggal Akhir" class="bg-transparent text-zinc-200 font-medium focus:outline-none text-xs">
-          <button onclick="clearDateFilter()" id="btnClearDate" class="hidden text-[10px] text-rose-400 hover:text-rose-300 font-semibold ml-1">Reset</button>
-        </div>
-
-        <!-- Google Login Button -->
-        <div id="googleBtnWrapper"></div>
-
-        <!-- Logged-In Pill -->
-        <div id="headerUserBadge" class="hidden items-center gap-2 bg-zinc-900 border border-zinc-700 px-3 py-1.5 rounded-xl text-xs">
-          <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
-          <span id="headerUserName" class="font-semibold text-white"></span>
-          <button onclick="logoutUser()" class="text-rose-400 hover:underline ml-1">Logout</button>
-        </div>
-
-        <button onclick="fetchAllData()" class="bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-800 px-3.5 py-2 rounded-xl text-xs font-semibold transition">
-          ↻ Refresh
+  <!-- Filter & Tab Switches bar -->
+  <div class="card-dark rounded-2xl p-4 mb-6 flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4">
+    <div class="flex items-center gap-2 shrink-0">
+      <div class="inline-flex bg-zinc-950 p-1 rounded-xl border border-zinc-800">
+        <button onclick="switchTicketType('Survey')" id="tab-Survey" class="px-4 py-1.5 rounded-lg text-xs font-bold transition bg-orange-600 text-white shadow">
+          📡 Survey (<span id="count-Survey">0</span>)
         </button>
-
-        <button id="btnNewTicket" onclick="openAddModal()" class="hidden bg-orange-600 hover:bg-orange-500 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-lg shadow-orange-600/20 transition">
-          + New Ticket
+        <button onclick="switchTicketType('Mapping')" id="tab-Mapping" class="px-4 py-1.5 rounded-lg text-xs font-bold transition text-zinc-400 hover:text-white">
+          🗺️ Mapping (<span id="count-Mapping">0</span>)
         </button>
       </div>
     </div>
 
-    <!-- KPI Cards (4 Cards Matching Mockup Style in Dark Mode) -->
-    <div id="kpi-container" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6"></div>
+    <!-- Status pill filters & search bar -->
+    <div class="flex flex-wrap items-center gap-2 justify-between md:justify-end">
+      <div id="status-filter-pills" class="flex gap-1.5 overflow-x-auto"></div>
 
-    <!-- Ticket Type Switcher & Search/Filter Toolbar -->
-    <div class="card-dark rounded-2xl p-3.5 mb-5 flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-3">
-      <!-- Switcher Survey vs Mapping -->
       <div class="flex items-center gap-2">
-        <div class="inline-flex bg-zinc-950 p-1 rounded-xl border border-zinc-800">
-          <button onclick="switchTicketType('Survey')" id="tab-Survey" class="px-4 py-1.5 rounded-lg text-xs font-bold transition bg-orange-600 text-white shadow">
-            📡 Ticket Survey (<span id="count-Survey">0</span>)
-          </button>
-          <button onclick="switchTicketType('Mapping')" id="tab-Mapping" class="px-4 py-1.5 rounded-lg text-xs font-bold transition text-zinc-400 hover:text-white">
-            🗺️ Ticket Mapping (<span id="count-Mapping">0</span>)
-          </button>
-        </div>
-      </div>
+        <select id="coverageFilter" onchange="renderActiveTab()" class="hidden bg-zinc-900 border border-zinc-700 text-zinc-200 rounded-xl px-2.5 py-1.5 text-xs font-medium focus:outline-none">
+          <option value="ALL">Coverage: Semua</option>
+          <option value="Onet">Onet</option>
+          <option value="Partner">Partner</option>
+          <option value="Not Cover">Not Cover</option>
+        </select>
 
-      <!-- Status Pills & Search -->
-      <div class="flex flex-wrap items-center gap-2 justify-between lg:justify-end">
-        <div id="status-filter-pills" class="flex gap-1.5 overflow-x-auto"></div>
-
-        <div class="flex items-center gap-2">
-          <select id="coverageFilter" onchange="renderActiveTab()" class="hidden bg-zinc-900 border border-zinc-700 text-zinc-200 rounded-xl px-3 py-1.5 text-xs font-medium focus:outline-none focus:border-orange-500">
-            <option value="ALL">Coverage: Semua</option>
-            <option value="Onet">Onet</option>
-            <option value="Partner">Partner</option>
-            <option value="Not Cover">Not Cover</option>
-          </select>
-
-          <div class="relative">
-            <input type="text" id="searchInput" oninput="renderActiveTab()" placeholder="Cari customer..." class="bg-zinc-900 border border-zinc-700 text-zinc-100 rounded-xl pl-8 pr-3 py-1.5 text-xs w-48 sm:w-56 focus:outline-none focus:border-orange-500">
-            <svg class="w-3.5 h-3.5 text-zinc-500 absolute left-2.5 top-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-          </div>
+        <div class="relative">
+          <input type="text" id="searchInput" oninput="renderActiveTab()" placeholder="Cari customer..." class="bg-zinc-900 border border-zinc-700 text-zinc-100 rounded-xl pl-8 pr-3 py-1.5 text-xs w-44 sm:w-52 focus:outline-none">
+          <svg class="w-3.5 h-3.5 text-zinc-500 absolute left-2.5 top-2.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
         </div>
       </div>
     </div>
+  </div>
 
-    <!-- Loader -->
-    <div id="loader" class="text-center py-16 hidden">
-      <div class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-orange-500 mb-3"></div>
-      <p class="text-sm text-zinc-400 font-medium">Memuat data tiket dari Google Sheets...</p>
-    </div>
+  <!-- Loader -->
+  <div id="loader" class="text-center py-16 hidden">
+    <div class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-orange-500 mb-3"></div>
+    <p class="text-sm text-zinc-400 font-medium">Memuat data...</p>
+  </div>
 
-    <!-- Main Data Table Container -->
-    <div id="table-wrapper" class="card-dark rounded-2xl overflow-hidden shadow-xl">
-      <div class="overflow-x-auto" id="main-table-container"></div>
-    </div>
+  <!-- Big Data Table Wrapper -->
+  <div id="table-wrapper" class="card-dark rounded-2xl overflow-hidden shadow-xl">
+    <div class="overflow-x-auto" id="main-table-container"></div>
+  </div>
 
-  </main>
-
-  <!-- Modal New Ticket (Admin Only) -->
+  <!-- MODALS SECTION -->
+  <!-- Modal New Ticket -->
   <div id="addModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
     <div class="card-dark rounded-2xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl">
       <div class="flex justify-between items-center mb-4 border-b border-zinc-800 pb-3">
         <h2 class="text-lg font-bold text-white">Create New Ticket</h2>
-        <button onclick="closeAddModal()" class="text-zinc-400 hover:text-white text-xl leading-none">&times;</button>
+        <button onclick="closeAddModal()" class="text-zinc-400 hover:text-white text-xl">&times;</button>
       </div>
 
       <div class="space-y-3.5 text-xs">
@@ -192,13 +154,12 @@
             <option value="Mapping">🗺️ Mapping (Coverage & Description)</option>
           </select>
         </div>
-
         <div>
           <label class="text-zinc-400 font-semibold block mb-1">Customer Name *</label>
           <input type="text" id="newCustomer" placeholder="Contoh: PT Hura Jaya" class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-2 text-white">
         </div>
 
-        <!-- Form Survey -->
+        <!-- Survey Fields -->
         <div id="newSurveyFields" class="space-y-3">
           <div class="grid grid-cols-2 gap-3">
             <div>
@@ -222,7 +183,6 @@
               </select>
             </div>
           </div>
-
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="text-zinc-400 font-semibold block mb-1">Staging Status</label>
@@ -241,7 +201,6 @@
               </select>
             </div>
           </div>
-
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="text-zinc-400 font-semibold block mb-1">Procurement Progress</label>
@@ -264,19 +223,19 @@
           </div>
         </div>
 
-        <!-- Form Mapping -->
+        <!-- Mapping Fields -->
         <div id="newMappingFields" class="space-y-3 hidden">
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="text-zinc-400 font-semibold block mb-1">Mapping Status</label>
-              <select id="newMappingStatus" class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-2 text-white">
+              <select id="newMappingStatus" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-white">
                 <option value="On Progress" selected>On Progress</option>
                 <option value="Done">Done</option>
               </select>
             </div>
             <div>
               <label class="text-zinc-400 font-semibold block mb-1">Coverage</label>
-              <select id="newCoverage" class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-2 text-white">
+              <select id="newCoverage" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-white">
                 <option value="">-</option>
                 <option value="Onet">Onet</option>
                 <option value="Partner">Partner</option>
@@ -284,45 +243,39 @@
               </select>
             </div>
           </div>
-
           <div>
             <label class="text-zinc-400 font-semibold block mb-1">PIC Mapping (Opsional)</label>
-            <input type="text" id="newMappingPic" placeholder="Nama PIC Mapping" class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-2 text-white">
+            <input type="text" id="newMappingPic" placeholder="Nama PIC Mapping" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-white">
           </div>
-
           <div>
             <label class="text-zinc-400 font-semibold block mb-1">Description</label>
-            <textarea id="newMappingDesc" rows="3" placeholder="Detail vendor, jarak tarik FO, koordinat..." class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-2 text-white"></textarea>
+            <textarea id="newMappingDesc" rows="3" placeholder="Detail vendor, jarak tarik FO, koordinat..." class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-white"></textarea>
           </div>
         </div>
       </div>
 
-      <div class="flex justify-end gap-2 mt-6 pt-3 border-t border-zinc-800">
+      <div class="flex justify-end gap-2 mt-6 pt-3 border-t border-zinc-850">
         <button onclick="closeAddModal()" class="px-4 py-2 text-xs text-zinc-400 hover:text-white font-medium">Cancel</button>
         <button onclick="submitNewTicket()" id="btnSubmitNew" class="bg-orange-600 hover:bg-orange-500 text-white px-5 py-2 rounded-xl text-xs font-bold shadow">Create & Notify</button>
       </div>
     </div>
   </div>
 
-  <!-- Modal Ticket Progress History & Export PDF -->
+  <!-- Modal Ticket History & PDF -->
   <div id="historyModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
     <div class="card-dark rounded-2xl p-6 w-full max-w-3xl max-h-[88vh] flex flex-col shadow-2xl">
-      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 border-b border-zinc-800 pb-4">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 border-b border-zinc-850 pb-4">
         <div>
-          <span id="historyTypeLabel" class="text-[11px] uppercase tracking-wider text-orange-400 font-bold">Audit Trail Report</span>
-          <h2 class="text-lg font-extrabold text-white mt-0.5">Ticket Progress History</h2>
+          <span id="historyTypeLabel" class="text-[10px] uppercase tracking-wider text-orange-400 font-bold">Audit Trail Report</span>
+          <h2 class="text-base font-extrabold text-white mt-0.5">Ticket Progress History</h2>
         </div>
 
         <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
-          <select id="historyCustomerFilter" onchange="onHistoryFilterChange()" class="bg-zinc-900 border border-zinc-700 text-zinc-200 rounded-xl px-3 py-2 text-xs font-medium max-w-[230px]"></select>
-
-          <button onclick="exportHistoryPDF()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-lg shadow-emerald-600/20">
+          <select id="historyCustomerFilter" onchange="onHistoryFilterChange()" class="bg-zinc-900 border border-zinc-700 text-zinc-200 rounded-xl px-3 py-1.5 text-xs font-medium max-w-[210px]"></select>
+          <button onclick="exportHistoryPDF()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-lg shadow-emerald-600/10">
             <span>📄</span> Export PDF
           </button>
-
-          <button onclick="closeHistoryModal()" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 px-3 py-1.5 rounded-xl text-sm font-bold">
-            &times;
-          </button>
+          <button onclick="closeHistoryModal()" class="bg-zinc-800 hover:bg-zinc-705 text-zinc-200 px-3 py-1 rounded-xl text-sm font-bold">&times;</button>
         </div>
       </div>
 
@@ -335,26 +288,26 @@
     </div>
   </div>
 
-  <!-- Modal Settings / Info Sistem -->
+  <!-- Settings / Info Access Modal -->
   <div id="settingsModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
     <div class="card-dark rounded-2xl p-6 w-full max-w-md shadow-2xl">
       <div class="flex justify-between items-center mb-4 border-b border-zinc-800 pb-3">
-        <h2 class="text-lg font-bold text-white">System & Access Info</h2>
+        <h2 class="text-base font-bold text-white">System & Access Info</h2>
         <button onclick="closeSettingsModal()" class="text-zinc-400 hover:text-white text-xl">&times;</button>
       </div>
-      <div class="space-y-3 text-xs text-zinc-300">
-        <div class="bg-zinc-900 p-3.5 rounded-xl border border-zinc-800">
-          <p class="text-zinc-500 text-[11px]">Status Sesi Saat Ini</p>
+      <div class="space-y-3 text-xs text-zinc-305">
+        <div class="bg-zinc-950 p-3.5 rounded-xl border border-zinc-800">
+          <p class="text-zinc-500 text-[10px]">Status Sesi Saat Ini</p>
           <p id="settingsAuthStatus" class="font-bold text-white text-sm mt-0.5">Viewer Mode (Read-Only)</p>
         </div>
-        <div class="bg-zinc-900 p-3.5 rounded-xl border border-zinc-800">
-          <p class="text-zinc-500 text-[11px]">Versi Aplikasi</p>
-          <p class="font-semibold text-white mt-0.5">BLiP Ticket Monitoring Dashboard v2.1.2 (Dark Edition)</p>
-          <p class="text-[11px] text-zinc-400 mt-1">Database: Google Sheets (Survey, Mapping, History, Users)</p>
+        <div class="bg-zinc-950 p-3.5 rounded-xl border border-zinc-800">
+          <p class="text-zinc-500 text-[10px]">Versi Aplikasi</p>
+          <p class="font-semibold text-white mt-0.5">BLiP Ticket Monitoring Dashboard v3.0 (Horizontal Edition)</p>
+          <p class="text-[10px] text-zinc-500 mt-1">Database: Google Sheets (Survey, Mapping, History, Users)</p>
         </div>
       </div>
       <div class="mt-5 flex justify-end">
-        <button onclick="closeSettingsModal()" class="bg-orange-600 hover:bg-orange-500 text-white px-4 py-2 rounded-xl text-xs font-semibold">Tutup</button>
+        <button onclick="closeSettingsModal()" class="bg-orange-600 hover:bg-orange-505 text-white px-4 py-2 rounded-xl text-xs font-semibold shadow">Tutup</button>
       </div>
     </div>
   </div>
@@ -449,8 +402,6 @@
       const btnNew = document.getElementById("btnNewTicket");
       const googleBtn = document.getElementById("googleBtnWrapper");
       const headerBadge = document.getElementById("headerUserBadge");
-      const sidebarTitle = document.getElementById("sidebarUserTitle");
-      const sidebarRole = document.getElementById("sidebarUserRole");
       const sidebarLogout = document.getElementById("sidebarLogoutBtn");
       const settingsStatus = document.getElementById("settingsAuthStatus");
 
@@ -461,31 +412,25 @@
         headerBadge.classList.remove("hidden");
         headerBadge.classList.add("flex");
         document.getElementById("headerUserName").innerText = `${currentUser.name} (${currentUser.role})`;
-
-        sidebarTitle.innerText = currentUser.name;
-        sidebarRole.innerText = `${currentUser.role} • PT. BLIP`;
-        sidebarLogout.classList.remove("hidden");
+        if (sidebarLogout) sidebarLogout.classList.remove("hidden");
         settingsStatus.innerText = `${currentUser.name} — ${currentUser.role} (${currentUser.email})`;
       } else {
         btnNew.classList.add("hidden");
         googleBtn.classList.remove("hidden");
         headerBadge.classList.add("hidden");
         headerBadge.classList.remove("flex");
-
-        sidebarTitle.innerText = "PT. BLIP";
-        sidebarRole.innerText = "Viewer Mode (Read-Only)";
-        sidebarLogout.classList.add("hidden");
+        if (sidebarLogout) sidebarLogout.classList.add("hidden");
         settingsStatus.innerText = "Viewer Mode (Belum Login)";
       }
     }
 
     function setActiveNav(navId) {
       document.querySelectorAll(".nav-btn").forEach(b => {
-        b.className = "nav-btn flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-zinc-400 hover:bg-zinc-800/80 hover:text-white transition whitespace-nowrap";
+        b.className = "nav-btn flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:bg-zinc-800/80 hover:text-white transition whitespace-nowrap";
       });
       const activeEl = document.getElementById(`nav-${navId}`);
       if (activeEl) {
-        activeEl.className = "nav-btn flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold bg-orange-600 text-white shadow-lg shadow-orange-600/20 whitespace-nowrap";
+        activeEl.className = "nav-btn flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold bg-orange-600 text-white shadow shadow-orange-600/20 whitespace-nowrap";
       }
     }
 
@@ -514,7 +459,7 @@
         document.getElementById("count-Mapping").innerText = appData.mapping.length;
         renderActiveTab();
 
-        // Muat cache history di background agar tidak menghambat render tabel utama
+        // fetch history on background so wait-times are non-existent
         refreshSurveyHistoryCache().then(() => {
           if (Object.values(expandedRows).some(Boolean) && activeTab === "Survey") {
             renderSurveyTable();
@@ -581,25 +526,25 @@
       if (parts.length < 2) return tsStr;
       const d = new Date(parts[0] + "T" + parts[1] + ":00");
       if (isNaN(d.getTime())) return tsStr;
-      const datePart = d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-      return `${datePart}<br><span class="text-zinc-500 text-[11px]">${parts[1]} WIB</span>`;
+      const datePart = d.toLocaleDateString("id-ID", { month: "short", day: "numeric", year: "numeric" });
+      return `${datePart}<br><span class="text-zinc-500 text-[10px]">${parts[1]} WIB</span>`;
     }
 
     function getStatusPillHtml(status) {
       const st = status || "Open";
-      if (st === "Closed" || st === "Done" || st === "Onet") {
-        return `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>${st}</span>`;
+      if (st === "Closed" || st === "Done" || st === "Onet" || st === "Deal" || st === "Material Ready") {
+        return `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>${st}</span>`;
       }
       if (st === "On Progress" || st === "Open" || st === "Partner") {
-        return `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-sky-500/15 text-sky-400 border border-sky-500/30"><span class="w-1.5 h-1.5 rounded-full bg-sky-400"></span>${st}</span>`;
+        return `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-sky-500/10 text-sky-400 border border-sky-500/30"><span class="w-1.5 h-1.5 rounded-full bg-sky-450"></span>${st}</span>`;
       }
       if (st === "Pending") {
-        return `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/15 text-amber-400 border border-amber-500/30"><span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>${st}</span>`;
+        return `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/10 text-amber-405 border border-amber-500/35"><span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>${st}</span>`;
       }
-      if (st === "Cancel" || st === "Not Cover") {
-        return `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-rose-500/15 text-rose-400 border border-rose-500/30"><span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>${st}</span>`;
+      if (st === "Cancel" || st === "Not Cover" || st === "Not Deal") {
+        return `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/35"><span class="w-1.5 h-1.5 rounded-full bg-rose-450"></span>${st}</span>`;
       }
-      return `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-zinc-800 text-zinc-400 border border-zinc-700">${st}</span>`;
+      return `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-zinc-800 text-zinc-400 border border-zinc-700">${st}</span>`;
     }
 
     function renderActiveTab() {
@@ -610,24 +555,24 @@
       }
     }
 
-    // ================= KPI CARDS GENERATOR (DARK MODE) =================
+    // ================= KPI CARDS GENERATOR =================
     function renderKpiCards(cards) {
       document.getElementById("kpi-container").innerHTML = cards.map(c => `
         <div class="card-dark rounded-2xl p-4 flex items-center justify-between hover:border-zinc-700 transition">
-          <div class="flex items-center gap-3.5">
-            <div class="w-12 h-12 rounded-2xl ${c.bgIcon} flex items-center justify-center shrink-0">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl ${c.bgIcon} flex items-center justify-center shrink-0">
               ${c.icon}
             </div>
             <div>
-              <p class="text-2xl font-extrabold text-white leading-none">${c.value}</p>
-              <p class="text-xs font-medium text-zinc-400 mt-1">${c.label}</p>
+              <p class="text-xl font-extrabold text-white leading-none">${c.value}</p>
+              <p class="text-[11px] font-medium text-zinc-400 mt-1">${c.label}</p>
             </div>
           </div>
           <div class="text-right">
-            <svg class="w-16 h-8" viewBox="0 0 80 35" fill="none">
-              <path d="${c.sparkPath}" stroke="${c.strokeColor}" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+            <svg class="w-14 h-7" viewBox="0 0 80 35" fill="none">
+              <path d="${c.sparkPath}" stroke="${c.strokeColor}" stroke-width="2" stroke-linecap="round" fill="none"/>
             </svg>
-            <span class="text-[11px] font-bold ${c.trendColor}">${c.subLabel}</span>
+            <span class="text-[10px] font-bold ${c.trendColor}">${c.subLabel}</span>
           </div>
         </div>
       `).join("");
@@ -646,27 +591,27 @@
       renderKpiCards([
         {
           label: "Total Ticket", value: totalCount, subLabel: "Survey Div.",
-          bgIcon: "bg-orange-500/20 text-orange-400 border border-orange-500/30", strokeColor: "#f97316", trendColor: "text-orange-400",
+          bgIcon: "bg-orange-500/15 text-orange-400 border border-orange-500/25", strokeColor: "#f97316", trendColor: "text-orange-400",
           sparkPath: "M2 28 Q 20 18, 35 22 T 75 6",
-          icon: `<svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/></svg>`
+          icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/></svg>`
         },
         {
           label: "In Progress", value: inProgCount, subLabel: `${totalCount ? Math.round((inProgCount/totalCount)*100) : 0}% Active`,
-          bgIcon: "bg-sky-500/20 text-sky-400 border border-sky-500/30", strokeColor: "#38bdf8", trendColor: "text-sky-400",
+          bgIcon: "bg-sky-500/15 text-sky-450 border border-sky-500/25", strokeColor: "#38bdf8", trendColor: "text-sky-400",
           sparkPath: "M2 25 Q 25 28, 42 15 T 76 12",
-          icon: `<svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>`
+          icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>`
         },
         {
-          label: "Closed", value: closedCount, subLabel: `${totalCount ? Math.round((closedCount/totalCount)*100) : 0}% Done`,
-          bgIcon: "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30", strokeColor: "#10b981", trendColor: "text-emerald-400",
+          label: "Closed", value: closedCount, subLabel: `${totalCount ? Math.round((closedCount/totalCount)*105) : 0}% Done`,
+          bgIcon: "bg-emerald-500/15 text-emerald-450 border border-emerald-500/25", strokeColor: "#10b981", trendColor: "text-emerald-400",
           sparkPath: "M2 28 Q 22 14, 45 18 T 76 5",
-          icon: `<svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>`
+          icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>`
         },
         {
           label: "Pending / Cancel", value: pendingCount, subLabel: "Follow-up",
-          bgIcon: "bg-amber-500/20 text-amber-400 border border-amber-500/30", strokeColor: "#f59e0b", trendColor: "text-amber-400",
+          bgIcon: "bg-amber-500/15 text-amber-455 border border-amber-500/25", strokeColor: "#f59e0b", trendColor: "text-amber-400",
           sparkPath: "M2 20 Q 25 15, 45 22 T 76 16",
-          icon: `<svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 2h12M6 22h12M8 2v4l4 4 4-4V2M8 22v-4l4-4 4 4v4"/></svg>`
+          icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 2h12M6 22h12M8 2v4l4 4 4-4V2M8 22v-4l4-4 4 4v4"/></svg>`
         }
       ]);
 
@@ -707,38 +652,81 @@
         const activeStageKey = activeStagePerTicket[t.ticketId] || "survey";
 
         const stepperHtml = `
-          <div class="grid grid-cols-5 gap-2 min-w-[440px]">
-            ${stageDefs.map(st => {
+          <div class="flex items-center justify-between min-w-[550px] overflow-x-auto py-2">
+            ${stageDefs.map((st, sIdx) => {
               const val = t[st.key] || "";
+              const isActive = isExpanded && st.key === activeStageKey;
               const isDone = ["Done", "Deal", "Material Ready"].includes(val);
               const isPending = ["Pending", "On Progress"].includes(val);
               const isCancel = ["Cancel", "Not Deal"].includes(val);
 
-              let iconCircle = `<span class="w-5 h-5 rounded-full border border-zinc-700 bg-zinc-900 text-zinc-500 flex items-center justify-center text-[10px]">🕒</span>`;
-              let subText = `<span class="text-zinc-500">Not Yet</span>`;
+              // check if pulse animation is required for current ongoing step
+              let isOngoingStep = false;
+              if (sIdx === 0 && (t.status === "On Progress" || t.status === "Open") && !val) {
+                isOngoingStep = true; 
+              } else if (sIdx > 0 && !val) {
+                const prevVal = t[stageDefs[sIdx - 1].key] || "";
+                if (["Done", "Deal", "Material Ready"].includes(prevVal)) isOngoingStep = true;
+              }
 
-              if (isDone) {
-                iconCircle = `<span class="w-5 h-5 rounded-full bg-emerald-500/20 border border-emerald-500/50 text-emerald-400 flex items-center justify-center text-[10px] font-bold">✓</span>`;
-                subText = `<span class="text-emerald-400 font-semibold">${val === "Done" ? "Completed" : val}</span>`;
+              let dotClass = "border-zinc-700 bg-zinc-900 text-zinc-500";
+              let labelColor = "text-zinc-500";
+              let badgeText = "Not Yet";
+              let badgeColorClass = "text-zinc-550";
+
+              if (isActive) {
+                dotClass = "border-orange-500 bg-orange-500/25 text-orange-400 active-pulse ring-2 ring-orange-500/20";
+                labelColor = "text-orange-400 font-extrabold";
+                badgeColorClass = "text-orange-400 font-semibold";
+                badgeText = val || "In Process";
+              } else if (isDone) {
+                dotClass = "border-emerald-500 bg-emerald-500/15 text-emerald-400 font-bold";
+                labelColor = "text-emerald-450 font-bold";
+                badgeColorClass = "text-emerald-450 font-semibold";
+                badgeText = val === "Done" ? "Completed" : val;
               } else if (isPending) {
-                iconCircle = `<span class="w-5 h-5 rounded-full bg-amber-500/20 border border-amber-500/50 text-amber-400 flex items-center justify-center text-[10px] font-bold">!</span>`;
-                subText = `<span class="text-amber-400 font-semibold">${val}</span>`;
+                dotClass = "border-amber-500 bg-amber-500/15 text-amber-400 font-bold " + (isOngoingStep ? "active-pulse" : "");
+                labelColor = "text-amber-400 font-semibold";
+                badgeColorClass = "text-amber-400 font-semibold";
+                badgeText = val;
               } else if (isCancel) {
-                iconCircle = `<span class="w-5 h-5 rounded-full bg-rose-500/20 border border-rose-500/50 text-rose-400 flex items-center justify-center text-[10px] font-bold">&times;</span>`;
-                subText = `<span class="text-rose-400 font-semibold">${val}</span>`;
+                dotClass = "border-rose-500 bg-rose-500/15 text-rose-450 font-bold";
+                labelColor = "text-rose-400 font-semibold";
+                badgeColorClass = "text-rose-400 font-semibold";
+                badgeText = val;
+              } else if (isOngoingStep) {
+                dotClass = "border-orange-500 bg-orange-500/10 text-orange-500 font-bold active-pulse";
+                labelColor = "text-orange-400/80 font-medium";
+                badgeColorClass = "text-orange-400/80 font-medium";
+                badgeText = "On Queue";
               }
 
               return `
-                <div class="flex flex-col items-center text-center">
-                  ${iconCircle}
-                  <span class="text-[11px] font-bold text-zinc-200 mt-1 leading-tight">${st.label}</span>
-                  <span class="text-[10px] mt-0.5">${subText}</span>
+                <div class="flex-1 flex flex-col items-center relative group select-none">
+                  <!-- Stepper Connecting Line -->
+                  ${sIdx > 0 ? `<div class="absolute w-full h-[1.5px] bg-zinc-800 -left-1/2 top-4 -z-10 ${isDone ? 'bg-emerald-500/30' : ''}"></div>` : ""}
+
+                  <!-- Clickable Circular Step Dot -->
+                  <button onclick="clickStepperPoint('${t.ticketId}', '${st.key}')" 
+                    class="w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 relative focus:outline-none ${dotClass}">
+                    <span class="text-[10px] font-bold">${sIdx + 1}</span>
+                  </button>
+                  <span class="text-[11px] font-bold mt-1.5 transition ${labelColor}">${st.label}</span>
+                  <span class="text-[9.5px] font-medium leading-tight mt-0.5 ${badgeColorClass}">${badgeText}</span>
+
+                  <!-- Orange Double Expand Arrow -->
+                  <div class="mt-2 text-orange-500/80 flex flex-col items-center select-none cursor-pointer chevron-bounce hover:text-orange-400" 
+                    onclick="clickStepperPoint('${t.ticketId}', '${st.key}')">
+                    <span class="text-[8px] font-black leading-[3px]">⌄</span>
+                    <span class="text-[8px] font-black leading-[3px] -mt-1">⌄</span>
+                  </div>
                 </div>
               `;
             }).join("")}
           </div>
         `;
 
+        // Expanded Section Area (Nested Vertical Panel with Cards)
         let expandedPanelHtml = "";
         if (isExpanded) {
           const activeStageObj = stageDefs.find(s => s.key === activeStageKey) || stageDefs[0];
@@ -754,47 +742,53 @@
 
           const logsToShow = stageLogs.length > 0 ? stageLogs : ticketLogs;
 
+          const leftAccentBorderColor = activeStageKey === "survey" ? "border-orange-500"
+                                      : activeStageKey === "staging" ? "border-amber-500"
+                                      : "border-sky-500";
+
+          // Left Accordion Cards
           const logsFeedHtml = loadingHistoryTicket[t.ticketId]
-            ? `<p class="text-xs text-orange-400 py-2">Memuat riwayat tahapan...</p>`
+            ? `<div class="py-4 text-center"><div class="inline-block animate-spin h-5 w-5 border-t-2 border-b-2 border-orange-500"></div></div>`
             : (logsToShow.length > 0
                 ? logsToShow.map(log => `
-                    <div class="bg-zinc-950/90 border border-zinc-800 rounded-xl p-3 text-xs space-y-1.5">
+                    <div class="bg-zinc-950/80 border-l-[3.5px] ${leftAccentBorderColor} border-y border-r border-zinc-850 rounded-xl p-3.5 text-xs space-y-2.5">
                       <div class="flex items-center justify-between gap-2">
-                        <div class="flex items-center gap-2">
-                          <span class="font-bold text-orange-400">${activeStageObj.label}</span>
-                          <span class="text-[10px] px-2 py-0.5 rounded bg-zinc-800 text-zinc-300">${log.status || "-"}</span>
-                        </div>
-                        <span class="text-[10px] text-zinc-500 font-mono">🕒 ${log.timestamp} WIB</span>
+                        <span class="font-extrabold text-white text-sm">${activeStageObj.label}</span>
+                        ${getStatusPillHtml(log.status)}
                       </div>
-                      <div class="flex items-center gap-1.5 text-[11px] text-zinc-400">
-                        <span>👤 PIC: <strong class="text-zinc-200">${log.pic || "-"}</strong></span>
-                        <span class="text-zinc-700">|</span>
-                        <span>By: <span class="text-emerald-400 font-medium">${log.updatedBy}</span></span>
+                      <div class="flex items-center gap-1.5 text-[10.5px] text-zinc-400 font-medium">
+                        <span>🕒 ${log.timestamp} WIB</span>
+                        <span class="text-zinc-800">|</span>
+                        <span>👤 PIC: <strong class="text-zinc-205">${log.pic || "-"}</strong></span>
+                        <span class="text-zinc-800">|</span>
+                        <span>By: <span class="text-emerald-450">${log.updatedBy}</span></span>
                       </div>
-                      <p class="text-zinc-300 bg-zinc-900 border border-zinc-800/80 rounded-lg px-2.5 py-1.5 text-[11.5px] whitespace-pre-line">${log.detail}</p>
+                      <p class="text-zinc-300 font-medium bg-zinc-900 border border-zinc-800/80 rounded-lg px-2.5 py-2 text-[11px] whitespace-pre-line leading-relaxed">
+                        ${log.detail.includes(" — ") ? log.detail.split(" — ").pop() : log.detail}
+                      </p>
                     </div>
                   `).join("")
-                : `<p class="text-xs text-zinc-500 italic py-2">Belum ada riwayat log tersimpan untuk tahapan ${activeStageObj.label}.</p>`
+                : `<div class="text-center py-6 text-zinc-500 italic">Belum ada riwayat log tersimpan untuk tahapan ${activeStageObj.label}.</div>`
               );
 
           const editorFormHtml = canEdit ? `
-            <div class="bg-zinc-950 border border-orange-500/30 rounded-xl p-3.5 mt-3 space-y-2.5">
-              <div class="flex flex-wrap items-center justify-between gap-2">
-                <span class="text-xs font-bold text-orange-400">Update Tahapan: ${activeStageObj.fullLabel}</span>
+            <div class="bg-zinc-950/80 border border-orange-500/20 rounded-2xl p-4.5 space-y-3 flex-1 min-w-[320px]">
+              <div class="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-850 pb-2.5">
+                <span class="text-xs font-extrabold text-orange-400 uppercase tracking-wide">Update Tahapan: ${activeStageObj.fullLabel}</span>
                 ${isAdmin ? `
                   <div class="flex items-center gap-1.5 text-xs">
                     <span class="text-zinc-400">Status Utama:</span>
-                    <select id="exp-mainstatus-${t.rowIndex}" class="bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1 text-xs font-semibold text-white">
+                    <select id="exp-mainstatus-${t.rowIndex}" class="bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1 text-[11px] font-bold text-white">
                       ${["Open", "On Progress", "Pending", "Cancel", "Closed"].map(s => `<option value="${s}" ${t.status === s ? "selected" : ""}>${s}</option>`).join("")}
                     </select>
                   </div>
                 ` : `<input type="hidden" id="exp-mainstatus-${t.rowIndex}" value="${t.status}">`}
               </div>
 
-              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs">
                 <div>
-                  <label class="text-[10px] font-semibold text-zinc-400 block mb-1">Status ${activeStageObj.label}</label>
-                  <select id="exp-stageval-${t.rowIndex}" class="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-2.5 py-1.5 font-semibold text-white">
+                  <label class="text-[10px] font-bold text-zinc-450 uppercase block mb-1">Status ${activeStageObj.label}</label>
+                  <select id="exp-stageval-${t.rowIndex}" class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-2 font-bold text-white">
                     ${activeStageObj.opts.map(o => {
                       const v = o === "-" ? "" : o;
                       return `<option value="${v}" ${currentStageVal === v ? "selected" : ""}>${o}</option>`;
@@ -802,17 +796,18 @@
                   </select>
                 </div>
                 <div>
-                  <label class="text-[10px] font-semibold text-zinc-400 block mb-1">PIC ${activeStageObj.label}</label>
-                  <input type="text" id="exp-pic-${t.rowIndex}" value="${stageDetailObj.pic || ''}" placeholder="Contoh: Parizi" class="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-2.5 py-1.5 text-white">
-                </div>
-                <div>
-                  <label class="text-[10px] font-semibold text-zinc-400 block mb-1">Keterangan / Notes</label>
-                  <input type="text" id="exp-note-${t.rowIndex}" value="${stageDetailObj.note || ''}" placeholder="Catatan progres..." class="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-2.5 py-1.5 text-white">
+                  <label class="text-[10px] font-bold text-zinc-455 uppercase block mb-1">PIC ${activeStageObj.label}</label>
+                  <input type="text" id="exp-pic-${t.rowIndex}" value="${stageDetailObj.pic || ''}" placeholder="Contoh: Parizi" class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-1.5 text-white">
                 </div>
               </div>
 
-              <div class="flex justify-end">
-                <button onclick="saveExpandedSurveyStage(${t.rowIndex}, '${t.ticketId}', '${activeStageKey}', this)" class="bg-orange-600 hover:bg-orange-500 text-white px-4 py-1.5 rounded-lg text-xs font-bold shadow transition">
+              <div>
+                <label class="text-[10px] font-bold text-zinc-455 uppercase block mb-1">Notes</label>
+                <textarea id="exp-note-${t.rowIndex}" rows="3" placeholder="Catatan progres lapangan..." class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-1.5 text-white">${stageDetailObj.note || ''}</textarea>
+              </div>
+
+              <div class="flex justify-end pt-1">
+                <button onclick="saveExpandedSurveyStage(${t.rowIndex}, '${t.ticketId}', '${activeStageKey}', this)" class="bg-orange-600 hover:bg-orange-500 text-white px-5 py-2 rounded-xl text-xs font-bold shadow-md shadow-orange-600/10 transition">
                   Save & Notify Team
                 </button>
               </div>
@@ -820,59 +815,49 @@
           ` : "";
 
           expandedPanelHtml = `
-            <div class="bg-zinc-900/90 border border-zinc-800 rounded-2xl p-3.5 min-w-[460px]">
-              <div class="grid grid-cols-5 gap-1 mb-3">
-                ${stageDefs.map((st, idx) => {
-                  const isActive = st.key === activeStageKey;
-                  const clipClass = idx === 0 ? "chevron-tab-first" : "chevron-tab";
-                  const bgClass = isActive
-                    ? "bg-orange-600 text-white font-bold shadow"
-                    : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-white font-semibold";
-                  return `
-                    <button onclick="selectChevronStage('${t.ticketId}', '${st.key}')" class="${clipClass} ${bgClass} py-2 px-3 text-[11px] text-center truncate">
-                      ${st.label}
-                    </button>
-                  `;
-                }).join("")}
-              </div>
-
-              <div class="flex items-center justify-between mb-2.5 pb-2 border-b border-zinc-800">
+            <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-2xl p-4 mt-1 space-y-4">
+              <!-- Inline action bar and pdf button -->
+              <div class="flex items-center justify-between border-b border-zinc-850 pb-2">
                 <div class="flex items-center gap-2">
-                  <span class="text-xs font-bold text-zinc-200">${activeStageObj.fullLabel}:</span>
+                  <span class="text-xs font-bold text-zinc-400">Riwayat Tahapan:</span>
                   ${getStatusPillHtml(currentStageVal || "Not Yet")}
                 </div>
-                <button onclick="openHistoryModal('Survey', '${t.ticketId}')" class="text-[11px] font-bold text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 px-2.5 py-1 rounded-lg transition">
-                  📄 History & Export PDF
+                <button onclick="openHistoryModal('Survey', '${t.ticketId}')" class="text-[10px] font-bold text-emerald-450 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-lg hover:bg-emerald-500/20 transition">
+                  📄 Audit Trail (PDF)
                 </button>
               </div>
 
-              <div class="space-y-2 max-h-52 overflow-y-auto pr-1">
-                ${logsFeedHtml}
+              <div class="flex flex-col xl:flex-row gap-4">
+                <!-- Left Stack of logs cards -->
+                <div class="space-y-3 max-h-64 overflow-y-auto pr-1.5 flex-1 min-w-[280px]">
+                  ${logsFeedHtml}
+                </div>
+                <!-- Right editor form -->
+                ${editorFormHtml}
               </div>
-
-              ${editorFormHtml}
             </div>
           `;
         }
 
         return `
-          <tr class="border-b border-zinc-800/80 hover:bg-zinc-900/50 align-top transition">
-            <td class="py-4 px-4 font-bold text-zinc-400 text-sm">${t.no}</td>
-            <td class="py-4 px-4 min-w-[220px]">
-              <div class="flex items-center gap-2">
-                <span class="text-orange-400">🏢</span>
-                <div>
-                  <p class="font-bold text-white text-sm leading-snug">${t.customer}</p>
-                  <span class="text-[10px] font-mono text-orange-400/80">${t.ticketId}</span>
+          <tr class="border-b border-zinc-800/80 hover:bg-zinc-900/10 align-top transition">
+            <td class="py-4 px-4 font-extrabold text-zinc-500 text-sm w-12">${t.no}</td>
+            <td class="py-4 px-4 min-w-[200px]">
+              <div class="flex items-start gap-2">
+                <span class="text-zinc-400 shrink-0 mt-0.5">🏢</span>
+                <div class="overflow-hidden">
+                  <p class="font-extrabold text-white text-sm leading-snug truncate">${t.customer}</p>
+                  <span class="text-[10px] font-mono text-orange-400 font-bold">${t.ticketId}</span>
                 </div>
               </div>
-              <button onclick="toggleTicketExpand('${t.ticketId}')" class="mt-2.5 inline-flex items-center gap-1.5 text-[11px] font-semibold px-3 py-1 rounded-lg border transition ${isExpanded ? 'bg-orange-500/15 text-orange-300 border-orange-500/40' : 'bg-zinc-900 text-zinc-300 border-zinc-700 hover:bg-zinc-800'}">
-                <span>${isExpanded ? 'Hide Ticket Progress' : 'Click To View Ticket Progress'}</span>
-                <span>${isExpanded ? '⌃' : '⌄'}</span>
-              </button>
             </td>
             <td class="py-4 px-4 whitespace-nowrap">${getStatusPillHtml(t.status)}</td>
-            <td class="py-4 px-4">${isExpanded ? expandedPanelHtml : stepperHtml}</td>
+            <td class="py-4 px-4">
+              <div class="flex flex-col">
+                ${stepperHtml}
+                ${expandedPanelHtml}
+              </div>
+            </td>
             <td class="py-4 px-4 text-right text-xs font-medium text-zinc-300 whitespace-nowrap">${formatDisplayDate(t.lastUpdated)}</td>
           </tr>
         `;
@@ -882,10 +867,10 @@
         <table class="w-full text-left border-collapse">
           <thead>
             <tr class="table-header-dark text-xs uppercase tracking-wider">
-              <th class="py-3.5 px-4 w-12">#</th>
-              <th class="py-3.5 px-4">Customer</th>
+              <th class="py-3.5 px-4">#</th>
+              <th class="py-3.5 px-4">Customer Name</th>
               <th class="py-3.5 px-4">Status</th>
-              <th class="py-3.5 px-4 text-center">Progress Tracking</th>
+              <th class="py-3.5 px-4 text-center min-w-[500px]">Progress Tracking & Stepper</th>
               <th class="py-3.5 px-4 text-right">Last Update</th>
             </tr>
           </thead>
@@ -894,9 +879,12 @@
       `;
     }
 
-    async function toggleTicketExpand(ticketId) {
-      expandedRows[ticketId] = !expandedRows[ticketId];
-      if (expandedRows[ticketId]) {
+    async function clickStepperPoint(ticketId, stageKey) {
+      if (expandedRows[ticketId] && activeStagePerTicket[ticketId] === stageKey) {
+        expandedRows[ticketId] = false;
+      } else {
+        expandedRows[ticketId] = true;
+        activeStagePerTicket[ticketId] = stageKey;
         loadingHistoryTicket[ticketId] = true;
         renderSurveyTable();
         await refreshSurveyHistoryCache();
@@ -905,13 +893,8 @@
       renderSurveyTable();
     }
 
-    function selectChevronStage(ticketId, stageKey) {
-      activeStagePerTicket[ticketId] = stageKey;
-      renderSurveyTable();
-    }
-
     async function saveExpandedSurveyStage(rowIndex, ticketId, stageKey, btn) {
-      if (!authToken) return alert("Silakan login ulang.");
+      if (!authToken) return alert("Silakan login.");
       const ticket = (appData.survey || []).find(item => item.rowIndex === rowIndex);
       if (!ticket) return;
 
@@ -949,8 +932,8 @@
           body: JSON.stringify(payload)
         });
         btn.innerText = "✓ Saved!";
-        btn.classList.replace("bg-orange-600", "bg-emerald-600");
-        setTimeout(() => fetchAllData(), 2200);
+        btn.classList.replace("bg-orange-600", "bg-emerald-605");
+        setTimeout(() => fetchAllData(), 2000);
       } catch (err) {
         alert("Gagal menyimpan perubahan.");
         btn.innerText = origText;
@@ -971,27 +954,27 @@
       renderKpiCards([
         {
           label: "Total Mapping", value: total, subLabel: "Mapping Div.",
-          bgIcon: "bg-orange-500/20 text-orange-400 border border-orange-500/30", strokeColor: "#f97316", trendColor: "text-orange-400",
+          bgIcon: "bg-orange-500/15 text-orange-400 border border-orange-500/25", strokeColor: "#f97316", trendColor: "text-orange-400",
           sparkPath: "M2 28 Q 20 18, 35 22 T 75 6",
-          icon: `<svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>`
+          icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>`
         },
         {
           label: "On Progress", value: onProg, subLabel: "Checking Area",
-          bgIcon: "bg-sky-500/20 text-sky-400 border border-sky-500/30", strokeColor: "#38bdf8", trendColor: "text-sky-400",
+          bgIcon: "bg-sky-500/15 text-sky-450 border border-sky-500/25", strokeColor: "#38bdf8", trendColor: "text-sky-450",
           sparkPath: "M2 25 Q 25 28, 42 15 T 76 12",
-          icon: `<svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>`
+          icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>`
         },
         {
           label: "Done", value: done, subLabel: `${total ? Math.round((done/total)*100) : 0}% Completed`,
-          bgIcon: "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30", strokeColor: "#10b981", trendColor: "text-emerald-400",
+          bgIcon: "bg-emerald-500/15 text-emerald-450 border border-emerald-500/25", strokeColor: "#10b981", trendColor: "text-emerald-400",
           sparkPath: "M2 28 Q 22 14, 45 18 T 76 5",
-          icon: `<svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>`
+          icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>`
         },
         {
           label: "Onet Coverage", value: onet, subLabel: "Direct Network",
-          bgIcon: "bg-amber-500/20 text-amber-400 border border-amber-500/30", strokeColor: "#f59e0b", trendColor: "text-amber-400",
+          bgIcon: "bg-amber-500/15 text-amber-455 border border-amber-500/25", strokeColor: "#f59e0b", trendColor: "text-amber-400",
           sparkPath: "M2 24 Q 25 12, 48 16 T 76 6",
-          icon: `<svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0114.08 0M1.42 9a16 16 0 0121.16 0M8.53 16.11a6 6 0 016.95 0M12 20h.01"/></svg>`
+          icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0114.08 0M1.42 9a16 16 0 0121.16 0M8.53 16.11a6 6 0 016.95 0M12 20h.01"/></svg>`
         }
       ]);
 
@@ -1024,28 +1007,28 @@
       const rowsHtml = filtered.map(t => {
         const r = t.rowIndex;
         return `
-          <tr class="border-b border-zinc-800/80 hover:bg-zinc-900/50 align-top transition">
-            <td class="py-4 px-4 font-bold text-zinc-400 text-sm">${t.no}</td>
-            <td class="py-4 px-4 min-w-[200px]">
-              <p class="font-bold text-white text-sm">${t.customer}</p>
-              <span class="text-[10px] font-mono text-orange-400/80">${t.ticketId}</span>
+          <tr class="border-b border-zinc-800/80 hover:bg-zinc-900/10 align-top transition">
+            <td class="py-4 px-4 font-extrabold text-zinc-500 text-sm w-12">${t.no}</td>
+            <td class="py-4 px-4 min-w-[190px]">
+              <p class="font-extrabold text-white text-sm truncate">${t.customer}</p>
+              <span class="text-[10px] font-mono text-orange-400 font-bold">${t.ticketId}</span>
               <div class="mt-2.5">
-                <button onclick="openHistoryModal('Mapping', '${t.ticketId}')" class="text-[11px] font-semibold text-amber-400 hover:text-amber-300 bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/30 transition">
-                  🕒 Ticket Progress History
+                <button onclick="openHistoryModal('Mapping', '${t.ticketId}')" class="text-[10.5px] font-semibold text-amber-405 hover:text-amber-300 bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/20 transition">
+                  🕒 Log History
                 </button>
               </div>
             </td>
-            <td class="py-4 px-4 whitespace-nowrap">
+            <td class="py-4 px-4 whitespace-nowrap font-semibold">
               ${canEdit ? `
-                <select id="map-status-${r}" class="bg-zinc-900 border border-zinc-700 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-white">
+                <select id="map-status-${r}" class="bg-zinc-900 border border-zinc-700 rounded-lg px-2.5 py-1 text-xs font-bold text-white focus:outline-none">
                   <option value="On Progress" ${t.status === "On Progress" ? "selected" : ""}>On Progress</option>
                   <option value="Done" ${t.status === "Done" ? "selected" : ""}>Done</option>
                 </select>
               ` : getStatusPillHtml(t.status)}
             </td>
-            <td class="py-4 px-4 whitespace-nowrap">
+            <td class="py-4 px-4 whitespace-nowrap font-bold">
               ${canEdit ? `
-                <select id="map-cov-${r}" class="bg-zinc-900 border border-zinc-700 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-white">
+                <select id="map-cov-${r}" class="bg-zinc-900 border border-zinc-700 rounded-lg px-2.5 py-1 text-xs font-bold text-white focus:outline-none">
                   <option value="" ${!t.coverage ? "selected" : ""}>-</option>
                   <option value="Onet" ${t.coverage === "Onet" ? "selected" : ""}>Onet</option>
                   <option value="Partner" ${t.coverage === "Partner" ? "selected" : ""}>Partner</option>
@@ -1053,16 +1036,14 @@
                 </select>
               ` : getStatusPillHtml(t.coverage || "-")}
             </td>
-            <td class="py-4 px-4 min-w-[280px]">
+            <td class="py-4 px-4 min-w-[260px]">
               ${canEdit ? `
                 <div class="space-y-1.5">
                   <input type="text" id="map-pic-${r}" value="${t.pic || ''}" placeholder="PIC Mapping (opsional)" class="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-2.5 py-1 text-xs text-white">
                   <textarea id="map-desc-${r}" rows="2" placeholder="Description..." class="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-2.5 py-1.5 text-xs text-white">${t.description || ''}</textarea>
-                  <button onclick="updateMappingRow(${r}, this)" class="bg-orange-600 hover:bg-orange-500 text-white px-3 py-1 rounded-lg text-xs font-bold shadow transition">
-                    Save & Notify
-                  </button>
+                  <button onclick="updateMappingRow(${r}, this)" class="bg-orange-600 hover:bg-orange-505 text-white px-3 py-1 rounded-lg text-xs font-extrabold shadow transition">Save & Notify</button>
                 </div>
-              ` : `<p class="text-xs text-zinc-300 whitespace-pre-line leading-relaxed">${t.description || "-"}</p>`}
+              ` : `<p class="text-[12px] text-zinc-300 whitespace-pre-line leading-relaxed font-medium">${t.description || "-"}</p>`}
             </td>
             <td class="py-4 px-4 text-right text-xs font-medium text-zinc-300 whitespace-nowrap">${formatDisplayDate(t.lastUpdated)}</td>
           </tr>
@@ -1087,7 +1068,7 @@
     }
 
     async function updateMappingRow(r, btn) {
-      if (!authToken) return alert("Silakan login ulang.");
+      if (!authToken) return alert("Silakan login.");
       const orig = btn.innerText;
       btn.innerText = "Saving...";
       btn.disabled = true;
@@ -1112,7 +1093,7 @@
         });
         btn.innerText = "✓ Saved!";
         btn.classList.replace("bg-orange-600", "bg-emerald-600");
-        setTimeout(() => fetchAllData(), 2200);
+        setTimeout(() => fetchAllData(), 2000);
       } catch (err) {
         alert("Gagal menyimpan Mapping.");
         btn.innerText = orig;
@@ -1120,7 +1101,7 @@
       }
     }
 
-    // ================= TICKET PROGRESS HISTORY & PDF =================
+    // ================= TICKET HISTORY & PDF EXPORTS =================
     async function openHistoryModal(type, selectedTicketId) {
       historyTypeActive = type;
       const prefix = type === "Survey" ? "SRV-" : "MAP-";
@@ -1141,7 +1122,7 @@
         allHistoryForType = Array.isArray(data) ? data : [];
         onHistoryFilterChange();
       } catch (err) {
-        document.getElementById("historyListContainer").innerHTML = `<p class="text-center text-xs text-rose-400 py-8">Gagal memuat Ticket Progress History.</p>`;
+        document.getElementById("historyListContainer").innerHTML = `<p class="text-center text-xs text-rose-450 py-8">Gagal memuat history data.</p>`;
       } finally {
         document.getElementById("historyLoader").classList.add("hidden");
       }
@@ -1164,40 +1145,40 @@
     function renderHistoryTimeline() {
       const container = document.getElementById("historyListContainer");
       if (filteredHistoryLogs.length === 0) {
-        container.innerHTML = `<div class="text-center py-12 text-zinc-500 text-xs">Belum ada riwayat perubahan untuk filter ini.</div>`;
+        container.innerHTML = `<div class="text-center py-12 text-zinc-500 text-xs font-semibold">Belum ada riwayat perubahan untuk filter ini.</div>`;
         return;
       }
 
       container.innerHTML = filteredHistoryLogs.map(item => {
         const badgesHtml = (item.badges && item.badges.length > 0)
           ? `<div class="flex flex-wrap gap-1.5 my-2">
-              ${item.badges.map(b => `<span class="text-[11px] font-semibold px-2.5 py-0.5 rounded-md bg-sky-500/15 text-sky-300 border border-sky-500/30">${b}</span>`).join("")}
+              ${item.badges.map(b => `<span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-sky-500/10 text-sky-400 border border-sky-500/20">${b}</span>`).join("")}
             </div>`
           : "";
 
         const notesHtml = (item.notesList && item.notesList.length > 0)
-          ? `<div class="bg-zinc-950 border border-zinc-800 rounded-xl p-2.5 my-2 space-y-1 text-zinc-300 text-[11.5px]">
+          ? `<div class="bg-zinc-950 border border-zinc-850 rounded-xl p-3 my-2 space-y-1.5 text-zinc-300 text-[11px] font-medium">
               ${item.notesList.map(n => `<p class="whitespace-pre-line">📝 ${n}</p>`).join("")}
             </div>`
-          : `<p class="text-zinc-300 my-1.5 whitespace-pre-line">${item.detail}</p>`;
+          : `<p class="text-zinc-300 my-1.5 whitespace-pre-line bg-zinc-950 border border-zinc-850/60 rounded-xl p-3 leading-relaxed font-medium">${item.detail}</p>`;
 
         return `
-          <div class="bg-zinc-900/90 border border-zinc-800 rounded-2xl p-4 text-xs">
-            <div class="flex flex-wrap justify-between items-center gap-2 pb-2 border-b border-zinc-800">
+          <div class="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-4 text-xs">
+            <div class="flex flex-wrap justify-between items-center gap-2 pb-2 border-b border-zinc-850">
               <div class="flex items-center gap-2 flex-wrap">
-                <span class="font-mono text-[11px] text-orange-400 bg-orange-500/15 border border-orange-500/30 px-2 py-0.5 rounded font-bold">${item.ticketId}</span>
+                <span class="font-mono text-[10px] text-orange-400 bg-orange-500/15 border border-orange-500/30 px-2.5 py-0.5 rounded font-extrabold">${item.ticketId}</span>
                 <span class="font-bold text-white text-sm">${item.customer}</span>
-                <span class="text-[10px] px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 font-semibold">${item.action}</span>
+                <span class="text-[9.5px] px-2 py-0.5 rounded bg-zinc-850 text-zinc-300 font-bold uppercase tracking-wider">${item.action}</span>
               </div>
-              <span class="font-mono text-[11px] text-zinc-500">🕒 ${item.timestamp} WIB</span>
+              <span class="font-mono text-[10px] text-zinc-550 font-semibold">🕒 ${item.timestamp} WIB</span>
             </div>
 
             ${badgesHtml}
             ${notesHtml}
 
-            <div class="flex flex-wrap justify-between items-center gap-2 text-[11px] text-zinc-400 pt-2 border-t border-zinc-800">
+            <div class="flex flex-wrap justify-between items-center gap-2 text-[10.5px] text-zinc-400 pt-2 border-t border-zinc-850 font-medium">
               <span>PIC: <strong class="text-amber-300">${item.pic || "-"}</strong></span>
-              <span>Updated by: <strong class="text-emerald-400">${item.updatedBy || "-"}</strong></span>
+              <span>Updated by: <strong class="text-emerald-450">${item.updatedBy || "-"}</strong></span>
             </div>
           </div>
         `;
@@ -1218,15 +1199,15 @@
       doc.setFillColor(13, 13, 17);
       doc.rect(0, 0, 297, 25, "F");
       doc.setTextColor(249, 115, 22);
-      doc.setFontSize(14);
+      doc.setFontSize(13);
       doc.setFont("helvetica", "bold");
       doc.text(`BLiP — TICKET PROGRESS HISTORY REPORT (${historyTypeActive.toUpperCase()})`, 14, 11);
 
-      doc.setTextColor(228, 228, 231);
-      doc.setFontSize(9.5);
+      doc.setTextColor(200, 200, 200);
+      doc.setFontSize(9);
       doc.setFont("helvetica", "normal");
       doc.text(`Filter: ${targetLabel}`, 14, 18);
-      doc.text(`Dicetak: ${new Date().toLocaleString("id-ID")} WIB`, 220, 18);
+      doc.text(`Dicetak: ${new Date().toLocaleString("id-ID")} WIB`, 230, 18);
 
       const rows = filteredHistoryLogs.map((log, i) => [
         i + 1,
@@ -1249,9 +1230,9 @@
         alternateRowStyles: { fillColor: [248, 250, 252] },
         columnStyles: {
           0: { cellWidth: 10, halign: "center" },
-          1: { cellWidth: 28 },
-          2: { cellWidth: 16, halign: "center", fontStyle: "bold" },
-          3: { cellWidth: 38, fontStyle: "bold" },
+          1: { cellWidth: 26 },
+          2: { cellWidth: 15, halign: "center", fontStyle: "bold" },
+          3: { cellWidth: 36, fontStyle: "bold" },
           4: { cellWidth: 22 },
           5: { cellWidth: 28 },
           6: { cellWidth: 32 },
@@ -1263,7 +1244,7 @@
       doc.save(`BLiP_Ticket_Progress_History_${safeFile}.pdf`);
     }
 
-    // ================= MODALS ADD & SETTINGS =================
+    // ================= ADD TICKET & SETTINGS CONTROL =================
     function openAddModal() {
       if (!currentUser || currentUser.role !== "Admin") return alert("Khusus Admin.");
       document.getElementById("newTicketType").value = activeTab;
@@ -1329,7 +1310,7 @@
         document.getElementById("newCustomer").value = "";
         document.getElementById("newMappingDesc").value = "";
         closeAddModal();
-        setTimeout(() => fetchAllData(), 2200);
+        setTimeout(() => fetchAllData(), 2000);
       } catch (err) {
         alert("Gagal membuat ticket baru.");
       } finally {
