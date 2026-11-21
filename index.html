@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BLiP Work Order Monitoring Dashboard v4.2.0 — Dual Freeze Edition</title>
+  <title>BLiP Work Order Monitoring Dashboard v4.4.0 — Toggleable 3-Point Need Attention</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -79,43 +79,49 @@
 <body class="min-h-screen bg-[#070709] text-zinc-100">
 
   <div class="min-h-screen flex flex-col lg:flex-row">
-    <!-- Left Sidebar (Sticky Full Height + Google Sign-In pinned at bottom) -->
-    <aside class="zone-3d w-full lg:w-72 shrink-0 lg:sticky lg:top-0 lg:h-screen flex flex-col justify-between p-4 lg:p-5 z-40">
+    <!-- Left Sidebar (Collapsible / Expandable + Sticky Full Height) -->
+    <aside id="mainSidebar" class="zone-3d w-full lg:w-72 shrink-0 lg:sticky lg:top-0 lg:h-screen flex flex-col justify-between p-4 lg:p-5 z-40 transition-all duration-200">
       <div class="space-y-6 overflow-y-auto pr-0.5">
-        <!-- Brand -->
-        <div class="flex items-center justify-between pb-4 border-b border-white/10">
-          <div class="flex items-center gap-2.5 select-none">
+        <!-- Brand + Expand/Collapse Button -->
+        <div id="sidebarHeaderRow" class="flex items-center justify-between gap-2 pb-4 border-b border-white/10">
+          <div id="sidebarBrandFull" class="flex items-center gap-2.5 select-none min-w-0">
             <span class="tracking-tighter font-extrabold text-3xl text-white">BL<span class="text-orange-500">i</span>P</span>
-            <span class="text-[10px] bg-orange-500/20 border border-orange-500/50 px-2 py-0.5 rounded text-orange-400 font-mono font-bold">v4.2.0</span>
+            <span class="text-[10px] bg-orange-500/20 border border-orange-500/50 px-2 py-0.5 rounded text-orange-400 font-mono font-bold">v4.4.0</span>
           </div>
-          <button onclick="fetchAllData()" title="Refresh Data" class="bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-white/15 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer">
-            ↻ Refresh
-          </button>
+          <div id="sidebarTopActions" class="flex items-center gap-1.5 shrink-0">
+            <button id="btnSidebarRefresh" onclick="fetchAllData()" title="Refresh Data" class="bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-white/15 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer">
+              ↻ <span class="sidebar-label">Refresh</span>
+            </button>
+            <button id="btnSidebarToggle" onclick="toggleSidebarExpand()" title="Expand / Collapse Sidebar" class="bg-zinc-900 hover:bg-orange-500/20 text-orange-400 border border-orange-500/40 px-2.5 py-1.5 rounded-xl text-xs font-extrabold transition cursor-pointer">
+              <span id="sidebarToggleIcon">«</span>
+            </button>
+          </div>
         </div>
 
         <!-- Navigation Menus -->
         <div class="space-y-1.5">
-          <p class="text-[10px] font-extrabold uppercase tracking-wider text-zinc-500 px-2 mb-2">Navigation</p>
-          <button onclick="setActiveNav('dashboard')" id="nav-dashboard" class="nav-btn w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-bold bg-orange-600 text-white shadow shadow-orange-600/20 text-left transition cursor-pointer">
+          <p class="sidebar-label text-[10px] font-extrabold uppercase tracking-wider text-zinc-500 px-2 mb-2">Navigation</p>
+          <button onclick="setActiveNav('dashboard')" id="nav-dashboard" title="Dashboard Monitoring Work Orders" class="nav-btn w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold bg-orange-600 text-white shadow shadow-orange-600/20 text-left transition cursor-pointer">
             <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
-            <span>Dashboard Monitoring Work Orders</span>
+            <span class="sidebar-label truncate">Dashboard Monitoring Work Orders</span>
           </button>
 
-          <button onclick="openHistoryModal(activeTab === 'Mapping' ? 'Mapping' : 'Survey', 'ALL', null)" id="nav-report" class="nav-btn w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-medium text-zinc-400 hover:bg-zinc-800/80 hover:text-white text-left transition cursor-pointer">
+          <button onclick="openHistoryModal(activeTab === 'Mapping' ? 'Mapping' : 'Survey', 'ALL', null)" id="nav-report" title="Report Activity Log" class="nav-btn w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-medium text-zinc-400 hover:bg-zinc-800/80 hover:text-white text-left transition cursor-pointer">
             <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-            <span>Report Activity Log</span>
+            <span class="sidebar-label truncate">Report Activity Log</span>
           </button>
 
-          <button onclick="openSettingsModal()" id="nav-settings" class="nav-btn w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-medium text-zinc-400 hover:bg-zinc-800/80 hover:text-white text-left transition cursor-pointer">
+          <button onclick="openSettingsModal()" id="nav-settings" title="Settings" class="nav-btn w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-medium text-zinc-400 hover:bg-zinc-800/80 hover:text-white text-left transition cursor-pointer">
             <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
-            <span>Settings</span>
+            <span class="sidebar-label truncate">Settings</span>
           </button>
         </div>
 
         <!-- Primary Action -->
         <div id="sidebarActionWrap" class="hidden pt-2 border-t border-white/10">
-          <button id="btnNewTicket" onclick="openAddModal()" class="w-full bg-orange-600 hover:bg-orange-500 text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-md shadow-orange-600/20 transition cursor-pointer">
-            + New Work Order
+          <button id="btnNewTicket" onclick="openAddModal()" title="New Work Order" class="w-full bg-orange-600 hover:bg-orange-500 text-white px-3 py-2.5 rounded-xl text-xs font-bold shadow-md shadow-orange-600/20 transition cursor-pointer flex items-center justify-center gap-1.5">
+            <span>+</span>
+            <span class="sidebar-label truncate">New Work Order</span>
           </button>
         </div>
       </div>
@@ -126,12 +132,12 @@
         <div id="sidebarUserBadge" class="hidden items-center justify-between gap-2 bg-zinc-950/90 border border-orange-500/40 px-3 py-2.5 rounded-xl text-xs">
           <div class="flex items-center gap-2 min-w-0">
             <span class="h-2.5 w-2.5 rounded-full bg-emerald-500 shrink-0"></span>
-            <div class="truncate">
+            <div class="sidebar-label truncate">
               <p id="sidebarUserName" class="font-bold text-white truncate"></p>
               <p id="sidebarUserRole" class="text-[10px] text-orange-400 font-semibold"></p>
             </div>
           </div>
-          <button onclick="logoutUser()" class="text-rose-400 hover:text-rose-300 font-semibold shrink-0 cursor-pointer">Sign Out</button>
+          <button onclick="logoutUser()" class="sidebar-label text-rose-400 hover:text-rose-300 font-semibold shrink-0 cursor-pointer">Sign Out</button>
         </div>
       </div>
     </aside>
@@ -216,99 +222,111 @@
         </div>
       </section>
 
-      <!-- Zone 3: NEED ATTENTION WORK ORDERS (Sticky Box Header + Filter Cards + Data Table) -->
-      <section class="zone-3d-amber rounded-2xl pb-4 md:pb-5 space-y-4">
+      <!-- Zone 3: NEED ATTENTION WORK ORDERS (Sticky Box Header + 3-Point Toggle Cards + Expandable Detail Panel) -->
+      <section id="needAttentionSection" class="zone-3d-amber rounded-2xl pb-4 md:pb-5 space-y-4">
         <div class="sticky-box-header rounded-t-2xl px-4 md:px-5 py-3 flex flex-wrap items-center justify-between gap-2">
           <div class="flex items-center gap-2">
             <span class="w-2 h-2 rounded-full bg-amber-400"></span>
             <h2 class="text-xs font-extrabold uppercase tracking-wider text-zinc-200">NEED ATTENTION WORK ORDERS</h2>
           </div>
-          <span class="text-[10.5px] text-zinc-400">Active items only (excludes Closed &amp; Cancel)</span>
+          <span class="text-[10.5px] text-zinc-400">Click All, Mapping, or Survey to expand / unexpand • Active items only</span>
         </div>
 
         <div class="px-4 md:px-5 space-y-5">
-          <div id="workOrderControlPanel" class="space-y-4">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <!-- All -->
-              <button onclick="selectDivisionTab('All')" id="btn-div-All" class="group flex items-center justify-between px-5 py-4 rounded-2xl border transition text-left bg-orange-600/15 border-orange-500 shadow-lg shadow-orange-600/10 cursor-pointer">
-                <div class="flex items-center gap-3.5">
-                  <span class="w-11 h-11 rounded-xl bg-zinc-950 border border-orange-500/40 flex items-center justify-center text-orange-400 transition">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                      <rect x="3" y="3" width="7" height="7" rx="1.5"/>
-                      <rect x="14" y="3" width="7" height="7" rx="1.5"/>
-                      <rect x="3" y="14" width="7" height="7" rx="1.5"/>
-                      <rect x="14" y="14" width="7" height="7" rx="1.5"/>
-                    </svg>
-                  </span>
-                  <div>
-                    <p class="text-base font-extrabold text-white tracking-tight">All</p>
-                    <p class="text-xs text-zinc-400 font-medium"><span id="count-All">0</span> Need Attention</p>
-                  </div>
+          <!-- 3 Point Cards: All, Mapping, Survey (Click to Expand / Unexpand detail below) -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <!-- All -->
+            <button type="button" onclick="selectDivisionTab('All')" id="btn-div-All" class="group flex items-center justify-between px-5 py-4 rounded-2xl border transition text-left bg-zinc-900/90 border-white/15 hover:border-orange-500/60 cursor-pointer">
+              <div class="flex items-center gap-3.5 min-w-0">
+                <span class="w-11 h-11 rounded-xl bg-zinc-950 border border-white/15 flex items-center justify-center text-orange-400 group-hover:border-orange-500/50 transition shrink-0">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <rect x="3" y="3" width="7" height="7" rx="1.5"/>
+                    <rect x="14" y="3" width="7" height="7" rx="1.5"/>
+                    <rect x="3" y="14" width="7" height="7" rx="1.5"/>
+                    <rect x="14" y="14" width="7" height="7" rx="1.5"/>
+                  </svg>
+                </span>
+                <div class="min-w-0">
+                  <p class="text-base font-extrabold text-white tracking-tight">All</p>
+                  <p class="text-xs text-zinc-400 font-medium"><span id="count-All">0</span> Need Attention</p>
                 </div>
-              </button>
+              </div>
+              <span id="badge-div-All" class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-zinc-950/90 text-zinc-400 border border-white/10 shrink-0">Expand</span>
+            </button>
 
-              <!-- Mapping -->
-              <button onclick="selectDivisionTab('Mapping')" id="btn-div-Mapping" class="group flex items-center justify-between px-5 py-4 rounded-2xl border transition text-left bg-zinc-900/90 border-white/15 hover:border-orange-500/60 cursor-pointer">
-                <div class="flex items-center gap-3.5">
-                  <span class="w-11 h-11 rounded-xl bg-zinc-950 border border-white/15 flex items-center justify-center text-amber-400 group-hover:border-orange-500/50 transition">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M6 4h11a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V4z"/>
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M6 4a2 2 0 0 0-2 2v1a1 1 0 0 0 1 1h1"/>
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M19 17h1a1 1 0 0 1 1 1v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2"/>
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M9.5 9.5l2 2m0-2l-2 2"/>
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M12.5 13.5c1.2-.8 2.2-.3 3 0"/>
-                      <circle cx="15.5" cy="9" r="1" fill="currentColor"/>
-                    </svg>
-                  </span>
-                  <div>
-                    <p class="text-base font-extrabold text-white tracking-tight">Mapping</p>
-                    <p class="text-xs text-zinc-400 font-medium"><span id="count-Mapping">0</span> Need Attention</p>
-                  </div>
+            <!-- Mapping -->
+            <button type="button" onclick="selectDivisionTab('Mapping')" id="btn-div-Mapping" class="group flex items-center justify-between px-5 py-4 rounded-2xl border transition text-left bg-zinc-900/90 border-white/15 hover:border-orange-500/60 cursor-pointer">
+              <div class="flex items-center gap-3.5 min-w-0">
+                <span class="w-11 h-11 rounded-xl bg-zinc-950 border border-white/15 flex items-center justify-center text-amber-400 group-hover:border-orange-500/50 transition shrink-0">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 4h11a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V4z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 4a2 2 0 0 0-2 2v1a1 1 0 0 0 1 1h1"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 17h1a1 1 0 0 1 1 1v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.5 9.5l2 2m0-2l-2 2"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12.5 13.5c1.2-.8 2.2-.3 3 0"/>
+                    <circle cx="15.5" cy="9" r="1" fill="currentColor"/>
+                  </svg>
+                </span>
+                <div class="min-w-0">
+                  <p class="text-base font-extrabold text-white tracking-tight">Mapping</p>
+                  <p class="text-xs text-zinc-400 font-medium"><span id="count-Mapping">0</span> Need Attention</p>
                 </div>
-              </button>
+              </div>
+              <span id="badge-div-Mapping" class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-zinc-950/90 text-zinc-400 border border-white/10 shrink-0">Expand</span>
+            </button>
 
-              <!-- Survey -->
-              <button onclick="selectDivisionTab('Survey')" id="btn-div-Survey" class="group flex items-center justify-between px-5 py-4 rounded-2xl border transition text-left bg-zinc-900/90 border-white/15 hover:border-orange-500/60 cursor-pointer">
-                <div class="flex items-center gap-3.5">
-                  <span class="w-11 h-11 rounded-xl bg-zinc-950 border border-white/15 flex items-center justify-center text-orange-400 group-hover:border-orange-500/50 transition">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                      <circle cx="6" cy="19" r="3"/>
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/>
-                      <circle cx="18" cy="5" r="3"/>
-                    </svg>
-                  </span>
-                  <div>
-                    <p class="text-base font-extrabold text-white tracking-tight">Survey</p>
-                    <p class="text-xs text-zinc-400 font-medium"><span id="count-Survey">0</span> Need Attention</p>
-                  </div>
+            <!-- Survey -->
+            <button type="button" onclick="selectDivisionTab('Survey')" id="btn-div-Survey" class="group flex items-center justify-between px-5 py-4 rounded-2xl border transition text-left bg-zinc-900/90 border-white/15 hover:border-orange-500/60 cursor-pointer">
+              <div class="flex items-center gap-3.5 min-w-0">
+                <span class="w-11 h-11 rounded-xl bg-zinc-950 border border-white/15 flex items-center justify-center text-orange-400 group-hover:border-orange-500/50 transition shrink-0">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <circle cx="6" cy="19" r="3"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/>
+                    <circle cx="18" cy="5" r="3"/>
+                  </svg>
+                </span>
+                <div class="min-w-0">
+                  <p class="text-base font-extrabold text-white tracking-tight">Survey</p>
+                  <p class="text-xs text-zinc-400 font-medium"><span id="count-Survey">0</span> Need Attention</p>
                 </div>
-              </button>
-            </div>
+              </div>
+              <span id="badge-div-Survey" class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-zinc-950/90 text-zinc-400 border border-white/10 shrink-0">Expand</span>
+            </button>
+          </div>
 
-            <!-- Sub-Filter Bar (Status Pills + Coverage Filter) -->
-            <div id="divisionFilterPanel" class="pt-4 border-t border-white/15 flex flex-wrap justify-between items-center gap-3">
-              <div id="status-filter-pills" class="flex gap-1.5 overflow-x-auto pb-1 sm:pb-0"></div>
+          <!-- Expandable Detail Panel for the Selected Point (Unexpanded / Hidden by default) -->
+          <div id="needAttentionExpandedPanel" class="hidden space-y-4">
+            <div id="workOrderControlPanel" class="card-dark rounded-2xl px-4 py-3">
+              <div id="divisionFilterPanel" class="flex flex-wrap justify-between items-center gap-3">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span id="activePointLabel" class="text-xs font-extrabold text-orange-400 uppercase tracking-wider mr-1">All</span>
+                  <div id="status-filter-pills" class="flex gap-1.5 overflow-x-auto pb-1 sm:pb-0"></div>
+                </div>
 
-              <div class="flex items-center gap-2">
-                <select id="coverageFilter" onchange="renderActiveTab()" class="hidden bg-zinc-900 border border-white/20 text-zinc-200 rounded-xl px-3 py-1.5 text-xs font-medium focus:outline-none focus:border-orange-500">
-                  <option value="ALL">Coverage: All</option>
-                  <option value="Onet">Onet</option>
-                  <option value="Partner">Partner</option>
-                  <option value="Not Cover">Not Cover</option>
-                </select>
+                <div class="flex items-center gap-2">
+                  <select id="coverageFilter" onchange="renderActiveTab()" class="hidden bg-zinc-900 border border-white/20 text-zinc-200 rounded-xl px-3 py-1.5 text-xs font-medium focus:outline-none focus:border-orange-500">
+                    <option value="ALL">Coverage: All</option>
+                    <option value="Onet">Onet</option>
+                    <option value="Partner">Partner</option>
+                    <option value="Not Cover">Not Cover</option>
+                  </select>
+                  <button type="button" onclick="collapseNeedAttentionPoint()" class="text-xs font-semibold text-zinc-300 hover:text-white bg-zinc-800 hover:bg-zinc-700 border border-white/15 px-3 py-1.5 rounded-xl transition cursor-pointer">
+                    ✕ Unexpand
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
 
-          <!-- Loader -->
-          <div id="loader" class="text-center py-16 hidden">
-            <div class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-orange-500 mb-3"></div>
-            <p class="text-sm text-zinc-400 font-medium">Loading work orders...</p>
-          </div>
+            <!-- Loader -->
+            <div id="loader" class="text-center py-14 hidden">
+              <div class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-orange-500 mb-3"></div>
+              <p class="text-sm text-zinc-400 font-medium">Loading work orders...</p>
+            </div>
 
-          <!-- Main Data Table Wrapper -->
-          <div id="table-wrapper" class="card-dark rounded-2xl shadow-xl">
-            <div class="overflow-x-auto rounded-2xl" id="main-table-container"></div>
+            <!-- Main Data Table Wrapper -->
+            <div id="table-wrapper" class="card-dark rounded-2xl shadow-xl">
+              <div class="overflow-x-auto rounded-2xl" id="main-table-container"></div>
+            </div>
           </div>
         </div>
       </section>
@@ -484,8 +502,8 @@
         </div>
         <div class="bg-zinc-950 p-3.5 rounded-xl border border-white/15">
           <p class="text-zinc-500 text-[10px]">Application Version</p>
-          <p class="font-semibold text-white mt-0.5">BLiP Work Order Monitoring Dashboard v4.2.0 (Dual Freeze Edition)</p>
-          <p class="text-[10px] text-zinc-500 mt-1">Weekly Work Orders • Need Attention Work Orders • Activity Log &amp; All Activity Log</p>
+          <p class="font-semibold text-white mt-0.5">BLiP Work Order Monitoring Dashboard v4.4.0</p>
+          <p class="text-[10px] text-zinc-500 mt-1">Collapsible Sidebar • Dual Freeze • Toggleable 3-Point Need Attention • Activity Log &amp; PDF</p>
         </div>
       </div>
       <div class="mt-5 flex justify-end">
@@ -510,8 +528,11 @@
 
     let appData = { survey: [], mapping: [] };
     let activeTab = "All";
+    let needAttentionExpanded = false; // Default unexpanded until one of the 3 points is clicked
     let currentStatusFilter = "NEED_ATTENTION";
     let activeWeeklyKpi = null;
+
+    let sidebarCollapsed = false;
 
     let authToken = "";
     try { authToken = localStorage.getItem("ticket_auth_token") || ""; } catch (e) {}
@@ -526,6 +547,50 @@
     let historyStageFilterKey = null;
     let allHistoryForType = [];
     let filteredHistoryLogs = [];
+
+    // ================= SIDEBAR EXPAND & UNEXPAND =================
+    function toggleSidebarExpand() {
+      sidebarCollapsed = !sidebarCollapsed;
+      applySidebarExpandUI();
+    }
+
+    function applySidebarExpandUI() {
+      const aside = document.getElementById("mainSidebar");
+      const brandFull = document.getElementById("sidebarBrandFull");
+      const headerRow = document.getElementById("sidebarHeaderRow");
+      const refreshBtn = document.getElementById("btnSidebarRefresh");
+      const toggleIcon = document.getElementById("sidebarToggleIcon");
+      const labels = document.querySelectorAll(".sidebar-label");
+      const navBtns = document.querySelectorAll(".nav-btn");
+
+      if (!aside) return;
+
+      if (sidebarCollapsed) {
+        aside.classList.remove("lg:w-72");
+        aside.classList.add("lg:w-20");
+        brandFull.classList.add("lg:hidden");
+        headerRow.classList.remove("justify-between");
+        headerRow.classList.add("lg:flex-col", "lg:items-center");
+        refreshBtn.classList.add("lg:hidden");
+        toggleIcon.innerText = "»";
+        labels.forEach(el => el.classList.add("lg:hidden"));
+        navBtns.forEach(btn => {
+          btn.classList.add("lg:justify-center", "lg:px-2");
+        });
+      } else {
+        aside.classList.remove("lg:w-20");
+        aside.classList.add("lg:w-72");
+        brandFull.classList.remove("lg:hidden");
+        headerRow.classList.add("justify-between");
+        headerRow.classList.remove("lg:flex-col", "lg:items-center");
+        refreshBtn.classList.remove("lg:hidden");
+        toggleIcon.innerText = "«";
+        labels.forEach(el => el.classList.remove("lg:hidden"));
+        navBtns.forEach(btn => {
+          btn.classList.remove("lg:justify-center", "lg:px-2");
+        });
+      }
+    }
 
     function toggleDatePopover(event) {
       event.stopPropagation();
@@ -563,7 +628,7 @@
     function onDateRangeChanged() {
       updateDateSearchDisplay();
       renderWeeklyPanel();
-      renderActiveTab();
+      if (needAttentionExpanded) renderActiveTab();
     }
 
     function renderWeekRangeBadge() {
@@ -602,6 +667,7 @@
     document.addEventListener("DOMContentLoaded", function () {
       renderWeekRangeBadge();
       updateDateSearchDisplay();
+      applySidebarExpandUI();
       initGoogleSignIn();
       syncDivisionButtonsUI();
       if (authToken) {
@@ -644,7 +710,7 @@
       updateAuthUI();
       if (reload) {
         renderWeeklyPanel();
-        renderActiveTab();
+        if (needAttentionExpanded) renderActiveTab();
       }
     }
 
@@ -673,21 +739,23 @@
         sidebarBadge.classList.remove("flex");
         settingsStatus.innerText = "Viewer Mode (Not Signed In)";
       }
+      applySidebarExpandUI();
     }
 
     function setActiveNav(navId) {
       document.querySelectorAll(".nav-btn").forEach(b => {
-        b.className = "nav-btn w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-medium text-zinc-400 hover:bg-zinc-800/80 hover:text-white text-left transition cursor-pointer";
+        b.className = "nav-btn w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-medium text-zinc-400 hover:bg-zinc-800/80 hover:text-white text-left transition cursor-pointer";
       });
       const activeEl = document.getElementById(`nav-${navId}`);
       if (activeEl) {
-        activeEl.className = "nav-btn w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-bold bg-orange-600 text-white shadow shadow-orange-600/20 text-left transition cursor-pointer";
+        activeEl.className = "nav-btn w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold bg-orange-600 text-white shadow shadow-orange-600/20 text-left transition cursor-pointer";
       }
+      applySidebarExpandUI();
     }
 
     function onGlobalSearchChange() {
       renderWeeklyPanel();
-      renderActiveTab();
+      if (needAttentionExpanded) renderActiveTab();
     }
 
     async function refreshSurveyHistoryCache() {
@@ -716,8 +784,10 @@
     }
 
     async function fetchAllData() {
-      document.getElementById("loader").classList.remove("hidden");
-      document.getElementById("table-wrapper").classList.add("hidden");
+      if (needAttentionExpanded) {
+        document.getElementById("loader").classList.remove("hidden");
+        document.getElementById("table-wrapper").classList.add("hidden");
+      }
 
       try {
         const res = await fetch(API_URL);
@@ -730,12 +800,12 @@
         renderCombinedKpi();
         renderWeeklyPanel();
         syncDivisionButtonsUI();
-        renderActiveTab();
+        if (needAttentionExpanded) renderActiveTab();
 
         refreshSurveyHistoryCache().then(() => {
           if (Object.values(expandedRows).some(Boolean)) {
             renderWeeklyPanel();
-            renderActiveTab();
+            if (needAttentionExpanded) renderActiveTab();
           }
         });
       } catch (err) {
@@ -744,7 +814,7 @@
         renderCombinedKpi();
         renderWeeklyPanel();
         syncDivisionButtonsUI();
-        renderActiveTab();
+        if (needAttentionExpanded) renderActiveTab();
       } finally {
         document.getElementById("loader").classList.add("hidden");
         document.getElementById("table-wrapper").classList.remove("hidden");
@@ -754,22 +824,51 @@
     function syncDivisionButtonsUI() {
       ["All", "Mapping", "Survey"].forEach(type => {
         const btn = document.getElementById(`btn-div-${type}`);
+        const badge = document.getElementById(`badge-div-${type}`);
         if (!btn) return;
-        const isSelected = activeTab === type;
+        const isSelectedAndExpanded = needAttentionExpanded && activeTab === type;
 
-        if (isSelected) {
+        if (isSelectedAndExpanded) {
           btn.className = "group flex items-center justify-between px-5 py-4 rounded-2xl border transition text-left bg-orange-600/15 border-orange-500 shadow-lg shadow-orange-600/10 cursor-pointer";
+          if (badge) {
+            badge.innerText = "Unexpand";
+            badge.className = "text-[11px] font-bold px-2.5 py-1 rounded-lg bg-orange-500/20 text-orange-300 border border-orange-500/40 shrink-0";
+          }
         } else {
           btn.className = "group flex items-center justify-between px-5 py-4 rounded-2xl border transition text-left bg-zinc-900/90 border-white/15 hover:border-orange-500/60 cursor-pointer";
+          if (badge) {
+            badge.innerText = "Expand";
+            badge.className = "text-[11px] font-bold px-2.5 py-1 rounded-lg bg-zinc-950/90 text-zinc-400 border border-white/10 shrink-0";
+          }
         }
       });
+
+      const panel = document.getElementById("needAttentionExpandedPanel");
+      const labelEl = document.getElementById("activePointLabel");
+      if (panel) {
+        panel.classList.toggle("hidden", !needAttentionExpanded);
+      }
+      if (labelEl) {
+        labelEl.innerText = `${activeTab} • Need Attention`;
+      }
     }
 
     function selectDivisionTab(type) {
+      if (needAttentionExpanded && activeTab === type) {
+        needAttentionExpanded = false;
+        syncDivisionButtonsUI();
+        return;
+      }
       activeTab = type;
+      needAttentionExpanded = true;
       currentStatusFilter = "NEED_ATTENTION";
       syncDivisionButtonsUI();
       renderActiveTab();
+    }
+
+    function collapseNeedAttentionPoint() {
+      needAttentionExpanded = false;
+      syncDivisionButtonsUI();
     }
 
     function selectKpiCard(kpiKey) {
@@ -1023,7 +1122,7 @@
       document.getElementById("dateEnd").value = "";
       updateDateSearchDisplay();
       renderWeeklyPanel();
-      renderActiveTab();
+      if (needAttentionExpanded) renderActiveTab();
     }
 
     function matchDateRange(lastUpdatedStr) {
@@ -1824,12 +1923,12 @@
         activeStagePerTicket[ticketId] = stageKey;
         loadingHistoryTicket[ticketId] = true;
         renderWeeklyPanel();
-        renderActiveTab();
+        if (needAttentionExpanded) renderActiveTab();
         await refreshSurveyHistoryCache();
         loadingHistoryTicket[ticketId] = false;
       }
       renderWeeklyPanel();
-      renderActiveTab();
+      if (needAttentionExpanded) renderActiveTab();
     }
 
     async function saveExpandedSurveyStage(rowIndex, ticketId, stageKey, btn) {
