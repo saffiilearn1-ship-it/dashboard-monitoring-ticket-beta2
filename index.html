@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BLiP Ticket Monitoring Dashboard v3.9.5 — Horizontal Dark Edition</title>
+  <title>BLiP Work Order Monitoring Dashboard v3.9.6 — Horizontal Dark Edition</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -42,7 +42,7 @@
     <div class="flex flex-col md:flex-row items-center gap-6 w-full lg:w-auto">
       <div class="flex items-center gap-2.5 shrink-0 select-none">
         <span class="tracking-tighter font-extrabold text-3xl text-white">BL<span class="text-orange-500">i</span>P</span>
-        <span class="text-[10px] bg-orange-500/20 border border-orange-500/50 px-2 py-0.5 rounded text-orange-400 font-mono font-bold">v3.9.5</span>
+        <span class="text-[10px] bg-orange-500/20 border border-orange-500/50 px-2 py-0.5 rounded text-orange-400 font-mono font-bold">v3.9.6</span>
       </div>
 
       <nav class="flex gap-1.5 overflow-x-auto w-full md:w-auto pb-1 md:pb-0">
@@ -50,10 +50,10 @@
           <span>Dashboard</span>
         </button>
         <button onclick="setActiveNav('monitor')" id="nav-monitor" class="nav-btn flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:bg-zinc-800/80 hover:text-white transition whitespace-nowrap">
-          <span>Ticket Monitor</span>
+          <span>Work Order Monitor</span>
         </button>
         <button onclick="openHistoryModal(activeTab === 'Mapping' ? 'Mapping' : 'Survey', 'ALL')" id="nav-report" class="nav-btn flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:bg-zinc-800/80 hover:text-white transition whitespace-nowrap">
-          <span>Report & History</span>
+          <span>Report &amp; Activity Log</span>
         </button>
         <button onclick="openSettingsModal()" id="nav-settings" class="nav-btn flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:bg-zinc-800/80 hover:text-white transition whitespace-nowrap">
           <span>Settings</span>
@@ -65,9 +65,9 @@
     <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto justify-end">
       <div class="flex items-center gap-1.5 bg-zinc-900 border border-white/15 rounded-xl px-3 py-1.5 text-xs">
         <svg class="w-3.5 h-3.5 text-orange-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-        <input type="date" id="dateStart" onchange="renderActiveTab()" title="Tanggal Mulai" class="bg-transparent text-zinc-200 font-medium focus:outline-none text-xs">
+        <input type="date" id="dateStart" onchange="renderActiveTab()" title="Start Date" class="bg-transparent text-zinc-200 font-medium focus:outline-none text-xs">
         <span class="text-zinc-500">–</span>
-        <input type="date" id="dateEnd" onchange="renderActiveTab()" title="Tanggal Akhir" class="bg-transparent text-zinc-200 font-medium focus:outline-none text-xs">
+        <input type="date" id="dateEnd" onchange="renderActiveTab()" title="End Date" class="bg-transparent text-zinc-200 font-medium focus:outline-none text-xs">
         <button onclick="clearDateFilter()" id="btnClearDate" class="hidden text-[10px] text-rose-400 hover:text-rose-300 font-semibold ml-1">Reset</button>
       </div>
 
@@ -75,34 +75,34 @@
       <div id="headerUserBadge" class="hidden items-center gap-2 bg-zinc-900 border border-orange-500/40 px-3 py-1.5 rounded-xl text-xs">
         <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
         <span id="headerUserName" class="font-semibold text-white"></span>
-        <button onclick="logoutUser()" class="text-rose-400 hover:underline ml-1">Logout</button>
+        <button onclick="logoutUser()" class="text-rose-400 hover:underline ml-1">Sign Out</button>
       </div>
 
       <button onclick="fetchAllData()" class="bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-white/15 px-3 py-1.5 rounded-xl text-xs font-semibold transition">↻ Refresh</button>
-      <button id="btnNewTicket" onclick="openAddModal()" class="hidden bg-orange-600 hover:bg-orange-500 text-white px-4 py-1.5 rounded-xl text-xs font-bold shadow-md shadow-orange-600/20 transition">+ New Ticket</button>
+      <button id="btnNewTicket" onclick="openAddModal()" class="hidden bg-orange-600 hover:bg-orange-500 text-white px-4 py-1.5 rounded-xl text-xs font-bold shadow-md shadow-orange-600/20 transition">+ New Work Order</button>
     </div>
   </header>
 
-  <!-- Section 1: Work Order This Week (6 KPI Cards) -->
+  <!-- Section 1: WEEKLY WORK ORDERS (6 Interactive KPI Cards) -->
   <section class="mb-6">
     <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
       <div class="flex items-center gap-2">
         <span class="w-2 h-2 rounded-full bg-orange-500"></span>
-        <h2 class="text-xs font-extrabold uppercase tracking-wider text-zinc-200">Work Order This Week</h2>
+        <h2 class="text-xs font-extrabold uppercase tracking-wider text-zinc-200">WEEKLY WORK ORDERS</h2>
       </div>
       <span id="weekRangeBadge" class="text-[11px] font-mono text-zinc-400 bg-zinc-900 border border-white/10 px-2.5 py-0.5 rounded-lg"></span>
     </div>
     <div id="kpi-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3.5"></div>
   </section>
 
-  <!-- Section 2: Need Attention Work Order (3 Tombol Sejajar [All] | [Mapping] | [Survey] + Sub-Filter) -->
-  <div class="card-dark rounded-2xl p-4 md:p-5 mb-6 space-y-4">
+  <!-- Section 2: NEED ATTENTION WORK ORDERS -->
+  <div id="workOrderControlPanel" class="card-dark rounded-2xl p-4 md:p-5 mb-6 space-y-4">
     <div class="flex flex-wrap items-center justify-between gap-2">
       <div class="flex items-center gap-2">
         <span class="w-2 h-2 rounded-full bg-amber-400"></span>
-        <h2 class="text-xs font-extrabold uppercase tracking-wider text-zinc-200">Need Attention Work Order</h2>
+        <h2 class="text-xs font-extrabold uppercase tracking-wider text-zinc-200">NEED ATTENTION WORK ORDERS</h2>
       </div>
-      <span class="text-[10.5px] text-zinc-400">Menghitung tiket aktif (tanpa Closed & Cancel)</span>
+      <span class="text-[10.5px] text-zinc-400">Active items only (excludes Closed &amp; Cancel)</span>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -124,7 +124,7 @@
         </div>
       </button>
 
-      <!-- Mapping (Icon Peta Zaman Dulu / Antique Scroll Map) -->
+      <!-- Mapping (Antique Scroll Map Icon) -->
       <button onclick="selectDivisionTab('Mapping')" id="btn-div-Mapping" class="group flex items-center justify-between px-5 py-4 rounded-2xl border transition text-left bg-zinc-900/90 border-white/15 hover:border-orange-500/60">
         <div class="flex items-center gap-3.5">
           <span class="w-11 h-11 rounded-xl bg-zinc-950 border border-white/15 flex items-center justify-center text-amber-400 group-hover:border-orange-500/50 transition">
@@ -144,7 +144,7 @@
         </div>
       </button>
 
-      <!-- Survey (Icon Route) -->
+      <!-- Survey (Route Icon) -->
       <button onclick="selectDivisionTab('Survey')" id="btn-div-Survey" class="group flex items-center justify-between px-5 py-4 rounded-2xl border transition text-left bg-zinc-900/90 border-white/15 hover:border-orange-500/60">
         <div class="flex items-center gap-3.5">
           <span class="w-11 h-11 rounded-xl bg-zinc-950 border border-white/15 flex items-center justify-center text-orange-400 group-hover:border-orange-500/50 transition">
@@ -162,20 +162,20 @@
       </button>
     </div>
 
-    <!-- Sub-Filter Bar (Selalu Tampil) -->
+    <!-- Sub-Filter Bar -->
     <div id="divisionFilterPanel" class="pt-4 border-t border-white/15 flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-3">
       <div id="status-filter-pills" class="flex gap-1.5 overflow-x-auto pb-1 lg:pb-0"></div>
 
       <div class="flex flex-wrap items-center gap-2 justify-between lg:justify-end">
         <select id="coverageFilter" onchange="renderActiveTab()" class="hidden bg-zinc-900 border border-white/20 text-zinc-200 rounded-xl px-3 py-1.5 text-xs font-medium focus:outline-none focus:border-orange-500">
-          <option value="ALL">Coverage: Semua</option>
+          <option value="ALL">Coverage: All</option>
           <option value="Onet">Onet</option>
           <option value="Partner">Partner</option>
           <option value="Not Cover">Not Cover</option>
         </select>
 
         <div class="relative">
-          <input type="text" id="searchInput" oninput="renderActiveTab()" placeholder="Cari work order ticket..." class="bg-zinc-900 border border-white/20 text-zinc-100 rounded-xl pl-8 pr-3 py-1.5 text-xs w-48 sm:w-56 focus:outline-none focus:border-orange-500">
+          <input type="text" id="searchInput" oninput="renderActiveTab()" placeholder="Search work order..." class="bg-zinc-900 border border-white/20 text-zinc-100 rounded-xl pl-8 pr-3 py-1.5 text-xs w-48 sm:w-56 focus:outline-none focus:border-orange-500">
           <svg class="w-3.5 h-3.5 text-zinc-500 absolute left-2.5 top-2.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
         </div>
       </div>
@@ -185,37 +185,37 @@
   <!-- Loader -->
   <div id="loader" class="text-center py-16 hidden">
     <div class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-orange-500 mb-3"></div>
-    <p class="text-sm text-zinc-400 font-medium">Memuat data...</p>
+    <p class="text-sm text-zinc-400 font-medium">Loading work orders...</p>
   </div>
 
-  <!-- Main Data Table Wrapper (Selalu Terbuka) -->
+  <!-- Main Data Table Wrapper -->
   <div id="table-wrapper" class="card-dark rounded-2xl overflow-hidden shadow-xl">
     <div class="overflow-x-auto" id="main-table-container"></div>
   </div>
 
-  <!-- Modal New Ticket -->
+  <!-- Modal New Work Order -->
   <div id="addModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
     <div class="card-dark rounded-2xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl">
       <div class="flex justify-between items-center mb-4 border-b border-white/15 pb-3">
-        <h2 class="text-lg font-bold text-white">Create New Ticket</h2>
+        <h2 class="text-lg font-bold text-white">Create New Work Order</h2>
         <button onclick="closeAddModal()" class="text-zinc-400 hover:text-white text-xl">&times;</button>
       </div>
 
       <div class="space-y-3.5 text-xs">
         <div>
-          <label class="text-orange-400 font-bold block mb-1">Jenis Ticket *</label>
+          <label class="text-orange-400 font-bold block mb-1">Work Order Type *</label>
           <select id="newTicketType" onchange="toggleNewTicketFields()" class="w-full bg-zinc-900 border border-orange-500/40 rounded-xl px-3 py-2 font-semibold text-white">
-            <option value="Survey">Survey (s/d Forward WO Installation)</option>
-            <option value="Mapping">Mapping (Coverage & Description)</option>
+            <option value="Survey">Survey (through Forward WO Installation)</option>
+            <option value="Mapping">Mapping (Coverage &amp; Description)</option>
           </select>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label class="text-zinc-400 font-semibold block mb-1">Work Order Ticket *</label>
-            <input type="text" id="newCustomer" placeholder="Contoh: PT Hura Jaya" class="w-full bg-zinc-900 border border-white/20 rounded-xl px-3 py-2 text-white">
+            <label class="text-zinc-400 font-semibold block mb-1">Work Order / Customer *</label>
+            <input type="text" id="newCustomer" placeholder="e.g., PT Hura Jaya" class="w-full bg-zinc-900 border border-white/20 rounded-xl px-3 py-2 text-white">
           </div>
           <div id="newSurveyStatusWrap">
-            <label class="text-zinc-400 font-semibold block mb-1">Ticket Status</label>
+            <label class="text-zinc-400 font-semibold block mb-1">Work Order Status</label>
             <select id="newSurveyStatus" class="w-full bg-zinc-900 border border-white/20 rounded-xl px-3 py-2 text-white">
               <option value="Open" selected>Open</option>
               <option value="On Progress">On Progress</option>
@@ -309,25 +309,25 @@
           </div>
           <div>
             <label class="text-zinc-400 font-semibold block mb-1">Description</label>
-            <textarea id="newMappingDesc" rows="3" placeholder="Detail vendor, jarak tarik FO, koordinat..." class="w-full bg-zinc-950 border border-white/20 rounded-xl px-3 py-2 text-white"></textarea>
+            <textarea id="newMappingDesc" rows="3" placeholder="Vendor details, fiber route distance, coordinates..." class="w-full bg-zinc-950 border border-white/20 rounded-xl px-3 py-2 text-white"></textarea>
           </div>
         </div>
       </div>
 
       <div class="flex justify-end gap-2 mt-6 pt-3 border-t border-white/15">
         <button onclick="closeAddModal()" class="px-4 py-2 text-xs text-zinc-400 hover:text-white font-medium">Cancel</button>
-        <button onclick="submitNewTicket()" id="btnSubmitNew" class="bg-orange-600 hover:bg-orange-500 text-white px-5 py-2 rounded-xl text-xs font-bold shadow">Create & Notify</button>
+        <button onclick="submitNewTicket()" id="btnSubmitNew" class="bg-orange-600 hover:bg-orange-500 text-white px-5 py-2 rounded-xl text-xs font-bold shadow">Create &amp; Notify</button>
       </div>
     </div>
   </div>
 
-  <!-- Modal Ticket History & Vertical PDF -->
+  <!-- Modal Activity Log & Vertical PDF -->
   <div id="historyModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
     <div class="card-dark rounded-2xl p-6 w-full max-w-3xl max-h-[88vh] flex flex-col shadow-2xl">
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 border-b border-white/15 pb-4">
         <div>
-          <span id="historyTypeLabel" class="text-[10px] uppercase tracking-wider text-orange-400 font-bold">Audit Trail Resi</span>
-          <h2 class="text-base font-extrabold text-white mt-0.5">Ticket Progress History</h2>
+          <span id="historyTypeLabel" class="text-[10px] uppercase tracking-wider text-orange-400 font-bold">Activity Log</span>
+          <h2 class="text-base font-extrabold text-white mt-0.5">Work Order Progress History</h2>
         </div>
 
         <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
@@ -341,7 +341,7 @@
 
       <div id="historyLoader" class="text-center py-12 hidden">
         <div class="inline-block animate-spin rounded-full h-7 w-7 border-t-2 border-b-2 border-orange-500 mb-2"></div>
-        <p class="text-xs text-zinc-400">Memuat Ticket Progress History...</p>
+        <p class="text-xs text-zinc-400">Loading Activity Log...</p>
       </div>
 
       <div id="historyListContainer" class="overflow-y-auto space-y-3 pr-1 flex-1"></div>
@@ -352,35 +352,37 @@
   <div id="settingsModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
     <div class="card-dark rounded-2xl p-6 w-full max-w-md shadow-2xl">
       <div class="flex justify-between items-center mb-4 border-b border-white/15 pb-3">
-        <h2 class="text-base font-bold text-white">System & Access Info</h2>
+        <h2 class="text-base font-bold text-white">System &amp; Access Info</h2>
         <button onclick="closeSettingsModal()" class="text-zinc-400 hover:text-white text-xl">&times;</button>
       </div>
       <div class="space-y-3 text-xs text-zinc-300">
         <div class="bg-zinc-950 p-3.5 rounded-xl border border-white/15">
-          <p class="text-zinc-500 text-[10px]">Status Sesi Saat Ini</p>
+          <p class="text-zinc-500 text-[10px]">Current Session Status</p>
           <p id="settingsAuthStatus" class="font-bold text-white text-sm mt-0.5">Viewer Mode (Read-Only)</p>
         </div>
         <div class="bg-zinc-950 p-3.5 rounded-xl border border-white/15">
-          <p class="text-zinc-500 text-[10px]">Versi Aplikasi</p>
-          <p class="font-semibold text-white mt-0.5">BLiP Ticket Monitoring Dashboard v3.9.5 (Horizontal Edition)</p>
-          <p class="text-[10px] text-zinc-500 mt-1">Work Order This Week • Need Attention Work Order • Stepper → Update → History Resi</p>
+          <p class="text-zinc-500 text-[10px]">Application Version</p>
+          <p class="font-semibold text-white mt-0.5">BLiP Work Order Monitoring Dashboard v3.9.6 (Horizontal Edition)</p>
+          <p class="text-[10px] text-zinc-500 mt-1">Weekly Work Orders • Need Attention Work Orders • Workflow Progress &amp; Activity Log</p>
         </div>
       </div>
       <div class="mt-5 flex justify-end">
-        <button onclick="closeSettingsModal()" class="bg-orange-600 hover:bg-orange-500 text-white px-4 py-2 rounded-xl text-xs font-semibold shadow">Tutup</button>
+        <button onclick="closeSettingsModal()" class="bg-orange-600 hover:bg-orange-500 text-white px-4 py-2 rounded-xl text-xs font-semibold shadow">Close</button>
       </div>
     </div>
   </div>
 
   <script>
-    // ================= KONFIGURASI =================
+    // ================= CONFIGURATION =================
     const API_URL = "https://script.google.com/macros/s/AKfycbyy9-44zG4rOt3MnsR8NCPY0NlTBQBTnkuCXoUeoJmbmiqw9dvjDQ8ueOrv09P4DDgR/exec";
     const GOOGLE_CLIENT_ID = "478985076311-eh3rsa1o4m9od56egthrj15o6pog0sta.apps.googleusercontent.com";
-    // ===============================================
+    // =================================================
 
     let appData = { survey: [], mapping: [] };
     let activeTab = "All";
-    let currentStatusFilter = "ALL";
+    let currentStatusFilter = "NEED_ATTENTION";
+    let activeKpiFilter = null;
+
     let authToken = "";
     try { authToken = localStorage.getItem("ticket_auth_token") || ""; } catch (e) {}
     let currentUser = null;
@@ -398,14 +400,14 @@
       const badge = document.getElementById("weekRangeBadge");
       if (!badge) return;
       const now = new Date();
-      const dayOfWeek = now.getDay(); // 0 = Sun, 1 = Mon
+      const dayOfWeek = now.getDay();
       const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
       const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + diffToMonday);
       const sunday = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + 6);
 
-      const fmt = (d) => d.toLocaleDateString("id-ID", { day: "2-digit", month: "short" });
+      const fmt = (d) => d.toLocaleDateString("en-US", { day: "2-digit", month: "short" });
       const yr = sunday.getFullYear();
-      badge.innerText = `${fmt(monday)} – ${fmt(sunday)} ${yr}`;
+      badge.innerText = `${fmt(monday)} – ${fmt(sunday)}, ${yr}`;
     }
 
     function initGoogleSignIn(attempt = 1) {
@@ -455,7 +457,7 @@
           fetchAllData();
         } else {
           logoutUser(false);
-          if (isManualLogin) alert(auth.message || "Akun Google tidak memiliki izin Edit.");
+          if (isManualLogin) alert(auth.message || "Your Google account does not have edit permissions.");
           fetchAllData();
         }
       } catch (err) {
@@ -491,7 +493,7 @@
         googleBtn.classList.remove("hidden");
         headerBadge.classList.add("hidden");
         headerBadge.classList.remove("flex");
-        settingsStatus.innerText = "Viewer Mode (Belum Login)";
+        settingsStatus.innerText = "Viewer Mode (Not Signed In)";
       }
     }
 
@@ -577,18 +579,81 @@
       });
     }
 
-    // Klik [All] | [Mapping] | [Survey] -> langsung buka tabel tanpa collapse
+    // Click [All] | [Mapping] | [Survey] under Need Attention
     function selectDivisionTab(type) {
       activeTab = type;
-      currentStatusFilter = "ALL";
+      activeKpiFilter = null;
+      currentStatusFilter = "NEED_ATTENTION";
       document.getElementById("searchInput").value = "";
+      renderCombinedKpi();
       syncDivisionButtonsUI();
       renderActiveTab();
     }
 
-    function setStatusFilter(status) {
-      currentStatusFilter = status;
+    // Click one of the 6 WEEKLY WORK ORDERS KPI cards
+    function selectKpiCard(kpiKey) {
+      activeKpiFilter = kpiKey;
+      activeTab = "All";
+      document.getElementById("searchInput").value = "";
+
+      if (kpiKey === "ALL") {
+        currentStatusFilter = "ALL_INCLUDING_CLOSED";
+      } else if (kpiKey === "Open") {
+        currentStatusFilter = "Open";
+      } else if (kpiKey === "On Progress") {
+        currentStatusFilter = "On Progress";
+      } else if (kpiKey === "Pending") {
+        currentStatusFilter = "Pending";
+      } else if (kpiKey === "Cancel") {
+        currentStatusFilter = "Cancel";
+      } else if (kpiKey === "Closed") {
+        currentStatusFilter = "Closed";
+      }
+
+      renderCombinedKpi();
+      syncDivisionButtonsUI();
       renderActiveTab();
+
+      const panelEl = document.getElementById("workOrderControlPanel");
+      if (panelEl) {
+        panelEl.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }
+
+    function setStatusFilter(status) {
+      activeKpiFilter = null;
+      currentStatusFilter = status;
+      renderCombinedKpi();
+      renderActiveTab();
+    }
+
+    function renderFilterPills() {
+      // Only All (Need Attention), Open, On Progress, Pending — no Closed or Cancel pills
+      const pills = [
+        { key: "NEED_ATTENTION", label: "All" },
+        { key: "Open", label: "Open" },
+        { key: "On Progress", label: "On Progress" },
+        { key: "Pending", label: "Pending" }
+      ];
+
+      document.getElementById("status-filter-pills").innerHTML = pills.map(p => {
+        const isActive = currentStatusFilter === p.key;
+        return `
+          <button onclick="setStatusFilter('${p.key}')" class="${isActive ? 'bg-orange-600 text-white border border-orange-400' : 'bg-zinc-900 text-zinc-400 hover:bg-zinc-800 hover:text-white border border-white/15'} px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition">
+            ${p.label}
+          </button>
+        `;
+      }).join("");
+    }
+
+    function matchWorkOrderStatus(effectiveStatus) {
+      if (currentStatusFilter === "ALL_INCLUDING_CLOSED") {
+        return true;
+      }
+      if (currentStatusFilter === "NEED_ATTENTION") {
+        return !["Closed", "Cancel"].includes(effectiveStatus);
+      }
+      return effectiveStatus === currentStatusFilter;
     }
 
     function clearDateFilter() {
@@ -652,7 +717,7 @@
       if (!rawTs || rawTs === "-") return "-";
       const d = parseLocalTimestamp(rawTs);
       if (d) {
-        const dp = d.toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" });
+        const dp = d.toLocaleDateString("en-US", { day: "2-digit", month: "short", year: "numeric" });
         const hh = String(d.getHours()).padStart(2, "0");
         const mm = String(d.getMinutes()).padStart(2, "0");
         return `${dp}, ${hh}:${mm} WIB`;
@@ -749,7 +814,7 @@
           const stVal = cleanMain.replace(/^ticket status:\s*/i, "").trim();
           const pair = stVal.split("→").map(x => x.trim());
           if (pair.length === 2 && pair[0] !== pair[1]) {
-            changes.unshift(`Status Tiket: ${pair[0]} → ${pair[1]}`);
+            changes.unshift(`Work Order Status: ${pair[0]} → ${pair[1]}`);
           }
         } else if (cleanMain && !cleanMain.toLowerCase().startsWith("update dicatat")) {
           changes.push(cleanMain);
@@ -804,7 +869,7 @@
       }
     }
 
-    // ================= 6 KPI CARDS GABUNGAN =================
+    // ================= 6 INTERACTIVE KPI CARDS (WEEKLY WORK ORDERS) =================
     function renderCombinedKpi() {
       const surveyStatuses = (appData.survey || []).map(t => {
         const cascaded = cascadeStages([t.survey, t.reportSurvey, t.boq, t.materialEquip, t.forwardWo], t.status);
@@ -820,7 +885,8 @@
 
       const cards = [
         {
-          label: "Total Ticket",
+          key: "ALL",
+          label: "Total Work Orders",
           mapCount: mapTotal,
           srvCount: srvTotal,
           bgIcon: "bg-orange-500/15 text-orange-400 border border-orange-500/35",
@@ -829,6 +895,7 @@
           icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/></svg>`
         },
         {
+          key: "Open",
           label: "Open",
           mapCount: countMap(["Open"]),
           srvCount: countSrv(["Open"]),
@@ -838,6 +905,7 @@
           icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v4m0 4h.01"/></svg>`
         },
         {
+          key: "On Progress",
           label: "On Progress",
           mapCount: countMap(["On Progress"]),
           srvCount: countSrv(["On Progress"]),
@@ -847,6 +915,7 @@
           icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>`
         },
         {
+          key: "Pending",
           label: "Pending",
           mapCount: countMap(["Pending"]),
           srvCount: countSrv(["Pending"]),
@@ -856,6 +925,7 @@
           icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 2h12M6 22h12M8 2v4l4 4 4-4V2M8 22v-4l4-4 4 4v4"/></svg>`
         },
         {
+          key: "Cancel",
           label: "Cancel",
           mapCount: 0,
           srvCount: countSrv(["Cancel"]),
@@ -865,6 +935,7 @@
           icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/></svg>`
         },
         {
+          key: "Closed",
           label: "Closed",
           mapCount: countMap(["Done", "Closed"]),
           srvCount: countSrv(["Closed"]),
@@ -877,10 +948,15 @@
 
       document.getElementById("kpi-container").innerHTML = cards.map(c => {
         const totalVal = c.mapCount + c.srvCount;
-        const detailLine = `(${c.mapCount} Ticket Mapping, ${c.srvCount} Ticket Survey)`;
+        const detailLine = `(${c.mapCount} Mapping, ${c.srvCount} Survey)`;
+        const isSelected = activeKpiFilter === c.key;
+        const activeRing = isSelected
+          ? "border-orange-500 ring-2 ring-orange-500/35 bg-orange-600/10"
+          : "hover:border-orange-500/70";
+
         return `
-          <div class="card-dark rounded-2xl p-3.5 flex flex-col justify-between gap-2.5 hover:border-orange-500/70 transition">
-            <div class="flex items-start justify-between gap-2">
+          <button type="button" onclick="selectKpiCard('${c.key}')" class="card-dark rounded-2xl p-3.5 flex flex-col justify-between gap-2.5 text-left cursor-pointer transition ${activeRing}">
+            <div class="flex items-start justify-between gap-2 w-full">
               <div class="flex items-center gap-2.5 min-w-0">
                 <div class="w-9 h-9 rounded-xl ${c.bgIcon} flex items-center justify-center shrink-0">
                   ${c.icon}
@@ -895,7 +971,7 @@
               </svg>
             </div>
             <p class="text-[11px] text-zinc-400 leading-snug" title="${detailLine}">${detailLine}</p>
-          </div>
+          </button>
         `;
       }).join("");
     }
@@ -980,7 +1056,7 @@
                 <div class="w-full flex items-center">
                   <div class="h-[2.5px] flex-1 ${sIdx === 0 ? 'opacity-0' : leftLineColor}"></div>
                   <button onclick="clickStepperPoint('${t.ticketId}', '${st.key}')"
-                    title="Klik untuk lihat & update ${st.fullLabel}"
+                    title="Click to view & update ${st.fullLabel}"
                     class="w-9 h-9 rounded-full shrink-0 flex items-center justify-center transition-all duration-300 cursor-pointer hover:scale-110 focus:outline-none ${circleStyle}">
                     ${iconHtml}
                   </button>
@@ -992,7 +1068,7 @@
 
                 <button onclick="clickStepperPoint('${t.ticketId}', '${st.key}')"
                   class="mt-1.5 px-2.5 py-1 rounded-lg hover:bg-orange-500/15 transition-transform duration-200 cursor-pointer ${isSelectedStage ? 'rotate-180 text-orange-400' : 'text-orange-500 hover:text-orange-400'}"
-                  title="Expand detail ${st.label}">
+                  title="Expand ${st.label} details">
                   <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.6" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 7l6 5 6-5M6 13l6 5 6-5"/>
                   </svg>
@@ -1021,12 +1097,12 @@
           <div class="bg-zinc-950 border border-orange-500/40 rounded-2xl p-4 space-y-3">
             <div class="flex flex-wrap items-center justify-between gap-2 border-b border-white/15 pb-2.5">
               <div class="flex items-center gap-2">
-                <span class="text-xs font-extrabold text-orange-400 uppercase tracking-wide">Menu Update: ${activeStageObj.fullLabel}</span>
+                <span class="text-xs font-extrabold text-orange-400 uppercase tracking-wide">Update Stage: ${activeStageObj.fullLabel}</span>
                 ${getStatusPillHtml(headerDisplayStatus)}
               </div>
               ${isAdmin ? `
                 <div class="flex items-center gap-1.5 text-xs">
-                  <span class="text-zinc-400">Ticket Status:</span>
+                  <span class="text-zinc-400">Work Order Status:</span>
                   <select id="exp-mainstatus-${t.rowIndex}" data-initial="${t.computedStatus}" class="bg-zinc-900 border border-white/20 rounded-lg px-2 py-1 text-[11px] font-bold text-white focus:border-orange-500 focus:outline-none">
                     ${["Open", "On Progress", "Pending", "Closed", "Cancel"].map(s => `<option value="${s}" ${t.computedStatus === s ? "selected" : ""}>${s}</option>`).join("")}
                   </select>
@@ -1036,7 +1112,7 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs items-end">
               <div>
-                <label class="text-[10px] font-bold text-zinc-400 uppercase block mb-1">Status ${activeStageObj.label}</label>
+                <label class="text-[10px] font-bold text-zinc-400 uppercase block mb-1">${activeStageObj.label} Status</label>
                 <select id="exp-stageval-${t.rowIndex}" class="w-full bg-zinc-900 border border-white/20 rounded-xl px-3 py-2 font-bold text-white focus:border-orange-500 focus:outline-none">
                   ${activeStageObj.opts.map(o => {
                     const v = o === "Not Yet" ? "" : o;
@@ -1052,18 +1128,18 @@
 
             <div>
               <label class="text-[10px] font-bold text-zinc-400 uppercase block mb-1">Notes</label>
-              <textarea id="exp-note-${t.rowIndex}" rows="2" placeholder="Catatan progres..." class="w-full bg-zinc-900 border border-white/20 rounded-xl px-3 py-1.5 text-white focus:border-orange-500 focus:outline-none">${stageDetailObj.note || ''}</textarea>
+              <textarea id="exp-note-${t.rowIndex}" rows="2" placeholder="Progress notes..." class="w-full bg-zinc-900 border border-white/20 rounded-xl px-3 py-1.5 text-white focus:border-orange-500 focus:outline-none">${stageDetailObj.note || ''}</textarea>
             </div>
 
             <div class="flex justify-end pt-1">
               <button onclick="saveExpandedSurveyStage(${t.rowIndex}, '${t.ticketId}', '${activeStageKey}', this)" class="bg-orange-600 hover:bg-orange-500 text-white px-5 py-2 rounded-xl text-xs font-bold shadow-md shadow-orange-600/20 transition">
-                Save & Notify Team
+                Save &amp; Notify Team
               </button>
             </div>
           </div>
         ` : `
           <div class="bg-zinc-950/70 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-zinc-400">
-            Login dengan akun Google untuk mengupdate tahapan <strong class="text-white">${activeStageObj.fullLabel}</strong>.
+            Please sign in with your Google account first to manage or update work orders.
           </div>
         `;
 
@@ -1087,14 +1163,14 @@
                           </ul>
                         ` : ""}
                         <p class="text-[11px] text-zinc-400 pt-1 border-t border-white/10">
-                          <span class="text-zinc-500">Catatan:</span> <span class="text-zinc-200">${parsed.note}</span>
+                          <span class="text-zinc-500">Notes:</span> <span class="text-zinc-200">${parsed.note}</span>
                         </p>
                       </div>
                     </div>
                   `;
                 }).join("")
               : `<div class="bg-zinc-950 border border-white/15 rounded-xl p-3 text-xs text-zinc-400">
-                  Belum ada riwayat resi pada tahapan <strong class="text-white">${activeStageObj.label}</strong> (${headerDisplayStatus}).
+                  No activity log recorded yet for <strong class="text-white">${activeStageObj.label}</strong> (${headerDisplayStatus}).
                 </div>`
             );
 
@@ -1102,8 +1178,8 @@
           <div class="bg-zinc-950/60 border border-white/15 rounded-2xl p-4 space-y-3">
             <div class="flex flex-wrap items-center justify-between gap-2 border-b border-white/15 pb-2">
               <div>
-                <span class="text-[10px] uppercase tracking-wider text-orange-400 font-bold">Resi Tracking • ${activeStageObj.fullLabel}</span>
-                <h4 class="text-xs font-extrabold text-white">Riwayat Progress (${t.ticketId})</h4>
+                <span class="text-[10px] uppercase tracking-wider text-orange-400 font-bold">Activity Log • ${activeStageObj.fullLabel}</span>
+                <h4 class="text-xs font-extrabold text-white">Progress History (${t.ticketId})</h4>
               </div>
               <button onclick="openHistoryModal('Survey', '${t.ticketId}')" class="text-[11px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/35 px-2.5 py-1 rounded-lg hover:bg-emerald-500/20 transition">
                 📄 Export PDF History
@@ -1158,13 +1234,7 @@
     // ================= RENDER ALL COMBINED TABLE (MAPPING + SURVEY) =================
     function renderAllCombinedTable() {
       document.getElementById("coverageFilter").classList.add("hidden");
-
-      const statuses = ["ALL", "Open", "On Progress", "Pending", "Closed", "Cancel"];
-      document.getElementById("status-filter-pills").innerHTML = statuses.map(st => `
-        <button onclick="setStatusFilter('${st}')" class="${currentStatusFilter === st ? 'bg-orange-600 text-white border border-orange-400' : 'bg-zinc-900 text-zinc-400 hover:bg-zinc-800 hover:text-white border border-white/15'} px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition">
-          ${st === "ALL" ? "All" : st}
-        </button>
-      `).join("");
+      renderFilterPills();
 
       const searchQuery = document.getElementById("searchInput").value.toLowerCase();
 
@@ -1195,7 +1265,7 @@
       });
 
       const merged = [...surveyNormalized, ...mappingNormalized].filter(item => {
-        const matchStatus = currentStatusFilter === "ALL" || item.unifiedStatus === currentStatusFilter;
+        const matchStatus = matchWorkOrderStatus(item.unifiedStatus);
         const matchSearch =
           (item.customer || "").toLowerCase().includes(searchQuery) ||
           (item.ticketId || "").toLowerCase().includes(searchQuery) ||
@@ -1212,7 +1282,7 @@
 
       const container = document.getElementById("main-table-container");
       if (merged.length === 0) {
-        container.innerHTML = `<div class="text-center py-14 text-zinc-500 text-sm">Tidak ada data ticket Mapping maupun Survey yang sesuai filter.</div>`;
+        container.innerHTML = `<div class="text-center py-14 text-zinc-500 text-sm">No work orders match the current filter.</div>`;
         return;
       }
 
@@ -1243,7 +1313,7 @@
                   <span class="text-[11px] font-mono text-orange-400 font-bold">${item.ticketId}</span>
                   <div class="mt-2">
                     <button onclick="openHistoryModal('Mapping', '${item.ticketId}')" class="text-[10.5px] font-semibold text-amber-400 hover:text-amber-300 bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/35 transition">
-                      🕒 Log History
+                      🕒 Activity Log
                     </button>
                   </div>
                 </div>
@@ -1275,7 +1345,7 @@
                 ${canEdit ? `
                   <div class="flex flex-col sm:flex-row gap-2 items-stretch sm:items-end">
                     <textarea id="cmb-map-desc-${r}" rows="1" placeholder="Description..." class="flex-1 bg-zinc-900 border border-white/20 rounded-lg px-2.5 py-1.5 text-xs text-white focus:border-orange-500 focus:outline-none">${item.description || ""}</textarea>
-                    <button onclick="updateCombinedMappingRow(${r}, this)" class="bg-orange-600 hover:bg-orange-500 text-white px-3.5 py-1.5 rounded-lg text-xs font-extrabold shadow shrink-0 transition">Save & Notify</button>
+                    <button onclick="updateCombinedMappingRow(${r}, this)" class="bg-orange-600 hover:bg-orange-500 text-white px-3.5 py-1.5 rounded-lg text-xs font-extrabold shadow shrink-0 transition">Save &amp; Notify</button>
                   </div>
                   <p class="text-[10.5px] text-zinc-400">PIC: <strong class="text-orange-400">👤 ${autoPicName}</strong></p>
                 ` : `<p class="text-zinc-300 whitespace-pre-line leading-relaxed">${item.description || "-"}</p>`}
@@ -1291,9 +1361,9 @@
           <thead>
             <tr class="table-header-dark text-xs uppercase tracking-wider divide-x divide-white/10">
               <th class="py-3.5 px-4 text-center">#</th>
-              <th class="py-3.5 px-4">Ticket Status</th>
-              <th class="py-3.5 px-4">Work Order Ticket</th>
-              <th class="py-3.5 px-4 text-center min-w-[580px]">Progress Tracking & Detail</th>
+              <th class="py-3.5 px-4">Work Order Status</th>
+              <th class="py-3.5 px-4">Work Order</th>
+              <th class="py-3.5 px-4 text-center min-w-[580px]">Workflow Progress</th>
               <th class="py-3.5 px-4 text-right">Last Update</th>
             </tr>
           </thead>
@@ -1303,7 +1373,7 @@
     }
 
     async function updateCombinedMappingRow(r, btn) {
-      if (!authToken || !currentUser) return alert("Silakan login dengan akun Gmail terlebih dahulu.");
+      if (!authToken || !currentUser) return alert("Please sign in with your Google account first to manage or update work orders.");
       const orig = btn.innerText;
       btn.innerText = "Saving...";
       btn.disabled = true;
@@ -1330,7 +1400,7 @@
         btn.classList.replace("bg-orange-600", "bg-emerald-600");
         setTimeout(() => fetchAllData(), 2200);
       } catch (err) {
-        alert("Gagal menyimpan Mapping.");
+        alert("Failed to save Mapping work order.");
         btn.innerText = orig;
         btn.disabled = false;
       }
@@ -1340,6 +1410,7 @@
     function renderSurveyTable() {
       const list = appData.survey || [];
       document.getElementById("coverageFilter").classList.add("hidden");
+      renderFilterPills();
 
       const normalizedList = list.map(t => {
         const cascaded = cascadeStages([t.survey, t.reportSurvey, t.boq, t.materialEquip, t.forwardWo], t.status);
@@ -1355,16 +1426,9 @@
         };
       });
 
-      const statuses = ["ALL", "Open", "On Progress", "Pending", "Closed", "Cancel"];
-      document.getElementById("status-filter-pills").innerHTML = statuses.map(st => `
-        <button onclick="setStatusFilter('${st}')" class="${currentStatusFilter === st ? 'bg-orange-600 text-white border border-orange-400' : 'bg-zinc-900 text-zinc-400 hover:bg-zinc-800 hover:text-white border border-white/15'} px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition">
-          ${st === "ALL" ? "All" : st}
-        </button>
-      `).join("");
-
       const searchQuery = document.getElementById("searchInput").value.toLowerCase();
       const filtered = normalizedList.filter(t => {
-        const matchStatus = currentStatusFilter === "ALL" || t.computedStatus === currentStatusFilter;
+        const matchStatus = matchWorkOrderStatus(t.computedStatus);
         const matchSearch = (t.customer || "").toLowerCase().includes(searchQuery) || (t.ticketId || "").toLowerCase().includes(searchQuery);
         const matchDate = matchDateRange(t.lastUpdated);
         return matchStatus && matchSearch && matchDate;
@@ -1372,20 +1436,20 @@
 
       const container = document.getElementById("main-table-container");
       if (filtered.length === 0) {
-        container.innerHTML = `<div class="text-center py-14 text-zinc-500 text-sm">Tidak ada data ticket Survey yang sesuai filter.</div>`;
+        container.innerHTML = `<div class="text-center py-14 text-zinc-500 text-sm">No Survey work orders match the current filter.</div>`;
         return;
       }
 
-      const rowsHtml = filtered.map(t => buildSurveyRowHtml(t, t.no, false)).join("");
+      const rowsHtml = filtered.map((t, idx) => buildSurveyRowHtml(t, idx + 1, false)).join("");
 
       container.innerHTML = `
         <table class="w-full text-left border-collapse">
           <thead>
             <tr class="table-header-dark text-xs uppercase tracking-wider divide-x divide-white/10">
               <th class="py-3.5 px-4 text-center">#</th>
-              <th class="py-3.5 px-4">Ticket Status</th>
-              <th class="py-3.5 px-4">Work Order Ticket</th>
-              <th class="py-3.5 px-4 text-center min-w-[580px]">Progress Tracking & Stepper</th>
+              <th class="py-3.5 px-4">Work Order Status</th>
+              <th class="py-3.5 px-4">Work Order</th>
+              <th class="py-3.5 px-4 text-center min-w-[580px]">Workflow Progress</th>
               <th class="py-3.5 px-4 text-right">Last Update</th>
             </tr>
           </thead>
@@ -1409,7 +1473,7 @@
     }
 
     async function saveExpandedSurveyStage(rowIndex, ticketId, stageKey, btn) {
-      if (!authToken || !currentUser) return alert("Silakan login dengan akun Gmail terlebih dahulu.");
+      if (!authToken || !currentUser) return alert("Please sign in with your Google account first to manage or update work orders.");
       const ticket = (appData.survey || []).find(item => item.rowIndex === rowIndex);
       if (!ticket) return;
 
@@ -1469,7 +1533,7 @@
         btn.classList.replace("bg-orange-600", "bg-emerald-600");
         setTimeout(() => fetchAllData(), 2200);
       } catch (err) {
-        alert("Gagal menyimpan perubahan.");
+        alert("Failed to save changes.");
         btn.innerText = origText;
         btn.disabled = false;
       }
@@ -1479,20 +1543,14 @@
     function renderMappingTable() {
       const list = appData.mapping || [];
       document.getElementById("coverageFilter").classList.remove("hidden");
-
-      const statuses = ["ALL", "Open", "On Progress", "Pending", "Closed", "Cancel"];
-      document.getElementById("status-filter-pills").innerHTML = statuses.map(st => `
-        <button onclick="setStatusFilter('${st}')" class="${currentStatusFilter === st ? 'bg-orange-600 text-white border border-orange-400' : 'bg-zinc-900 text-zinc-400 hover:bg-zinc-800 hover:text-white border border-white/15'} px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition">
-          ${st === "ALL" ? "All" : st}
-        </button>
-      `).join("");
+      renderFilterPills();
 
       const covQuery = document.getElementById("coverageFilter").value || "ALL";
       const searchQuery = document.getElementById("searchInput").value.toLowerCase();
 
       const filtered = list.filter(t => {
         const effSt = getEffectiveMappingStatus(t.status);
-        const matchStatus = currentStatusFilter === "ALL" || effSt === currentStatusFilter;
+        const matchStatus = matchWorkOrderStatus(effSt);
         const matchCov = covQuery === "ALL" || t.coverage === covQuery;
         const matchSearch = (t.customer || "").toLowerCase().includes(searchQuery) || (t.description || "").toLowerCase().includes(searchQuery);
         const matchDate = matchDateRange(t.lastUpdated);
@@ -1501,56 +1559,64 @@
 
       const container = document.getElementById("main-table-container");
       if (filtered.length === 0) {
-        container.innerHTML = `<div class="text-center py-14 text-zinc-500 text-sm">Tidak ada data ticket Mapping yang sesuai filter.</div>`;
+        container.innerHTML = `<div class="text-center py-14 text-zinc-500 text-sm">No Mapping work orders match the current filter.</div>`;
         return;
       }
 
       const canEdit = Boolean(currentUser);
       const autoPicName = currentUser ? formatPicLabel(currentUser.name) : "";
 
-      const rowsHtml = filtered.map(t => {
+      const rowsHtml = filtered.map((t, idx) => {
         const r = t.rowIndex;
         const stNorm = normalizeMappingStatus(t.status);
+        const effSt = getEffectiveMappingStatus(t.status);
         return `
           <tr class="border-b border-white/15 hover:bg-zinc-900/30 align-top transition divide-x divide-white/10">
-            <td class="py-4 px-4 font-extrabold text-zinc-500 text-sm w-12 text-center">${t.no}</td>
-            <td class="py-4 px-4 min-w-[190px]">
-              <p class="font-extrabold text-white text-sm truncate">${t.customer}</p>
-              <span class="text-[10px] font-mono text-orange-400 font-bold">${t.ticketId}</span>
-              <div class="mt-2.5">
-                <button onclick="openHistoryModal('Mapping', '${t.ticketId}')" class="text-[10.5px] font-semibold text-amber-400 hover:text-amber-300 bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/35 transition">
-                  🕒 Log History
-                </button>
-              </div>
-            </td>
+            <td class="py-4 px-4 font-extrabold text-zinc-500 text-sm w-12 text-center">${idx + 1}</td>
             <td class="py-4 px-4 whitespace-nowrap font-semibold">
               ${canEdit ? `
                 <select id="map-status-${r}" class="bg-zinc-900 border border-white/20 rounded-lg px-2.5 py-1 text-xs font-bold text-white focus:border-orange-500 focus:outline-none">
                   ${["Open", "On Progress", "Pending", "Done"].map(opt => `<option value="${opt}" ${stNorm === opt ? "selected" : ""}>${opt}</option>`).join("")}
                 </select>
-              ` : getStatusPillHtml(stNorm)}
+              ` : getStatusPillHtml(effSt)}
             </td>
-            <td class="py-4 px-4 whitespace-nowrap font-bold">
-              ${canEdit ? `
-                <select id="map-cov-${r}" class="bg-zinc-900 border border-white/20 rounded-lg px-2.5 py-1 text-xs font-bold text-white focus:border-orange-500 focus:outline-none">
-                  <option value="" ${!t.coverage ? "selected" : ""}>Not Yet</option>
-                  <option value="Onet" ${t.coverage === "Onet" ? "selected" : ""}>Onet</option>
-                  <option value="Partner" ${t.coverage === "Partner" ? "selected" : ""}>Partner</option>
-                  <option value="Not Cover" ${t.coverage === "Not Cover" ? "selected" : ""}>Not Cover</option>
-                </select>
-              ` : getStatusPillHtml(t.coverage || "Not Yet")}
-            </td>
-            <td class="py-4 px-4 min-w-[260px]">
-              ${canEdit ? `
-                <div class="space-y-2">
-                  <div class="flex items-center justify-between bg-zinc-900/80 border border-white/15 rounded-lg px-2.5 py-1 text-[10.5px]">
-                    <span class="text-zinc-400">PIC:</span>
-                    <span class="font-bold text-orange-400">👤 ${autoPicName}</span>
+            <td class="py-4 px-4 min-w-[200px]">
+              <div class="flex items-start gap-2.5">
+                <span class="text-zinc-400 shrink-0 mt-0.5">🏢</span>
+                <div class="overflow-hidden">
+                  <p class="font-extrabold text-white text-sm leading-snug">${t.customer || "-"}</p>
+                  <span class="text-[11px] font-mono text-orange-400 font-bold">${t.ticketId}</span>
+                  <div class="mt-2">
+                    <button onclick="openHistoryModal('Mapping', '${t.ticketId}')" class="text-[10.5px] font-semibold text-amber-400 hover:text-amber-300 bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/35 transition">
+                      🕒 Activity Log
+                    </button>
                   </div>
-                  <textarea id="map-desc-${r}" rows="2" placeholder="Description..." class="w-full bg-zinc-900 border border-white/20 rounded-lg px-2.5 py-1.5 text-xs text-white focus:border-orange-500 focus:outline-none">${t.description || ''}</textarea>
-                  <button onclick="updateMappingRow(${r}, this)" class="bg-orange-600 hover:bg-orange-500 text-white px-3 py-1 rounded-lg text-xs font-extrabold shadow transition">Save & Notify</button>
                 </div>
-              ` : `<p class="text-[12px] text-zinc-300 whitespace-pre-line leading-relaxed font-medium">${t.description || "-"}</p>`}
+              </div>
+            </td>
+            <td class="py-4 px-4 min-w-[340px]">
+              <div class="bg-zinc-950/80 border border-white/15 rounded-xl p-3.5 text-xs space-y-2.5">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                  <div class="flex items-center gap-2">
+                    <span class="text-[10px] uppercase tracking-wider text-zinc-400 font-bold">Coverage:</span>
+                    ${canEdit ? `
+                      <select id="map-cov-${r}" class="bg-zinc-900 border border-white/20 rounded-lg px-2.5 py-1 text-xs font-bold text-white focus:border-orange-500 focus:outline-none">
+                        <option value="" ${!t.coverage ? "selected" : ""}>Not Yet</option>
+                        <option value="Onet" ${t.coverage === "Onet" ? "selected" : ""}>Onet</option>
+                        <option value="Partner" ${t.coverage === "Partner" ? "selected" : ""}>Partner</option>
+                        <option value="Not Cover" ${t.coverage === "Not Cover" ? "selected" : ""}>Not Cover</option>
+                      </select>
+                    ` : getStatusPillHtml(t.coverage || "Not Yet")}
+                  </div>
+                  ${canEdit ? `<span class="text-[10.5px] text-zinc-400">PIC: <strong class="text-orange-400">👤 ${autoPicName}</strong></span>` : ""}
+                </div>
+                ${canEdit ? `
+                  <div class="flex flex-col sm:flex-row gap-2 items-stretch sm:items-end">
+                    <textarea id="map-desc-${r}" rows="2" placeholder="Description..." class="flex-1 bg-zinc-900 border border-white/20 rounded-lg px-2.5 py-1.5 text-xs text-white focus:border-orange-500 focus:outline-none">${t.description || ''}</textarea>
+                    <button onclick="updateMappingRow(${r}, this)" class="bg-orange-600 hover:bg-orange-500 text-white px-3.5 py-1.5 rounded-lg text-xs font-extrabold shadow shrink-0 transition">Save &amp; Notify</button>
+                  </div>
+                ` : `<p class="text-[12px] text-zinc-300 whitespace-pre-line leading-relaxed font-medium">${t.description || "-"}</p>`}
+              </div>
             </td>
             <td class="py-4 px-4 text-right text-xs font-medium text-zinc-300 whitespace-nowrap">${formatDisplayDate(t.lastUpdated)}</td>
           </tr>
@@ -1562,10 +1628,9 @@
           <thead>
             <tr class="table-header-dark text-xs uppercase tracking-wider divide-x divide-white/10">
               <th class="py-3.5 px-4 w-12 text-center">#</th>
-              <th class="py-3.5 px-4">Customer Name</th>
-              <th class="py-3.5 px-4">Mapping Status</th>
-              <th class="py-3.5 px-4">Coverage</th>
-              <th class="py-3.5 px-4">Description</th>
+              <th class="py-3.5 px-4">Work Order Status</th>
+              <th class="py-3.5 px-4">Work Order</th>
+              <th class="py-3.5 px-4">Workflow Progress</th>
               <th class="py-3.5 px-4 text-right">Last Update</th>
             </tr>
           </thead>
@@ -1575,7 +1640,7 @@
     }
 
     async function updateMappingRow(r, btn) {
-      if (!authToken || !currentUser) return alert("Silakan login dengan akun Gmail terlebih dahulu.");
+      if (!authToken || !currentUser) return alert("Please sign in with your Google account first to manage or update work orders.");
       const orig = btn.innerText;
       btn.innerText = "Saving...";
       btn.disabled = true;
@@ -1602,17 +1667,17 @@
         btn.classList.replace("bg-orange-600", "bg-emerald-600");
         setTimeout(() => fetchAllData(), 2200);
       } catch (err) {
-        alert("Gagal menyimpan Mapping.");
+        alert("Failed to save Mapping work order.");
         btn.innerText = orig;
         btn.disabled = false;
       }
     }
 
-    // ================= TICKET HISTORY (RESI STYLE) & VERTICAL PDF =================
+    // ================= ACTIVITY LOG & VERTICAL PDF =================
     async function openHistoryModal(type, selectedTicketId) {
       historyTypeActive = type;
       const prefix = type === "Survey" ? "SRV-" : "MAP-";
-      document.getElementById("historyTypeLabel").innerText = `Jenis Ticket: ${type} • Resi Log`;
+      document.getElementById("historyTypeLabel").innerText = `Work Order Type: ${type} • Activity Log`;
       document.getElementById("historyListContainer").innerHTML = "";
       document.getElementById("historyLoader").classList.remove("hidden");
       document.getElementById("historyModal").classList.remove("hidden");
@@ -1620,7 +1685,7 @@
 
       const custSelect = document.getElementById("historyCustomerFilter");
       const sourceList = type === "Survey" ? (appData.survey || []) : (appData.mapping || []);
-      custSelect.innerHTML = `<option value="ALL">Semua Work Order / Customer (${type})</option>` +
+      custSelect.innerHTML = `<option value="ALL">All Work Orders (${type})</option>` +
         sourceList.map(item => `<option value="${item.ticketId}" ${item.ticketId === selectedTicketId ? "selected" : ""}>${item.ticketId} - ${item.customer}</option>`).join("");
 
       try {
@@ -1629,7 +1694,7 @@
         allHistoryForType = Array.isArray(data) ? data : [];
         onHistoryFilterChange();
       } catch (err) {
-        document.getElementById("historyListContainer").innerHTML = `<p class="text-center text-xs text-rose-400 py-8">Gagal memuat history data.</p>`;
+        document.getElementById("historyListContainer").innerHTML = `<p class="text-center text-xs text-rose-400 py-8">Failed to load activity log.</p>`;
       } finally {
         document.getElementById("historyLoader").classList.add("hidden");
       }
@@ -1652,7 +1717,7 @@
     function renderHistoryTimeline() {
       const container = document.getElementById("historyListContainer");
       if (filteredHistoryLogs.length === 0) {
-        container.innerHTML = `<div class="text-center py-12 text-zinc-500 text-xs font-semibold">Belum ada riwayat perubahan untuk filter ini.</div>`;
+        container.innerHTML = `<div class="text-center py-12 text-zinc-500 text-xs font-semibold">No activity log entries match the selected filter.</div>`;
         return;
       }
 
@@ -1679,7 +1744,7 @@
 
               ${parsed.changes.length > 0 ? `
                 <div class="bg-zinc-950/90 border border-white/10 rounded-xl px-3.5 py-2.5 space-y-1">
-                  <p class="text-[10px] uppercase tracking-wider text-zinc-500 font-bold">Ringkasan Progres</p>
+                  <p class="text-[10px] uppercase tracking-wider text-zinc-500 font-bold">Progress Summary</p>
                   <ul class="space-y-1 text-xs text-zinc-200">
                     ${parsed.changes.map(c => `<li class="flex items-start gap-1.5"><span class="text-orange-400 font-bold">▸</span><span>${c}</span></li>`).join("")}
                   </ul>
@@ -1687,7 +1752,7 @@
               ` : ""}
 
               <div class="bg-zinc-950 border border-white/15 rounded-xl px-3.5 py-2.5 text-xs text-zinc-300">
-                <span class="text-[10px] uppercase tracking-wider text-zinc-500 font-bold block mb-0.5">Catatan</span>
+                <span class="text-[10px] uppercase tracking-wider text-zinc-500 font-bold block mb-0.5">Notes</span>
                 <p class="whitespace-pre-line leading-relaxed text-zinc-200">${parsed.note}</p>
               </div>
 
@@ -1703,7 +1768,7 @@
 
     function exportHistoryPDF() {
       if (filteredHistoryLogs.length === 0) {
-        return alert("Tidak ada data history untuk di-export ke PDF.");
+        return alert("No activity log data available to export to PDF.");
       }
 
       const { jsPDF } = window.jspdf;
@@ -1716,7 +1781,7 @@
 
       const filterSelect = document.getElementById("historyCustomerFilter");
       const targetLabel = filterSelect.options[filterSelect.selectedIndex].text;
-      const printedAt = new Date().toLocaleString("id-ID", {
+      const printedAt = new Date().toLocaleString("en-US", {
         day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit"
       }) + " WIB";
 
@@ -1729,13 +1794,13 @@
         doc.setTextColor(249, 115, 22);
         doc.setFont("helvetica", "bold");
         doc.setFontSize(13);
-        doc.text(`BLiP — TICKET PROGRESS HISTORY (${historyTypeActive.toUpperCase()})`, marginX, 11);
+        doc.text(`BLiP — WORK ORDER PROGRESS HISTORY (${historyTypeActive.toUpperCase()})`, marginX, 11);
 
         doc.setTextColor(220, 220, 225);
         doc.setFont("helvetica", "normal");
         doc.setFontSize(8.5);
         doc.text(`Filter: ${targetLabel}`, marginX, 18);
-        doc.text(`Dicetak: ${printedAt}  |  Total Log: ${filteredHistoryLogs.length}`, marginX, 24);
+        doc.text(`Printed: ${printedAt}  |  Total Logs: ${filteredHistoryLogs.length}`, marginX, 24);
         y = 35;
       }
 
@@ -1787,7 +1852,7 @@
         doc.setFont("helvetica", "normal");
         doc.setFontSize(8);
         doc.setTextColor(100, 116, 139);
-        doc.text(`Waktu: ${tsText}`, marginX + 5, cy);
+        doc.text(`Time: ${tsText}`, marginX + 5, cy);
         doc.text(`PIC: ${parsed.pic}`, pageW - marginX - 4, cy, { align: "right" });
 
         cy += 4.5;
@@ -1798,7 +1863,7 @@
           doc.setFont("helvetica", "bold");
           doc.setFontSize(7.5);
           doc.setTextColor(71, 85, 105);
-          doc.text("PERUBAHAN TAHAPAN", marginX + 6.5, cy + 3.8);
+          doc.text("STAGE CHANGES", marginX + 6.5, cy + 3.8);
 
           doc.setFont("helvetica", "normal");
           doc.setFontSize(8);
@@ -1816,7 +1881,7 @@
         doc.setFont("helvetica", "bold");
         doc.setFontSize(7.5);
         doc.setTextColor(154, 52, 18);
-        doc.text("CATATAN / NOTES", marginX + 6.5, cy + 3.8);
+        doc.text("NOTES", marginX + 6.5, cy + 3.8);
 
         doc.setFont("helvetica", "normal");
         doc.setFontSize(8);
@@ -1831,12 +1896,12 @@
       });
 
       const safeFile = targetLabel.replace(/[^a-zA-Z0-9-_]/g, "_");
-      doc.save(`BLiP_History_Resi_${safeFile}.pdf`);
+      doc.save(`BLiP_WorkOrder_History_${safeFile}.pdf`);
     }
 
-    // ================= ADD TICKET & SETTINGS CONTROL =================
+    // ================= ADD WORK ORDER & SETTINGS CONTROL =================
     function openAddModal() {
-      if (!currentUser || currentUser.role !== "Admin") return alert("Khusus Admin.");
+      if (!currentUser || currentUser.role !== "Admin") return alert("Admin access only.");
       document.getElementById("newTicketType").value = activeTab === "Mapping" ? "Mapping" : "Survey";
       toggleNewTicketFields();
       document.getElementById("addModal").classList.remove("hidden");
@@ -1866,9 +1931,9 @@
     }
 
     async function submitNewTicket() {
-      if (!currentUser || currentUser.role !== "Admin") return alert("Akses ditolak.");
+      if (!currentUser || currentUser.role !== "Admin") return alert("Access denied.");
       const customer = document.getElementById("newCustomer").value.trim();
-      if (!customer) return alert("Work Order Ticket wajib diisi!");
+      if (!customer) return alert("Work Order / Customer is required!");
 
       const type = document.getElementById("newTicketType").value;
       const btn = document.getElementById("btnSubmitNew");
@@ -1912,7 +1977,7 @@
         closeAddModal();
         setTimeout(() => fetchAllData(), 2200);
       } catch (err) {
-        alert("Gagal membuat ticket baru.");
+        alert("Failed to create new work order.");
       } finally {
         btn.innerText = "Create & Notify";
         btn.disabled = false;
