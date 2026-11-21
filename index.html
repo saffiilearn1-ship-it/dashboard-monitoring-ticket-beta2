@@ -3,11 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BLiP Ticket Monitoring Dashboard v3.9.1 — Horizontal Dark Edition</title>
+  <title>BLiP Ticket Monitoring Dashboard v3.9.2 — Horizontal Dark Edition</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
   <style>
     body { background-color: #09090b; color: #f4f4f5; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
     .card-dark {
@@ -43,7 +42,7 @@
     <div class="flex flex-col md:flex-row items-center gap-6 w-full lg:w-auto">
       <div class="flex items-center gap-2.5 shrink-0 select-none">
         <span class="tracking-tighter font-extrabold text-3xl text-white">BL<span class="text-orange-500">i</span>P</span>
-        <span class="text-[10px] bg-orange-500/20 border border-orange-500/50 px-2 py-0.5 rounded text-orange-400 font-mono font-bold">v3.9.1</span>
+        <span class="text-[10px] bg-orange-500/20 border border-orange-500/50 px-2 py-0.5 rounded text-orange-400 font-mono font-bold">v3.9.2</span>
       </div>
 
       <nav class="flex gap-1.5 overflow-x-auto w-full md:w-auto pb-1 md:pb-0">
@@ -256,19 +255,19 @@
     </div>
   </div>
 
-  <!-- Modal Ticket History & PDF -->
+  <!-- Modal Ticket History & Vertical PDF -->
   <div id="historyModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
     <div class="card-dark rounded-2xl p-6 w-full max-w-3xl max-h-[88vh] flex flex-col shadow-2xl">
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 border-b border-white/15 pb-4">
         <div>
-          <span id="historyTypeLabel" class="text-[10px] uppercase tracking-wider text-orange-400 font-bold">Audit Trail Report</span>
+          <span id="historyTypeLabel" class="text-[10px] uppercase tracking-wider text-orange-400 font-bold">Audit Trail Resi</span>
           <h2 class="text-base font-extrabold text-white mt-0.5">Ticket Progress History</h2>
         </div>
 
         <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
-          <select id="historyCustomerFilter" onchange="onHistoryFilterChange()" class="bg-zinc-900 border border-white/20 text-zinc-200 rounded-xl px-3 py-1.5 text-xs font-medium max-w-[210px]"></select>
+          <select id="historyCustomerFilter" onchange="onHistoryFilterChange()" class="bg-zinc-900 border border-white/20 text-zinc-200 rounded-xl px-3 py-1.5 text-xs font-medium max-w-[220px]"></select>
           <button onclick="exportHistoryPDF()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-lg shadow-emerald-600/20">
-            <span>📄</span> Export PDF
+            <span>📄</span> Export PDF (Portrait)
           </button>
           <button onclick="closeHistoryModal()" class="bg-zinc-800 hover:bg-zinc-700 border border-white/15 text-zinc-200 px-3 py-1 rounded-xl text-sm font-bold">&times;</button>
         </div>
@@ -297,8 +296,8 @@
         </div>
         <div class="bg-zinc-950 p-3.5 rounded-xl border border-white/15">
           <p class="text-zinc-500 text-[10px]">Versi Aplikasi</p>
-          <p class="font-semibold text-white mt-0.5">BLiP Ticket Monitoring Dashboard v3.9.1 (Horizontal Edition)</p>
-          <p class="text-[10px] text-zinc-500 mt-1">Alur: Survey → Report Survey → BOQ → Preparing Network Materials and Equipment → Forward WO Installation</p>
+          <p class="font-semibold text-white mt-0.5">BLiP Ticket Monitoring Dashboard v3.9.2 (Horizontal Edition)</p>
+          <p class="text-[10px] text-zinc-500 mt-1">Panel: Stepper → Menu Ticket Update → History (Gaya Resi & Vertical PDF)</p>
         </div>
       </div>
       <div class="mt-5 flex justify-end">
@@ -596,42 +595,64 @@
       return fallbackStatus || "Open";
     }
 
-    function extractStageInfoFromLog(log, stageObj, fallbackPic, fallbackNote) {
-      const detail = String(log.detail || "");
-
-      let extractedPic = "";
-      let extractedNote = "";
-      let extractedTransition = "";
-
+    // Parse detail log menjadi ringkasan resi yang bersih (tanpa badge biru panjang yang riweh)
+    function parseResiLogEntry(log, fallbackPic, fallbackNote) {
+      const detail = String(log.detail || "").trim();
       const blocks = detail.split(";").map(s => s.trim()).filter(Boolean);
+
+      const changes = [];
+      const notes = [];
+      let detectedPic = "";
+
       for (const blk of blocks) {
-        const bLower = blk.toLowerCase();
-        const isMatchBlock = stageObj.bracketTags.some(tag => bLower.includes(`[${tag}]`) || bLower.includes(`${tag}:`));
-        if (isMatchBlock) {
-          const picMatch = blk.match(/PIC:\s*([^|;]+)/i);
-          if (picMatch && picMatch[1].trim() && picMatch[1].trim() !== "-") {
-            extractedPic = picMatch[1].trim();
+        const picMatch = blk.match(/PIC:\s*([^|;]+)/i);
+        if (picMatch && picMatch[1].trim() && picMatch[1].trim() !== "-") {
+          detectedPic = picMatch[1].trim();
+        }
+
+        const ketSplit = blk.split("| Ket:");
+        const mainPart = ketSplit[0].trim();
+        const notePart = ketSplit.length > 1 ? ketSplit.slice(1).join("| Ket:").trim() : "";
+
+        if (notePart && notePart !== "-" && !notes.includes(notePart)) {
+          notes.push(notePart);
+        }
+
+        // Ambil poin perubahan status/tahapan secara ringkas
+        const cleanMain = mainPart.replace(/\s*\|\s*PIC:[^|;]+/i, "").trim();
+        const transMatch = cleanMain.match(/^\[([^\]]+)\]\s*[^:]+:\s*(.+)$/);
+        if (transMatch) {
+          const stageTitle = transMatch[1].trim();
+          const transVal = transMatch[2].trim();
+          const pair = transVal.split("→").map(x => x.trim());
+          if (pair.length === 2 && pair[0] !== pair[1]) {
+            changes.push(`${stageTitle}: ${pair[0]} → ${pair[1]}`);
+          } else if (pair.length === 2 && pair[1] !== "Not Yet") {
+            changes.push(`${stageTitle}: ${pair[1]}`);
           }
-          const ketMatch = blk.match(/Ket:\s*([^;]+)/i);
-          if (ketMatch && ketMatch[1].trim() && ketMatch[1].trim() !== "-") {
-            extractedNote = ketMatch[1].trim();
+        } else if (cleanMain.toLowerCase().startsWith("ticket status:")) {
+          const stVal = cleanMain.replace(/^ticket status:\s*/i, "").trim();
+          const pair = stVal.split("→").map(x => x.trim());
+          if (pair.length === 2 && pair[0] !== pair[1]) {
+            changes.unshift(`Status Tiket: ${pair[0]} → ${pair[1]}`);
           }
-          const transMatch = blk.match(/:\s*([^|]+?)\s*\|/);
-          if (transMatch && transMatch[1].trim()) {
-            extractedTransition = transMatch[1].trim();
-          }
+        } else if (cleanMain && !cleanMain.toLowerCase().startsWith("update dicatat")) {
+          changes.push(cleanMain);
         }
       }
 
-      if (!extractedNote && !detail.includes("[")) {
-        const cleanBody = detail.includes(" — ") ? detail.split(" — ").pop().trim() : detail;
-        extractedNote = cleanBody;
+      if (notes.length === 0 && fallbackNote && fallbackNote !== "-") {
+        notes.push(fallbackNote);
       }
 
+      const finalNoteText = notes.length > 0
+        ? notes.join(" | ")
+        : (changes.length === 0 && detail ? detail : "-");
+
       return {
-        pic: formatPicLabel(extractedPic || log.pic || fallbackPic || "-"),
-        note: extractedNote || fallbackNote || "-",
-        transitionText: extractedTransition
+        pic: formatPicLabel(detectedPic || log.pic || log.updatedBy || fallbackPic || "-"),
+        changes: changes,
+        note: finalNoteText
       };
     }
 
@@ -767,7 +788,6 @@
           label: "Survey",
           fullLabel: "Survey",
           bracketTags: ["survey"],
-          keywords: ["survey"],
           opts: ["Not Yet", "Done", "On Progress", "Pending", "Cancel"]
         },
         {
@@ -775,7 +795,6 @@
           label: "Report Survey",
           fullLabel: "Report Survey",
           bracketTags: ["report survey", "staging"],
-          keywords: ["report survey", "staging"],
           opts: ["Not Yet", "Done", "On Progress", "Pending", "Cancel"]
         },
         {
@@ -783,7 +802,6 @@
           label: "BOQ",
           fullLabel: "BOQ",
           bracketTags: ["boq", "po procurement", "po"],
-          keywords: ["boq", "po procurement", "po"],
           opts: ["Not Yet", "Done", "On Progress", "Pending", "Cancel"]
         },
         {
@@ -791,7 +809,6 @@
           label: "Preparing Network Materials and Equipment",
           fullLabel: "Preparing Network Materials and Equipment",
           bracketTags: ["preparing network materials and equipment", "material & equipment", "material", "procurement"],
-          keywords: ["preparing network materials and equipment", "material & equipment", "material", "procurement"],
           opts: ["Not Yet", "Done", "On Progress", "Pending", "Waiting Approval", "Cancel"]
         },
         {
@@ -799,7 +816,6 @@
           label: "Forward WO Installation",
           fullLabel: "Forward WO Installation",
           bracketTags: ["forward wo installation", "forward wo", "installation wo"],
-          keywords: ["forward wo installation", "forward wo", "installation wo"],
           opts: ["Not Yet", "Done", "On Progress", "Pending", "Cancel"]
         }
       ];
@@ -816,6 +832,7 @@
         const isExpanded = Boolean(expandedRows[t.ticketId]);
         const activeStageKey = activeStagePerTicket[t.ticketId] || "survey";
 
+        // 1. STEPPER
         const stepperHtml = `
           <div class="flex items-start justify-between min-w-[600px] py-1">
             ${stageDefs.map((st, sIdx) => {
@@ -898,74 +915,29 @@
           </div>
         `;
 
-        // Expanded Section Area
+        // Expanded Section: Stepper -> Menu Ticket Update -> History (Gaya Resi)
         let expandedPanelHtml = "";
         if (isExpanded) {
           const activeStageObj = stageDefs.find(s => s.key === activeStageKey) || stageDefs[0];
           const currentStageVal = normalizeStageVal(t[activeStageKey]);
           const stageDetailObj = (t.stageDetails && t.stageDetails[activeStageKey]) || { pic: "", note: "" };
-
           const headerDisplayStatus = currentStageVal || "Not Yet";
 
           const ticketLogs = (cachedHistory.Survey || []).filter(log => String(log.ticketId).trim() === String(t.ticketId).trim());
-
           const stageLogs = ticketLogs.filter(log => {
             const dLower = (log.detail || "").toLowerCase();
-            const hasBracket = activeStageObj.bracketTags.some(tag => dLower.includes(`[${tag}]`) || dLower.includes(`${tag}:`));
-            return hasBracket;
+            return activeStageObj.bracketTags.some(tag => dLower.includes(`[${tag}]`) || dLower.includes(`${tag}:`));
           });
+          const logsToShow = stageLogs.length > 0 ? stageLogs : ticketLogs.slice(0, 3);
 
-          const logsToShow = stageLogs.length > 0 ? stageLogs : ticketLogs.slice(0, 1);
-
-          const leftAccentBorderColor = ["Done", "Deal", "Material Ready"].includes(currentStageVal)
-            ? "border-l-emerald-500"
-            : "border-l-orange-500";
-
-          const logsFeedHtml = loadingHistoryTicket[t.ticketId]
-            ? `<div class="py-6 text-center"><div class="inline-block animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-orange-500"></div></div>`
-            : (logsToShow.length > 0
-                ? logsToShow.map(log => {
-                    const parsed = extractStageInfoFromLog(log, activeStageObj, stageDetailObj.pic, stageDetailObj.note);
-                    const badgeLabel = parsed.transitionText || headerDisplayStatus;
-                    return `
-                      <div class="bg-zinc-950 border border-white/15 border-l-4 ${leftAccentBorderColor} rounded-xl p-3.5 text-xs space-y-2 shadow-sm">
-                        <div class="flex items-center justify-between gap-2">
-                          <span class="font-extrabold text-white text-sm">${activeStageObj.label}</span>
-                          <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-orange-500/15 text-orange-300 border border-orange-500/35">${badgeLabel}</span>
-                        </div>
-                        <div class="space-y-1 text-[11px] text-zinc-400">
-                          <div class="flex items-center gap-1.5">
-                            <span>🕒</span>
-                            <span class="font-mono text-zinc-300">${cleanTimestamp(log.timestamp)}</span>
-                          </div>
-                          <div class="flex items-center gap-1.5">
-                            <span>👤</span>
-                            <span>PIC : <strong class="text-white">${parsed.pic}</strong></span>
-                          </div>
-                          <div class="flex items-start gap-1.5 pt-0.5">
-                            <span class="mt-0.5">📝</span>
-                            <p class="text-zinc-200 font-medium whitespace-pre-line leading-relaxed">${parsed.note}</p>
-                          </div>
-                        </div>
-                      </div>
-                    `;
-                  }).join("")
-                : `<div class="bg-zinc-950 border border-white/15 border-l-4 ${leftAccentBorderColor} rounded-xl p-3.5 text-xs space-y-2">
-                    <div class="flex items-center justify-between gap-2">
-                      <span class="font-extrabold text-white text-sm">${activeStageObj.label}</span>
-                      ${getStatusPillHtml(headerDisplayStatus)}
-                    </div>
-                    <div class="space-y-1 text-[11px] text-zinc-400">
-                      <div class="flex items-center gap-1.5"><span>👤</span><span>PIC : <strong class="text-white">${formatPicLabel(stageDetailObj.pic)}</strong></span></div>
-                      <div class="flex items-start gap-1.5"><span>📝</span><p class="text-zinc-200 font-medium">${stageDetailObj.note || "-"}</p></div>
-                    </div>
-                  </div>`
-              );
-
-          const editorFormHtml = canEdit ? `
-            <div class="bg-zinc-950 border border-orange-500/40 rounded-2xl p-4 space-y-3 flex-1 min-w-[300px]">
+          // 2. MENU TICKET UPDATE (di atas History)
+          const updateMenuHtml = canEdit ? `
+            <div class="bg-zinc-950 border border-orange-500/40 rounded-2xl p-4 space-y-3">
               <div class="flex flex-wrap items-center justify-between gap-2 border-b border-white/15 pb-2.5">
-                <span class="text-xs font-extrabold text-orange-400 uppercase tracking-wide">Update: ${activeStageObj.fullLabel}</span>
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-extrabold text-orange-400 uppercase tracking-wide">Menu Update: ${activeStageObj.fullLabel}</span>
+                  ${getStatusPillHtml(headerDisplayStatus)}
+                </div>
                 ${isAdmin ? `
                   <div class="flex items-center gap-1.5 text-xs">
                     <span class="text-zinc-400">Ticket Status:</span>
@@ -1003,26 +975,65 @@
                 </button>
               </div>
             </div>
-          ` : "";
+          ` : `
+            <div class="bg-zinc-950/70 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-zinc-400">
+              Login dengan akun Google untuk mengupdate tahapan <strong class="text-white">${activeStageObj.fullLabel}</strong>.
+            </div>
+          `;
 
-          expandedPanelHtml = `
-            <div class="bg-zinc-900/80 border border-orange-500/40 rounded-2xl p-4 mt-2 space-y-3 shadow-lg">
-              <div class="flex items-center justify-between border-b border-white/15 pb-2.5">
-                <div class="flex items-center gap-2">
-                  <span class="text-xs font-bold text-zinc-300">Detail Tahapan: <span class="text-orange-400">${activeStageObj.fullLabel}</span></span>
-                  ${getStatusPillHtml(headerDisplayStatus)}
+          // 3. HISTORY GAYA RESI PENGIRIMAN (di bawah Menu Ticket Update)
+          const resiItemsHtml = loadingHistoryTicket[t.ticketId]
+            ? `<div class="py-5 text-center"><div class="inline-block animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-orange-500"></div></div>`
+            : (logsToShow.length > 0
+                ? logsToShow.map((log, idx) => {
+                    const parsed = parseResiLogEntry(log, stageDetailObj.pic, stageDetailObj.note);
+                    const isLatest = idx === 0;
+                    return `
+                      <div class="relative pl-6 pb-3.5 last:pb-1 ${idx < logsToShow.length - 1 ? 'border-l border-dashed border-white/20 ml-2' : 'ml-2'}">
+                        <span class="w-2.5 h-2.5 rounded-full ${isLatest ? 'bg-orange-500 ring-4 ring-orange-500/20' : 'bg-zinc-500'} absolute -left-[5px] top-1.5"></span>
+                        <div class="bg-zinc-950 border border-white/15 rounded-xl p-3 text-xs space-y-1.5">
+                          <div class="flex flex-wrap items-center justify-between gap-2">
+                            <span class="font-mono text-[11px] text-orange-300 font-semibold">${cleanTimestamp(log.timestamp)}</span>
+                            <span class="text-[11px] text-zinc-400">PIC: <strong class="text-white">${parsed.pic}</strong></span>
+                          </div>
+                          ${parsed.changes.length > 0 ? `
+                            <ul class="space-y-0.5 text-[11px] text-zinc-200">
+                              ${parsed.changes.map(ch => `<li>• ${ch}</li>`).join("")}
+                            </ul>
+                          ` : ""}
+                          <p class="text-[11px] text-zinc-400 pt-1 border-t border-white/10">
+                            <span class="text-zinc-500">Catatan:</span> <span class="text-zinc-200">${parsed.note}</span>
+                          </p>
+                        </div>
+                      </div>
+                    `;
+                  }).join("")
+                : `<div class="bg-zinc-950 border border-white/15 rounded-xl p-3 text-xs text-zinc-400">
+                    Belum ada riwayat resi pada tahapan <strong class="text-white">${activeStageObj.label}</strong> (${headerDisplayStatus}).
+                  </div>`
+              );
+
+          const historySectionHtml = `
+            <div class="bg-zinc-950/60 border border-white/15 rounded-2xl p-4 space-y-3">
+              <div class="flex flex-wrap items-center justify-between gap-2 border-b border-white/15 pb-2">
+                <div>
+                  <span class="text-[10px] uppercase tracking-wider text-orange-400 font-bold">Resi Tracking • ${activeStageObj.fullLabel}</span>
+                  <h4 class="text-xs font-extrabold text-white">Riwayat Progress (${t.ticketId})</h4>
                 </div>
                 <button onclick="openHistoryModal('Survey', '${t.ticketId}')" class="text-[11px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/35 px-2.5 py-1 rounded-lg hover:bg-emerald-500/20 transition">
                   📄 Export PDF History
                 </button>
               </div>
-
-              <div class="flex flex-col xl:flex-row gap-4">
-                <div class="space-y-2.5 max-h-64 overflow-y-auto pr-1 flex-1 min-w-[280px]">
-                  ${logsFeedHtml}
-                </div>
-                ${editorFormHtml}
+              <div class="max-h-56 overflow-y-auto pr-1 pt-1">
+                ${resiItemsHtml}
               </div>
+            </div>
+          `;
+
+          expandedPanelHtml = `
+            <div class="bg-zinc-900/80 border border-orange-500/40 rounded-2xl p-4 mt-2 space-y-3.5 shadow-lg">
+              ${updateMenuHtml}
+              ${historySectionHtml}
             </div>
           `;
         }
@@ -1314,11 +1325,11 @@
       }
     }
 
-    // ================= TICKET HISTORY & PDF EXPORTS =================
+    // ================= TICKET HISTORY (RESI STYLE) & VERTICAL PDF =================
     async function openHistoryModal(type, selectedTicketId) {
       historyTypeActive = type;
       const prefix = type === "Survey" ? "SRV-" : "MAP-";
-      document.getElementById("historyTypeLabel").innerText = `Jenis Ticket: ${type}`;
+      document.getElementById("historyTypeLabel").innerText = `Jenis Ticket: ${type} • Resi Log`;
       document.getElementById("historyListContainer").innerHTML = "";
       document.getElementById("historyLoader").classList.remove("hidden");
       document.getElementById("historyModal").classList.remove("hidden");
@@ -1362,99 +1373,188 @@
         return;
       }
 
-      container.innerHTML = filteredHistoryLogs.map(item => {
-        const badgesHtml = (item.badges && item.badges.length > 0)
-          ? `<div class="flex flex-wrap gap-1.5 my-2">
-              ${item.badges.map(b => `<span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-sky-500/10 text-sky-400 border border-sky-500/30">${b}</span>`).join("")}
-            </div>`
-          : "";
-
-        const notesHtml = (item.notesList && item.notesList.length > 0)
-          ? `<div class="bg-zinc-950 border border-white/15 rounded-xl p-3 my-2 space-y-1.5 text-zinc-300 text-[11px] font-medium">
-              ${item.notesList.map(n => `<p class="whitespace-pre-line">📝 ${n}</p>`).join("")}
-            </div>`
-          : `<p class="text-zinc-300 my-1.5 whitespace-pre-line bg-zinc-950 border border-white/15 rounded-xl p-3 leading-relaxed font-medium">${item.detail}</p>`;
-
-        const picDisplay = formatPicLabel(item.pic || item.updatedBy || "-");
+      container.innerHTML = filteredHistoryLogs.map((item, idx) => {
+        const parsed = parseResiLogEntry(item, "-", "");
+        const isLast = idx === filteredHistoryLogs.length - 1;
 
         return `
-          <div class="bg-zinc-900/60 border border-white/15 border-l-4 border-l-orange-500 rounded-2xl p-4 text-xs">
-            <div class="flex flex-wrap justify-between items-center gap-2 pb-2 border-b border-white/15">
-              <div class="flex items-center gap-2 flex-wrap">
-                <span class="font-mono text-[10px] text-orange-400 bg-orange-500/15 border border-orange-500/40 px-2.5 py-0.5 rounded font-extrabold">${item.ticketId}</span>
-                <span class="font-bold text-white text-sm">${item.customer}</span>
-                <span class="text-[9.5px] px-2 py-0.5 rounded bg-zinc-800 border border-white/10 text-zinc-300 font-bold uppercase tracking-wider">${item.action}</span>
+          <div class="relative pl-7 pb-4 ${isLast ? 'pb-1' : ''}">
+            ${!isLast ? `<span class="w-[2px] bg-white/15 absolute left-[9px] top-5 bottom-0"></span>` : ""}
+            <span class="w-4 h-4 rounded-full bg-orange-500/20 border-2 border-orange-500 flex items-center justify-center absolute left-0.5 top-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-orange-400"></span>
+            </span>
+
+            <div class="bg-zinc-900/80 border border-white/15 rounded-2xl p-4 text-xs space-y-2.5">
+              <div class="flex flex-wrap justify-between items-center gap-2 pb-2 border-b border-white/15">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="font-mono text-[11px] text-orange-400 bg-orange-500/15 border border-orange-500/40 px-2.5 py-0.5 rounded font-extrabold">${item.ticketId}</span>
+                  <span class="font-extrabold text-white text-sm">${item.customer || "-"}</span>
+                  <span class="text-[10px] px-2 py-0.5 rounded bg-zinc-800 border border-white/10 text-zinc-300 font-bold uppercase">${item.action || "Updated"}</span>
+                </div>
+                <span class="font-mono text-[11px] text-zinc-400">🕒 ${cleanTimestamp(item.timestamp)}</span>
               </div>
-              <span class="font-mono text-[10px] text-zinc-400 font-semibold">🕒 ${cleanTimestamp(item.timestamp)}</span>
-            </div>
 
-            ${badgesHtml}
-            ${notesHtml}
+              ${parsed.changes.length > 0 ? `
+                <div class="bg-zinc-950/90 border border-white/10 rounded-xl px-3.5 py-2.5 space-y-1">
+                  <p class="text-[10px] uppercase tracking-wider text-zinc-500 font-bold">Ringkasan Progres</p>
+                  <ul class="space-y-1 text-xs text-zinc-200">
+                    ${parsed.changes.map(c => `<li class="flex items-start gap-1.5"><span class="text-orange-400 font-bold">▸</span><span>${c}</span></li>`).join("")}
+                  </ul>
+                </div>
+              ` : ""}
 
-            <div class="flex flex-wrap justify-between items-center gap-2 text-[10.5px] text-zinc-400 pt-2 border-t border-white/15 font-medium">
-              <span>PIC : <strong class="text-amber-300">${picDisplay}</strong></span>
-              ${item.status ? getStatusPillHtml(item.status) : ""}
+              <div class="bg-zinc-950 border border-white/15 rounded-xl px-3.5 py-2.5 text-xs text-zinc-300">
+                <span class="text-[10px] uppercase tracking-wider text-zinc-500 font-bold block mb-0.5">Catatan</span>
+                <p class="whitespace-pre-line leading-relaxed text-zinc-200">${parsed.note}</p>
+              </div>
+
+              <div class="flex flex-wrap justify-between items-center gap-2 text-[11px] text-zinc-400 pt-1">
+                <span>PIC: <strong class="text-amber-300">${parsed.pic}</strong></span>
+                ${item.status ? getStatusPillHtml(item.status) : ""}
+              </div>
             </div>
           </div>
         `;
       }).join("");
     }
 
+    // Export PDF model vertikal (portrait) bergaya resi/blok tanpa terpotong
     function exportHistoryPDF() {
       if (filteredHistoryLogs.length === 0) {
         return alert("Tidak ada data history untuk di-export ke PDF.");
       }
 
       const { jsPDF } = window.jspdf;
-      const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+      const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+
+      const pageW = doc.internal.pageSize.getWidth();
+      const pageH = doc.internal.pageSize.getHeight();
+      const marginX = 14;
+      const contentW = pageW - marginX * 2;
 
       const filterSelect = document.getElementById("historyCustomerFilter");
       const targetLabel = filterSelect.options[filterSelect.selectedIndex].text;
+      const printedAt = new Date().toLocaleString("id-ID", {
+        day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit"
+      }) + " WIB";
 
-      doc.setFillColor(13, 13, 17);
-      doc.rect(0, 0, 297, 25, "F");
-      doc.setTextColor(249, 115, 22);
-      doc.setFontSize(13);
-      doc.setFont("helvetica", "bold");
-      doc.text(`BLiP — TICKET PROGRESS HISTORY REPORT (${historyTypeActive.toUpperCase()})`, 14, 11);
+      let y = 0;
 
-      doc.setTextColor(200, 200, 200);
-      doc.setFontSize(9);
-      doc.setFont("helvetica", "normal");
-      doc.text(`Filter: ${targetLabel}`, 14, 18);
-      doc.text(`Dicetak: ${new Date().toLocaleString("id-ID")} WIB`, 230, 18);
+      function drawHeaderBanner() {
+        doc.setFillColor(18, 18, 23);
+        doc.rect(0, 0, pageW, 28, "F");
 
-      const rows = filteredHistoryLogs.map((log, i) => [
-        i + 1,
-        cleanTimestamp(log.timestamp),
-        log.ticketId,
-        log.customer,
-        log.status || "-",
-        formatPicLabel(log.pic || log.updatedBy || "-"),
-        log.detail
-      ]);
+        doc.setTextColor(249, 115, 22);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(13);
+        doc.text(`BLiP — TICKET PROGRESS HISTORY (${historyTypeActive.toUpperCase()})`, marginX, 11);
 
-      doc.autoTable({
-        startY: 30,
-        head: [["No", "Timestamp", "ID", "Work Order Ticket", "Status", "PIC", "Detail Perubahan & Notes"]],
-        body: rows,
-        theme: "grid",
-        styles: { fontSize: 8, cellPadding: 2.5, valign: "middle" },
-        headStyles: { fillColor: [234, 88, 12], textColor: [255, 255, 255], fontStyle: "bold" },
-        alternateRowStyles: { fillColor: [248, 250, 252] },
-        columnStyles: {
-          0: { cellWidth: 10, halign: "center" },
-          1: { cellWidth: 28 },
-          2: { cellWidth: 18, halign: "center", fontStyle: "bold" },
-          3: { cellWidth: 38, fontStyle: "bold" },
-          4: { cellWidth: 24 },
-          5: { cellWidth: 34 },
-          6: { cellWidth: "auto" }
+        doc.setTextColor(220, 220, 225);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8.5);
+        doc.text(`Filter: ${targetLabel}`, marginX, 18);
+        doc.text(`Dicetak: ${printedAt}  |  Total Log: ${filteredHistoryLogs.length}`, marginX, 24);
+        y = 35;
+      }
+
+      function ensureSpace(neededHeight) {
+        if (y + neededHeight > pageH - 12) {
+          doc.addPage();
+          drawHeaderBanner();
         }
+      }
+
+      drawHeaderBanner();
+
+      filteredHistoryLogs.forEach((log, index) => {
+        const parsed = parseResiLogEntry(log, "-", "");
+        const tsText = cleanTimestamp(log.timestamp);
+        const statusText = log.status || "-";
+        const changeLines = parsed.changes.length > 0
+          ? parsed.changes.flatMap(ch => doc.splitTextToSize(`• ${ch}`, contentW - 12))
+          : [];
+        const noteLines = doc.splitTextToSize(parsed.note || "-", contentW - 12);
+
+        const changesBlockH = changeLines.length > 0 ? (6 + changeLines.length * 4.2) : 0;
+        const noteBlockH = 6 + noteLines.length * 4.2;
+        const cardH = 15 + changesBlockH + noteBlockH + 4;
+
+        ensureSpace(cardH);
+
+        // Kartu vertikal per entri resi
+        doc.setDrawColor(215, 218, 224);
+        doc.setFillColor(252, 252, 253);
+        doc.roundedRect(marginX, y, contentW, cardH - 2, 2.5, 2.5, "FD");
+
+        // Garis aksen kiri oranye
+        doc.setFillColor(234, 88, 12);
+        doc.rect(marginX, y, 2.2, cardH - 2, "F");
+
+        let cy = y + 5.5;
+
+        // Baris 1: ID Tiket, Nama WO, Status & Waktu
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(9.5);
+        doc.setTextColor(24, 24, 27);
+        const titleStr = `#${index + 1}  ${log.ticketId} — ${log.customer || "-"}`;
+        doc.text(doc.splitTextToSize(titleStr, contentW - 56)[0], marginX + 5, cy);
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(8.5);
+        doc.setTextColor(194, 65, 12);
+        doc.text(statusText, pageW - marginX - 4, cy, { align: "right" });
+
+        cy += 4.5;
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8);
+        doc.setTextColor(100, 116, 139);
+        doc.text(`Waktu: ${tsText}`, marginX + 5, cy);
+        doc.text(`PIC: ${parsed.pic}`, pageW - marginX - 4, cy, { align: "right" });
+
+        cy += 4.5;
+
+        // Blok perubahan tahapan (vertikal)
+        if (changeLines.length > 0) {
+          doc.setFillColor(241, 245, 249);
+          doc.roundedRect(marginX + 4.5, cy, contentW - 9, changesBlockH - 1.5, 1.5, 1.5, "F");
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(7.5);
+          doc.setTextColor(71, 85, 105);
+          doc.text("PERUBAHAN TAHAPAN", marginX + 6.5, cy + 3.8);
+
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(8);
+          doc.setTextColor(30, 41, 59);
+          let lineY = cy + 7.5;
+          changeLines.forEach(cl => {
+            doc.text(cl, marginX + 6.5, lineY);
+            lineY += 4.2;
+          });
+          cy += changesBlockH + 1;
+        }
+
+        // Blok catatan (vertikal, full wrap)
+        doc.setFillColor(255, 247, 237);
+        doc.roundedRect(marginX + 4.5, cy, contentW - 9, noteBlockH - 1.5, 1.5, 1.5, "F");
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(7.5);
+        doc.setTextColor(154, 52, 18);
+        doc.text("CATATAN / NOTES", marginX + 6.5, cy + 3.8);
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8);
+        doc.setTextColor(39, 39, 42);
+        let noteY = cy + 7.5;
+        noteLines.forEach(nl => {
+          doc.text(nl, marginX + 6.5, noteY);
+          noteY += 4.2;
+        });
+
+        y += cardH + 2;
       });
 
       const safeFile = targetLabel.replace(/[^a-zA-Z0-9-_]/g, "_");
-      doc.save(`BLiP_Ticket_Progress_History_${safeFile}.pdf`);
+      doc.save(`BLiP_History_Resi_${safeFile}.pdf`);
     }
 
     // ================= ADD TICKET & SETTINGS CONTROL =================
