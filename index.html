@@ -13,18 +13,13 @@
   <style>
     :root {
       --bg-canvas: #090b10;
-      --bg-surface: rgba(17, 20, 29, 0.82);
-      --bg-surface-elevated: #161a26;
+      --bg-surface: #11141d;
       --border-subtle: rgba(255, 255, 255, 0.08);
-      --accent-primary: #f97316;
-      --accent-glow: rgba(249, 115, 22, 0.22);
     }
 
     body {
       background-color: var(--bg-canvas);
-      background-image:
-        radial-gradient(ellipse 80% 45% at 50% -10%, rgba(249, 115, 22, 0.12), transparent 65%),
-        radial-gradient(circle at 88% 20%, rgba(56, 189, 248, 0.06), transparent 45%);
+      background-image: radial-gradient(ellipse 80% 40% at 50% -10%, rgba(249, 115, 22, 0.09), transparent 65%);
       color: #e2e8f0;
       font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
     }
@@ -35,42 +30,28 @@
 
     .surface-card {
       background: var(--bg-surface);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
       border: 1px solid var(--border-subtle);
-      box-shadow: 0 10px 30px -12px rgba(0, 0, 0, 0.65);
+      box-shadow: 0 6px 18px -8px rgba(0, 0, 0, 0.65);
     }
 
     .surface-card-hover {
-      transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+      transition: transform 0.15s ease, border-color 0.15s ease;
     }
 
     .surface-card-hover:hover {
-      transform: translateY(-2px);
+      transform: translateY(-1px);
       border-color: rgba(249, 115, 22, 0.45);
-      box-shadow: 0 14px 32px -12px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(249, 115, 22, 0.15);
     }
 
     .glass-topbar {
-      background: rgba(9, 11, 16, 0.78);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
+      background: rgba(9, 11, 16, 0.94);
       border-bottom: 1px solid var(--border-subtle);
     }
 
     .table-head-modern {
-      background: rgba(22, 26, 38, 0.92);
+      background: #161a26;
       color: #94a3b8;
       border-bottom: 1px solid var(--border-subtle);
-    }
-
-    @keyframes pulse-ring {
-      0% { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.55); }
-      70% { box-shadow: 0 0 0 9px rgba(249, 115, 22, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0); }
-    }
-    .step-active-ring {
-      animation: pulse-ring 1.8s infinite ease-out;
     }
 
     input[type="date"]::-webkit-calendar-picker-indicator {
@@ -88,12 +69,12 @@
 
   <div class="min-h-screen flex flex-col lg:flex-row">
     <!-- Left Navigation Rail -->
-    <aside id="mainSidebar" class="surface-card w-full lg:w-68 shrink-0 lg:sticky lg:top-0 lg:h-screen flex flex-col justify-between p-4 lg:p-5 z-40 transition-all duration-200 border-b lg:border-b-0 lg:border-r border-white/[0.08]">
+    <aside id="mainSidebar" class="surface-card w-full lg:w-68 shrink-0 lg:sticky lg:top-0 lg:h-screen flex flex-col justify-between p-4 lg:p-5 z-40 transition-all duration-150 border-b lg:border-b-0 lg:border-r border-white/[0.08]">
       <div class="space-y-6 overflow-y-auto pr-0.5">
         <!-- Brand Header + Collapse Toggle -->
         <div id="sidebarHeaderRow" class="flex items-center justify-between gap-2 pb-4 border-b border-white/[0.08]">
           <div id="sidebarBrandFull" class="flex items-center gap-2.5 select-none min-w-0">
-            <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center text-slate-950 font-extrabold text-sm shadow-lg shadow-orange-500/25 shrink-0">
+            <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center text-slate-950 font-extrabold text-sm shrink-0">
               B
             </div>
             <div class="min-w-0">
@@ -106,7 +87,7 @@
           </div>
 
           <button id="btnSidebarToggle" onclick="toggleSidebarExpand()" title="Collapse / Expand Sidebar" class="hidden lg:flex w-8 h-8 rounded-xl bg-white/[0.04] hover:bg-white/[0.09] text-slate-300 hover:text-white border border-white/[0.08] items-center justify-center transition cursor-pointer shrink-0">
-            <svg id="sidebarToggleSvg" class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <svg id="sidebarToggleSvg" class="w-4 h-4 transition-transform duration-150" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
             </svg>
           </button>
@@ -116,7 +97,7 @@
         <div class="space-y-1">
           <p class="sidebar-label text-[10px] font-bold uppercase tracking-widest text-slate-500 px-2.5 mb-2">Workspace</p>
 
-          <button onclick="setActiveNav('dashboard')" id="nav-dashboard" title="Monitoring Dashboard" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-orange-500/20 to-amber-500/10 text-orange-300 border border-orange-500/35 text-left transition cursor-pointer">
+          <button onclick="setActiveNav('dashboard')" id="nav-dashboard" title="Monitoring Dashboard" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold bg-orange-500/15 text-orange-300 border border-orange-500/35 text-left transition cursor-pointer">
             <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
             </svg>
@@ -142,7 +123,7 @@
         <div class="sidebar-label bg-white/[0.03] border border-white/[0.07] rounded-2xl p-3.5 space-y-2.5">
           <div class="flex items-center justify-between">
             <span class="text-[11px] font-semibold text-slate-300 flex items-center gap-1.5">
-              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
               Live Sheet Sync
             </span>
             <button id="btnSidebarRefresh" onclick="fetchAllData()" class="text-[11px] font-bold text-orange-400 hover:text-orange-300 flex items-center gap-1 cursor-pointer transition">
@@ -201,11 +182,11 @@
           <!-- Right Search, Date Filter & Primary Action -->
           <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
             <!-- Search Input -->
-            <div class="relative flex items-center bg-[#0d1017] border border-white/10 focus-within:border-orange-500/60 focus-within:ring-2 focus-within:ring-orange-500/15 rounded-xl px-3.5 py-2 sm:w-64 md:w-72 transition">
+            <div class="relative flex items-center bg-[#0d1017] border border-white/10 focus-within:border-orange-500/60 rounded-xl px-3.5 py-2 sm:w-64 md:w-72 transition">
               <svg class="w-4 h-4 text-slate-400 shrink-0 mr-2.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <circle cx="11" cy="11" r="8"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35"/>
               </svg>
-              <input type="text" id="searchInput" oninput="onGlobalSearchChange()" placeholder="Search customer, ticket ID..." class="w-full bg-transparent text-xs text-slate-100 placeholder-slate-500 focus:outline-none">
+              <input type="text" id="searchInput" oninput="debouncedSearch()" placeholder="Search customer, ticket ID..." class="w-full bg-transparent text-xs text-slate-100 placeholder-slate-500 focus:outline-none">
             </div>
 
             <!-- Date Range Popover Trigger -->
@@ -241,7 +222,7 @@
 
             <!-- Admin Action Button -->
             <div id="sidebarActionWrap" class="hidden">
-              <button id="btnNewTicket" onclick="openAddModal()" class="w-full sm:w-auto bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-slate-950 px-4 py-2 rounded-xl text-xs font-extrabold shadow-lg shadow-orange-500/25 transition cursor-pointer flex items-center justify-center gap-1.5">
+              <button id="btnNewTicket" onclick="openAddModal()" class="w-full sm:w-auto bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-slate-950 px-4 py-2 rounded-xl text-xs font-extrabold transition cursor-pointer flex items-center justify-center gap-1.5">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.6" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
                 <span>New Work Order</span>
               </button>
@@ -297,7 +278,7 @@
             <!-- All Queue -->
             <button type="button" onclick="selectDivisionTab('All')" id="btn-div-All" class="surface-card surface-card-hover group flex items-center justify-between p-5 rounded-2xl text-left cursor-pointer">
               <div class="flex items-center gap-4 min-w-0">
-                <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500/20 to-amber-500/10 border border-orange-500/30 flex items-center justify-center text-orange-400 shrink-0 group-hover:scale-105 transition">
+                <div class="w-12 h-12 rounded-2xl bg-orange-500/15 border border-orange-500/30 flex items-center justify-center text-orange-400 shrink-0">
                   <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
                   </svg>
@@ -316,7 +297,7 @@
             <!-- Mapping Queue -->
             <button type="button" onclick="selectDivisionTab('Mapping')" id="btn-div-Mapping" class="surface-card surface-card-hover group flex items-center justify-between p-5 rounded-2xl text-left cursor-pointer">
               <div class="flex items-center gap-4 min-w-0">
-                <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-sky-500/20 to-cyan-500/10 border border-sky-500/30 flex items-center justify-center text-sky-400 shrink-0 group-hover:scale-105 transition">
+                <div class="w-12 h-12 rounded-2xl bg-sky-500/15 border border-sky-500/30 flex items-center justify-center text-sky-400 shrink-0">
                   <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
                   </svg>
@@ -335,7 +316,7 @@
             <!-- Survey Queue -->
             <button type="button" onclick="selectDivisionTab('Survey')" id="btn-div-Survey" class="surface-card surface-card-hover group flex items-center justify-between p-5 rounded-2xl text-left cursor-pointer">
               <div class="flex items-center gap-4 min-w-0">
-                <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-teal-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0 group-hover:scale-105 transition">
+                <div class="w-12 h-12 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
                   <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><circle cx="12" cy="11" r="3"/>
                   </svg>
@@ -384,7 +365,7 @@
   </div>
 
   <!-- Modal: Create New Work Order -->
-  <div id="addModal" class="fixed inset-0 bg-black/75 backdrop-blur-md hidden items-center justify-center p-4 z-50">
+  <div id="addModal" class="fixed inset-0 bg-black/80 hidden items-center justify-center p-4 z-50">
     <div class="surface-card rounded-3xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto border border-white/15">
       <div class="flex justify-between items-center mb-5 pb-3 border-b border-white/10">
         <div>
@@ -484,13 +465,13 @@
 
       <div class="flex justify-end gap-2.5 mt-6 pt-4 border-t border-white/10">
         <button onclick="closeAddModal()" class="px-4 py-2 rounded-xl text-xs text-slate-400 hover:text-white hover:bg-white/[0.05] font-semibold cursor-pointer">Cancel</button>
-        <button onclick="submitNewTicket()" id="btnSubmitNew" class="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-slate-950 px-5 py-2 rounded-xl text-xs font-extrabold shadow-lg shadow-orange-500/20 cursor-pointer">Create &amp; Notify</button>
+        <button onclick="submitNewTicket()" id="btnSubmitNew" class="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-slate-950 px-5 py-2 rounded-xl text-xs font-extrabold cursor-pointer">Create &amp; Notify</button>
       </div>
     </div>
   </div>
 
   <!-- Modal: Activity Log & Vertical PDF -->
-  <div id="historyModal" class="fixed inset-0 bg-black/75 backdrop-blur-md hidden items-center justify-center p-4 z-50">
+  <div id="historyModal" class="fixed inset-0 bg-black/80 hidden items-center justify-center p-4 z-50">
     <div class="surface-card rounded-3xl p-6 w-full max-w-3xl max-h-[88vh] flex flex-col border border-white/15">
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 pb-4 border-b border-white/10">
         <div>
@@ -500,7 +481,7 @@
 
         <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
           <select id="historyCustomerFilter" onchange="onHistoryFilterChange()" class="bg-[#0d1017] border border-white/15 text-slate-200 rounded-xl px-3 py-1.5 text-xs font-medium max-w-[220px]"></select>
-          <button onclick="exportHistoryPDF()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-3.5 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-1.5 shadow-lg shadow-emerald-500/20 cursor-pointer transition">
+          <button onclick="exportHistoryPDF()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-3.5 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-1.5 cursor-pointer transition">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
             Export PDF
           </button>
@@ -518,7 +499,7 @@
   </div>
 
   <!-- Modal: System & Access -->
-  <div id="settingsModal" class="fixed inset-0 bg-black/75 backdrop-blur-md hidden items-center justify-center p-4 z-50">
+  <div id="settingsModal" class="fixed inset-0 bg-black/80 hidden items-center justify-center p-4 z-50">
     <div class="surface-card rounded-3xl p-6 w-full max-w-md border border-white/15">
       <div class="flex justify-between items-center mb-4 pb-3 border-b border-white/10">
         <h2 class="text-base font-extrabold text-white">System &amp; Access Info</h2>
@@ -531,8 +512,8 @@
         </div>
         <div class="bg-[#0d1017] p-4 rounded-2xl border border-white/[0.08]">
           <p class="text-slate-500 text-[10px] uppercase tracking-wider font-bold">Build Release</p>
-          <p class="font-bold text-white mt-1">BLiP OpsPulse Dashboard v5.0</p>
-          <p class="text-[11px] text-slate-400 mt-1">Modern Glass-Slate UI • Bento Metrics • Interactive 5-Stage Pipeline</p>
+          <p class="font-bold text-white mt-1">BLiP OpsPulse Dashboard v5.0 Lite</p>
+          <p class="text-[11px] text-slate-400 mt-1">Low-GPU Glass-Slate UI • Bento Metrics • Interactive 5-Stage Pipeline</p>
         </div>
       </div>
       <div class="mt-5 flex justify-end">
@@ -561,6 +542,7 @@
     let currentStatusFilter = "NEED_ATTENTION";
     let activeWeeklyKpi = null;
     let sidebarCollapsed = false;
+    let searchDebounceTimer = null;
 
     let authToken = "";
     try { authToken = localStorage.getItem("ticket_auth_token") || ""; } catch (e) {}
@@ -576,7 +558,13 @@
     let allHistoryForType = [];
     let filteredHistoryLogs = [];
 
-    // ================= SIDEBAR COLLAPSE =================
+    function debouncedSearch() {
+      clearTimeout(searchDebounceTimer);
+      searchDebounceTimer = setTimeout(() => {
+        onGlobalSearchChange();
+      }, 140);
+    }
+
     function toggleSidebarExpand() {
       sidebarCollapsed = !sidebarCollapsed;
       applySidebarExpandUI();
@@ -671,8 +659,8 @@
             document.getElementById("googleBtnWrapper"),
             { theme: "filled_black", size: "medium", text: "signin_with", shape: "pill" }
           );
-        } else if (attempt <= 5) {
-          setTimeout(() => initGoogleSignIn(attempt + 1), 800);
+        } else if (attempt <= 3) {
+          setTimeout(() => initGoogleSignIn(attempt + 1), 1200);
         }
       } catch (err) {
         console.warn("Google Sign-In skipped:", err);
@@ -767,7 +755,7 @@
       });
       const activeEl = document.getElementById(`nav-${navId}`);
       if (activeEl) {
-        activeEl.className = "nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-orange-500/20 to-amber-500/10 text-orange-300 border border-orange-500/35 text-left transition cursor-pointer";
+        activeEl.className = "nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold bg-orange-500/15 text-orange-300 border border-orange-500/35 text-left transition cursor-pointer";
       }
       applySidebarExpandUI();
     }
@@ -828,7 +816,7 @@
           }
         });
       } catch (err) {
-        console.error("Fetch error:", err);
+        console.warn("Fetch error:", err);
         updateNeedAttentionCounts();
         renderCombinedKpi();
         renderWeeklyPanel();
@@ -1100,7 +1088,7 @@
       document.getElementById("status-filter-pills").innerHTML = pills.map(p => {
         const isActive = currentStatusFilter === p.key;
         return `
-          <button onclick="setStatusFilter('${p.key}')" class="${isActive ? 'bg-orange-500 text-slate-950 font-extrabold shadow-md shadow-orange-500/25' : 'bg-white/[0.04] text-slate-400 hover:bg-white/[0.08] hover:text-white font-semibold'} px-3.5 py-1.5 rounded-xl text-xs whitespace-nowrap transition cursor-pointer">
+          <button onclick="setStatusFilter('${p.key}')" class="${isActive ? 'bg-orange-500 text-slate-950 font-extrabold' : 'bg-white/[0.04] text-slate-400 hover:bg-white/[0.08] hover:text-white font-semibold'} px-3.5 py-1.5 rounded-xl text-xs whitespace-nowrap transition cursor-pointer">
             ${p.label}
           </button>
         `;
@@ -1321,7 +1309,6 @@
       else if (activeTab === "Mapping") renderMappingTable();
     }
 
-    // ================= 6 MODERN BENTO KPI CARDS =================
     function renderCombinedKpi() {
       const surveyStatuses = (appData.survey || []).map(t => {
         const cascaded = cascadeStages([t.survey, t.reportSurvey, t.boq, t.materialEquip, t.forwardWo], t.status);
@@ -1416,7 +1403,7 @@
                 <span class="text-[11px] font-mono-code font-semibold text-slate-400">${pct}%</span>
               </div>
               <div class="w-full h-1.5 bg-white/[0.06] rounded-full overflow-hidden mt-2">
-                <div class="h-full ${c.barColor} rounded-full transition-all duration-500" style="width: ${c.key === 'ALL' ? 100 : pct}%"></div>
+                <div class="h-full ${c.barColor} rounded-full transition-all duration-300" style="width: ${c.key === 'ALL' ? 100 : pct}%"></div>
               </div>
             </div>
 
@@ -1429,7 +1416,6 @@
       }).join("");
     }
 
-    // ================= SURVEY ROW & 5-STAGE STEPPER =================
     function buildSurveyRowHtml(t, displayNo, showDivBadge = false) {
       const stageDefs = SURVEY_STAGE_DEFS;
 
@@ -1474,7 +1460,7 @@
             let subColor = "text-slate-500";
 
             if (isDone) {
-              circleStyle = "bg-emerald-500 border border-emerald-400 text-slate-950 shadow-md shadow-emerald-500/20";
+              circleStyle = "bg-emerald-500 border border-emerald-400 text-slate-950";
               iconHtml = checkSvg;
               labelColor = "text-slate-100 font-bold";
               subText = val === "Done" ? "Done" : val;
@@ -1486,7 +1472,7 @@
               subText = val;
               subColor = "text-slate-500 font-semibold";
             } else if (isPending || isOngoingStep) {
-              circleStyle = "bg-orange-500/20 border-2 border-orange-500 text-orange-400 step-active-ring";
+              circleStyle = "bg-orange-500/20 border-2 border-orange-500 text-orange-400";
               iconHtml = dotSvg;
               labelColor = "text-orange-300 font-bold";
               subText = val || "Next";
@@ -1504,7 +1490,7 @@
                   <div class="h-[2px] flex-1 ${sIdx === 0 ? 'opacity-0' : leftLineColor}"></div>
                   <button onclick="clickStepperPoint('${t.ticketId}', '${st.key}')"
                     title="Manage ${st.fullLabel}"
-                    class="w-8 h-8 rounded-full shrink-0 flex items-center justify-center transition-all duration-200 cursor-pointer hover:scale-110 focus:outline-none ${circleStyle}">
+                    class="w-8 h-8 rounded-full shrink-0 flex items-center justify-center transition-transform duration-150 cursor-pointer hover:scale-110 focus:outline-none ${circleStyle}">
                     ${iconHtml}
                   </button>
                   <div class="h-[2px] flex-1 ${sIdx === stageDefs.length - 1 ? 'opacity-0' : rightLineColor}"></div>
@@ -1514,7 +1500,7 @@
                 <span class="text-[10px] mt-0.5 leading-tight ${subColor}">${subText}</span>
 
                 <button onclick="clickStepperPoint('${t.ticketId}', '${st.key}')"
-                  class="mt-1 px-2 py-0.5 rounded-md hover:bg-white/[0.06] transition-transform duration-200 cursor-pointer ${isSelectedStage ? 'rotate-180 text-orange-400' : 'text-slate-500 hover:text-orange-400'}"
+                  class="mt-1 px-2 py-0.5 rounded-md hover:bg-white/[0.06] transition-transform duration-150 cursor-pointer ${isSelectedStage ? 'rotate-180 text-orange-400' : 'text-slate-500 hover:text-orange-400'}"
                   title="Toggle ${st.label} drawer">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
@@ -1577,7 +1563,7 @@
             </div>
 
             <div class="flex justify-end pt-1">
-              <button onclick="saveExpandedSurveyStage(${t.rowIndex}, '${t.ticketId}', '${activeStageKey}', this)" class="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-slate-950 px-5 py-2 rounded-xl text-xs font-extrabold shadow-md shadow-orange-500/20 transition cursor-pointer">
+              <button onclick="saveExpandedSurveyStage(${t.rowIndex}, '${t.ticketId}', '${activeStageKey}', this)" class="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-slate-950 px-5 py-2 rounded-xl text-xs font-extrabold transition cursor-pointer">
                 Save &amp; Notify Team
               </button>
             </div>
@@ -1595,7 +1581,7 @@
                   const isLatest = idx === 0;
                   return `
                     <div class="relative pl-5 pb-3 last:pb-0 ${idx < stageEntries.length - 1 ? 'border-l border-white/10 ml-2' : 'ml-2'}">
-                      <span class="w-2.5 h-2.5 rounded-full ${isLatest ? 'bg-orange-400 ring-4 ring-orange-500/15' : 'bg-slate-600'} absolute -left-[5.5px] top-1.5"></span>
+                      <span class="w-2.5 h-2.5 rounded-full ${isLatest ? 'bg-orange-400' : 'bg-slate-600'} absolute -left-[5.5px] top-1.5"></span>
                       <div class="bg-[#0d1017] border border-white/[0.07] rounded-xl p-3 text-xs space-y-1">
                         <div class="flex flex-wrap items-center justify-between gap-2">
                           <span class="font-mono-code text-[11px] text-orange-300 font-semibold">${cleanTimestamp(log.timestamp)}</span>
@@ -1633,7 +1619,7 @@
         `;
 
         expandedPanelHtml = `
-          <div class="bg-[#131722] border border-white/10 rounded-2xl p-4 mt-3 space-y-3.5 shadow-xl">
+          <div class="bg-[#131722] border border-white/10 rounded-2xl p-4 mt-3 space-y-3.5">
             ${updateMenuHtml}
             ${historySectionHtml}
           </div>
@@ -1672,7 +1658,6 @@
       `;
     }
 
-    // ================= RENDER COMBINED TABLE =================
     function renderAllCombinedTable() {
       document.getElementById("coverageFilter").classList.add("hidden");
       renderFilterPills();
@@ -1817,7 +1802,6 @@
       }
     }
 
-    // ================= RENDER SURVEY TABLE =================
     function renderSurveyTable() {
       const list = appData.survey || [];
       document.getElementById("coverageFilter").classList.add("hidden");
@@ -1954,7 +1938,6 @@
       }
     }
 
-    // ================= RENDER MAPPING TABLE =================
     function renderMappingTable() {
       const list = appData.mapping || [];
       document.getElementById("coverageFilter").classList.remove("hidden");
@@ -2087,7 +2070,6 @@
       }
     }
 
-    // ================= ACTIVITY LOG MODAL & PDF EXPORT =================
     async function openHistoryModal(type, selectedTicketId, stageKey = null) {
       historyTypeActive = type;
       historyStageFilterKey = type === "Survey" ? stageKey : null;
@@ -2345,7 +2327,6 @@
       doc.save(`BLiP_All_Activity_Log_${safeFile}.pdf`);
     }
 
-    // ================= MODALS & CREATE NEW =================
     function openAddModal() {
       if (!currentUser || currentUser.role !== "Admin") return alert("Admin access only.");
       document.getElementById("newTicketType").value = activeTab === "Mapping" ? "Mapping" : "Survey";
