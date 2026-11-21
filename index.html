@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BLiP Work Order Monitoring Dashboard v3.9.8 — Horizontal Dark Edition</title>
+  <title>BLiP Work Order Monitoring Dashboard v4.0.0 — Horizontal Dark Edition</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -68,49 +68,59 @@
 </head>
 <body class="min-h-screen flex flex-col p-4 md:p-6 lg:px-8">
 
-  <!-- Zone 1: Top Horizontal Brand Bar & Navigation -->
-  <header class="zone-3d rounded-2xl p-4 mb-7 flex flex-col lg:flex-row justify-between items-center gap-4">
-    <div class="flex flex-col md:flex-row items-center gap-6 w-full lg:w-auto">
-      <div class="flex items-center gap-2.5 shrink-0 select-none">
-        <span class="tracking-tighter font-extrabold text-3xl text-white">BL<span class="text-orange-500">i</span>P</span>
-        <span class="text-[10px] bg-orange-500/20 border border-orange-500/50 px-2 py-0.5 rounded text-orange-400 font-mono font-bold">v3.9.8</span>
+  <!-- Zone 1: Sticky Top Horizontal Brand Bar & Navigation -->
+  <header class="zone-3d sticky top-3 z-40 rounded-2xl p-3.5 md:p-4 mb-7 flex flex-col gap-3 backdrop-blur-md">
+    <div class="flex flex-col xl:flex-row justify-between items-center gap-3.5">
+      <!-- Left: Brand + Navigation -->
+      <div class="flex flex-col md:flex-row items-center gap-4 md:gap-5 w-full xl:w-auto">
+        <div class="flex items-center gap-2.5 shrink-0 select-none">
+          <span class="tracking-tighter font-extrabold text-3xl text-white">BL<span class="text-orange-500">i</span>P</span>
+          <span class="text-[10px] bg-orange-500/20 border border-orange-500/50 px-2 py-0.5 rounded text-orange-400 font-mono font-bold">v4.0.0</span>
+        </div>
+
+        <nav class="flex gap-1.5 overflow-x-auto w-full md:w-auto pb-1 md:pb-0">
+          <button onclick="setActiveNav('dashboard')" id="nav-dashboard" class="nav-btn flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold bg-orange-600 text-white shadow shadow-orange-600/20 whitespace-nowrap">
+            <span>Dashboard Monitoring Work Orders</span>
+          </button>
+          <button onclick="openHistoryModal(activeTab === 'Mapping' ? 'Mapping' : 'Survey', 'ALL', null)" id="nav-report" class="nav-btn flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:bg-zinc-800/80 hover:text-white transition whitespace-nowrap">
+            <span>Report Activity Log</span>
+          </button>
+          <button onclick="openSettingsModal()" id="nav-settings" class="nav-btn flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:bg-zinc-800/80 hover:text-white transition whitespace-nowrap">
+            <span>Settings</span>
+          </button>
+        </nav>
       </div>
 
-      <nav class="flex gap-1.5 overflow-x-auto w-full md:w-auto pb-1 md:pb-0">
-        <button onclick="setActiveNav('dashboard')" id="nav-dashboard" class="nav-btn flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold bg-orange-600 text-white shadow shadow-orange-600/20 whitespace-nowrap">
-          <span>Dashboard</span>
-        </button>
-        <button onclick="setActiveNav('monitor')" id="nav-monitor" class="nav-btn flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:bg-zinc-800/80 hover:text-white transition whitespace-nowrap">
-          <span>Work Order Monitor</span>
-        </button>
-        <button onclick="openHistoryModal(activeTab === 'Mapping' ? 'Mapping' : 'Survey', 'ALL')" id="nav-report" class="nav-btn flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:bg-zinc-800/80 hover:text-white transition whitespace-nowrap">
-          <span>Report &amp; Activity Log</span>
-        </button>
-        <button onclick="openSettingsModal()" id="nav-settings" class="nav-btn flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:bg-zinc-800/80 hover:text-white transition whitespace-nowrap">
-          <span>Settings</span>
-        </button>
-      </nav>
+      <!-- Right: Auth + Action Buttons -->
+      <div class="flex flex-wrap items-center gap-2.5 w-full xl:w-auto justify-end">
+        <div id="googleBtnWrapper"></div>
+        <div id="headerUserBadge" class="hidden items-center gap-2 bg-zinc-900 border border-orange-500/40 px-3 py-1.5 rounded-xl text-xs">
+          <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
+          <span id="headerUserName" class="font-semibold text-white"></span>
+          <button onclick="logoutUser()" class="text-rose-400 hover:underline ml-1">Sign Out</button>
+        </div>
+
+        <button onclick="fetchAllData()" class="bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-white/15 px-3 py-1.5 rounded-xl text-xs font-semibold transition">↻ Refresh</button>
+        <button id="btnNewTicket" onclick="openAddModal()" class="hidden bg-orange-600 hover:bg-orange-500 text-white px-4 py-1.5 rounded-xl text-xs font-bold shadow-md shadow-orange-600/20 transition">+ New Work Order</button>
+      </div>
     </div>
 
-    <!-- Right Controls -->
-    <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto justify-end">
-      <div class="flex items-center gap-1.5 bg-zinc-900 border border-white/15 rounded-xl px-3 py-1.5 text-xs">
-        <svg class="w-3.5 h-3.5 text-orange-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-        <input type="date" id="dateStart" onchange="renderActiveTab()" title="Start Date" class="bg-transparent text-zinc-200 font-medium focus:outline-none text-xs">
-        <span class="text-zinc-500">–</span>
-        <input type="date" id="dateEnd" onchange="renderActiveTab()" title="End Date" class="bg-transparent text-zinc-200 font-medium focus:outline-none text-xs">
-        <button onclick="clearDateFilter()" id="btnClearDate" class="hidden text-[10px] text-rose-400 hover:text-rose-300 font-semibold ml-1">Reset</button>
+    <!-- Bottom Row of Top Bar: Search Work Orders By Date | Search Work Orders By Name/ID -->
+    <div class="pt-2.5 border-t border-white/10 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-2.5">
+      <div class="flex flex-wrap items-center gap-2 bg-zinc-950/90 border border-white/15 rounded-xl px-3 py-1.5 text-xs">
+        <span class="text-[11px] font-bold text-orange-400 whitespace-nowrap">Search Work Orders By Date:</span>
+        <div class="flex items-center gap-1.5">
+          <input type="date" id="dateStart" onchange="onGlobalSearchChange()" title="Start Date" class="bg-transparent text-zinc-200 font-medium focus:outline-none text-xs">
+          <span class="text-zinc-500">–</span>
+          <input type="date" id="dateEnd" onchange="onGlobalSearchChange()" title="End Date" class="bg-transparent text-zinc-200 font-medium focus:outline-none text-xs">
+          <button onclick="clearDateFilter()" id="btnClearDate" class="hidden text-[10px] text-rose-400 hover:text-rose-300 font-semibold ml-1">Reset</button>
+        </div>
       </div>
 
-      <div id="googleBtnWrapper"></div>
-      <div id="headerUserBadge" class="hidden items-center gap-2 bg-zinc-900 border border-orange-500/40 px-3 py-1.5 rounded-xl text-xs">
-        <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
-        <span id="headerUserName" class="font-semibold text-white"></span>
-        <button onclick="logoutUser()" class="text-rose-400 hover:underline ml-1">Sign Out</button>
+      <div class="relative flex-1 lg:max-w-sm">
+        <input type="text" id="searchInput" oninput="onGlobalSearchChange()" placeholder="Search Work Orders By Name/ID..." class="w-full bg-zinc-950/90 border border-white/15 text-zinc-100 rounded-xl pl-8 pr-3 py-1.5 text-xs focus:outline-none focus:border-orange-500">
+        <svg class="w-3.5 h-3.5 text-orange-400 absolute left-2.5 top-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
       </div>
-
-      <button onclick="fetchAllData()" class="bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-white/15 px-3 py-1.5 rounded-xl text-xs font-semibold transition">↻ Refresh</button>
-      <button id="btnNewTicket" onclick="openAddModal()" class="hidden bg-orange-600 hover:bg-orange-500 text-white px-4 py-1.5 rounded-xl text-xs font-bold shadow-md shadow-orange-600/20 transition">+ New Work Order</button>
     </div>
   </header>
 
@@ -209,22 +219,17 @@
       </button>
     </div>
 
-    <!-- Sub-Filter Bar -->
-    <div id="divisionFilterPanel" class="pt-4 border-t border-white/15 flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-3">
-      <div id="status-filter-pills" class="flex gap-1.5 overflow-x-auto pb-1 lg:pb-0"></div>
+    <!-- Sub-Filter Bar (Status Pills + Coverage Filter only) -->
+    <div id="divisionFilterPanel" class="pt-4 border-t border-white/15 flex flex-wrap justify-between items-center gap-3">
+      <div id="status-filter-pills" class="flex gap-1.5 overflow-x-auto pb-1 sm:pb-0"></div>
 
-      <div class="flex flex-wrap items-center gap-2 justify-between lg:justify-end">
+      <div class="flex items-center gap-2">
         <select id="coverageFilter" onchange="renderActiveTab()" class="hidden bg-zinc-900 border border-white/20 text-zinc-200 rounded-xl px-3 py-1.5 text-xs font-medium focus:outline-none focus:border-orange-500">
           <option value="ALL">Coverage: All</option>
           <option value="Onet">Onet</option>
           <option value="Partner">Partner</option>
           <option value="Not Cover">Not Cover</option>
         </select>
-
-        <div class="relative">
-          <input type="text" id="searchInput" oninput="renderActiveTab()" placeholder="Search work order..." class="bg-zinc-900 border border-white/20 text-zinc-100 rounded-xl pl-8 pr-3 py-1.5 text-xs w-48 sm:w-56 focus:outline-none focus:border-orange-500">
-          <svg class="w-3.5 h-3.5 text-zinc-500 absolute left-2.5 top-2.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-        </div>
       </div>
     </div>
   </div>
@@ -368,13 +373,13 @@
     </div>
   </div>
 
-  <!-- Modal Activity Log & Vertical PDF -->
+  <!-- Modal Activity Log / All Activity Log & Vertical PDF -->
   <div id="historyModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
     <div class="card-dark rounded-2xl p-6 w-full max-w-3xl max-h-[88vh] flex flex-col shadow-2xl">
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 border-b border-white/15 pb-4">
         <div>
-          <span id="historyTypeLabel" class="text-[10px] uppercase tracking-wider text-orange-400 font-bold">Activity Log</span>
-          <h2 class="text-base font-extrabold text-white mt-0.5">Work Order Progress History</h2>
+          <span id="historyTypeLabel" class="text-[10px] uppercase tracking-wider text-orange-400 font-bold">All Activity Log</span>
+          <h2 id="historyModalTitle" class="text-base font-extrabold text-white mt-0.5">All Activity Log</h2>
         </div>
 
         <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
@@ -409,8 +414,8 @@
         </div>
         <div class="bg-zinc-950 p-3.5 rounded-xl border border-white/15">
           <p class="text-zinc-500 text-[10px]">Application Version</p>
-          <p class="font-semibold text-white mt-0.5">BLiP Work Order Monitoring Dashboard v3.9.8 (Horizontal Edition)</p>
-          <p class="text-[10px] text-zinc-500 mt-1">Weekly Work Orders • Need Attention Work Orders • Workflow Progress &amp; Activity Log</p>
+          <p class="font-semibold text-white mt-0.5">BLiP Work Order Monitoring Dashboard v4.0.0 (Horizontal Edition)</p>
+          <p class="text-[10px] text-zinc-500 mt-1">Weekly Work Orders • Need Attention Work Orders • Activity Log &amp; All Activity Log</p>
         </div>
       </div>
       <div class="mt-5 flex justify-end">
@@ -448,6 +453,7 @@
     let loadingHistoryTicket = {};
 
     let historyTypeActive = "Survey";
+    let historyStageFilterKey = null;
     let allHistoryForType = [];
     let filteredHistoryLogs = [];
 
@@ -565,6 +571,11 @@
       }
     }
 
+    function onGlobalSearchChange() {
+      renderWeeklyPanel();
+      renderActiveTab();
+    }
+
     async function refreshSurveyHistoryCache() {
       try {
         const res = await fetch(`${API_URL}?action=getHistory&prefix=SRV-`);
@@ -643,7 +654,6 @@
     function selectDivisionTab(type) {
       activeTab = type;
       currentStatusFilter = "NEED_ATTENTION";
-      document.getElementById("searchInput").value = "";
       syncDivisionButtonsUI();
       renderActiveTab();
     }
@@ -718,10 +728,16 @@
       };
       titleEl.innerText = labelMap[activeWeeklyKpi] || `Weekly ${activeWeeklyKpi}`;
 
+      const searchQuery = document.getElementById("searchInput").value.toLowerCase();
+
       const items = getNormalizedAllWorkOrders().filter(item => {
         const matchKpi = activeWeeklyKpi === "ALL" || item.unifiedStatus === activeWeeklyKpi;
+        const matchSearch =
+          (item.customer || "").toLowerCase().includes(searchQuery) ||
+          (item.ticketId || "").toLowerCase().includes(searchQuery) ||
+          (item.description || "").toLowerCase().includes(searchQuery);
         const matchDate = matchDateRange(item.lastUpdated);
-        return matchKpi && matchDate;
+        return matchKpi && matchSearch && matchDate;
       });
 
       items.sort((a, b) => {
@@ -762,11 +778,6 @@
                 <div class="overflow-hidden">
                   <p class="font-extrabold text-white text-sm leading-snug">${item.customer || "-"}</p>
                   <span class="text-[11px] font-mono text-orange-400 font-bold">${item.ticketId}</span>
-                  <div class="mt-2">
-                    <button onclick="openHistoryModal('Mapping', '${item.ticketId}')" class="text-[10.5px] font-semibold text-amber-400 hover:text-amber-300 bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/35 transition">
-                      🕒 Activity Log
-                    </button>
-                  </div>
                 </div>
               </div>
             </td>
@@ -803,6 +814,11 @@
               </div>
             </td>
             <td class="py-4 px-4 text-right text-xs font-medium text-zinc-300 whitespace-nowrap">${formatDisplayDate(item.lastUpdated)}</td>
+            <td class="py-4 px-4 text-center whitespace-nowrap">
+              <button onclick="openHistoryModal('Mapping', '${item.ticketId}', null)" class="text-[11px] font-bold text-orange-400 hover:text-orange-300 bg-orange-500/10 hover:bg-orange-500/20 px-3 py-1.5 rounded-xl border border-orange-500/40 transition cursor-pointer">
+                📜 All Activity Log
+              </button>
+            </td>
           </tr>
         `;
       }).join("");
@@ -816,6 +832,7 @@
               <th class="py-3.5 px-4">Work Order</th>
               <th class="py-3.5 px-4 text-center min-w-[580px]">Workflow Progress</th>
               <th class="py-3.5 px-4 text-right">Last Update</th>
+              <th class="py-3.5 px-4 text-center">All Activity Log</th>
             </tr>
           </thead>
           <tbody>${rowsHtml}</tbody>
@@ -1016,7 +1033,6 @@
       return targetNames.some(tag => lowerTitle === tag || lowerTitle.includes(tag));
     }
 
-    // stageOnlyObj: when passed (from expanded stepper stage), strictly shows only changes for that stage
     function parseResiLogEntry(log, fallbackPic, fallbackNote, stageOnlyObj = null) {
       const detail = String(log.detail || "").trim();
       const blocks = detail.split(";").map(s => s.trim()).filter(Boolean);
@@ -1035,10 +1051,6 @@
         const mainPart = ketSplit[0].trim();
         const notePart = ketSplit.length > 1 ? ketSplit.slice(1).join("| Ket:").trim() : "";
 
-        if (notePart && notePart !== "-" && !notes.includes(notePart)) {
-          notes.push(notePart);
-        }
-
         const cleanMain = mainPart.replace(/\s*\|\s*PIC:[^|;]+/i, "").trim();
         const transMatch = cleanMain.match(/^\[([^\]]+)\]\s*[^:]+:\s*(.+)$/);
 
@@ -1046,6 +1058,9 @@
           const stageTitle = transMatch[1].trim();
           if (stageOnlyObj && !matchStageTag(stageTitle, stageOnlyObj)) {
             continue;
+          }
+          if (notePart && notePart !== "-" && !notes.includes(notePart)) {
+            notes.push(notePart);
           }
           const transVal = transMatch[2].trim();
           const pair = transVal.split("→").map(x => x.trim());
@@ -1056,6 +1071,9 @@
           }
         } else if (cleanMain.toLowerCase().startsWith("ticket status:")) {
           if (stageOnlyObj) continue;
+          if (notePart && notePart !== "-" && !notes.includes(notePart)) {
+            notes.push(notePart);
+          }
           const stVal = cleanMain.replace(/^ticket status:\s*/i, "").trim();
           const pair = stVal.split("→").map(x => x.trim());
           if (pair.length === 2 && pair[0] !== pair[1]) {
@@ -1071,11 +1089,16 @@
               continue;
             }
           }
+          if (notePart && notePart !== "-" && !notes.includes(notePart)) {
+            notes.push(notePart);
+          }
           changes.push(cleanMain);
+        } else if (!stageOnlyObj && notePart && notePart !== "-" && !notes.includes(notePart)) {
+          notes.push(notePart);
         }
       }
 
-      if (notes.length === 0 && fallbackNote && fallbackNote !== "-") {
+      if (!stageOnlyObj && notes.length === 0 && fallbackNote && fallbackNote !== "-") {
         notes.push(fallbackNote);
       }
 
@@ -1334,11 +1357,11 @@
         const stageDetailObj = (t.stageDetails && t.stageDetails[activeStageKey]) || { pic: "", note: "" };
         const headerDisplayStatus = currentStageVal || "Not Yet";
 
+        // Strictly filter logs that have parsed changes belonging ONLY to activeStageObj
         const ticketLogs = (cachedHistory.Survey || []).filter(log => String(log.ticketId).trim() === String(t.ticketId).trim());
-        const stageLogs = ticketLogs.filter(log => {
-          const dLower = (log.detail || "").toLowerCase();
-          return activeStageObj.bracketTags.some(tag => dLower.includes(`[${tag}]`) || dLower.includes(`${tag}:`));
-        });
+        const stageEntries = ticketLogs
+          .map(log => ({ log, parsed: parseResiLogEntry(log, stageDetailObj.pic, stageDetailObj.note, activeStageObj) }))
+          .filter(entry => entry.parsed.changes.length > 0);
 
         const updateMenuHtml = canEdit ? `
           <div class="bg-zinc-950 border border-orange-500/40 rounded-2xl p-4 space-y-3">
@@ -1392,23 +1415,20 @@
 
         const resiItemsHtml = loadingHistoryTicket[t.ticketId]
           ? `<div class="py-5 text-center"><div class="inline-block animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-orange-500"></div></div>`
-          : (stageLogs.length > 0
-              ? stageLogs.map((log, idx) => {
-                  const parsed = parseResiLogEntry(log, stageDetailObj.pic, stageDetailObj.note, activeStageObj);
+          : (stageEntries.length > 0
+              ? stageEntries.map(({ log, parsed }, idx) => {
                   const isLatest = idx === 0;
                   return `
-                    <div class="relative pl-6 pb-3.5 last:pb-1 ${idx < stageLogs.length - 1 ? 'border-l border-dashed border-white/20 ml-2' : 'ml-2'}">
+                    <div class="relative pl-6 pb-3.5 last:pb-1 ${idx < stageEntries.length - 1 ? 'border-l border-dashed border-white/20 ml-2' : 'ml-2'}">
                       <span class="w-2.5 h-2.5 rounded-full ${isLatest ? 'bg-orange-500 ring-4 ring-orange-500/20' : 'bg-zinc-500'} absolute -left-[5px] top-1.5"></span>
                       <div class="bg-zinc-950 border border-white/15 rounded-xl p-3 text-xs space-y-1.5">
                         <div class="flex flex-wrap items-center justify-between gap-2">
                           <span class="font-mono text-[11px] text-orange-300 font-semibold">${cleanTimestamp(log.timestamp)}</span>
                           <span class="text-[11px] text-zinc-400">PIC: <strong class="text-white">${parsed.pic}</strong></span>
                         </div>
-                        ${parsed.changes.length > 0 ? `
-                          <ul class="space-y-0.5 text-[11px] text-zinc-200">
-                            ${parsed.changes.map(ch => `<li>• ${ch}</li>`).join("")}
-                          </ul>
-                        ` : ""}
+                        <ul class="space-y-0.5 text-[11px] text-zinc-200">
+                          ${parsed.changes.map(ch => `<li>• ${ch}</li>`).join("")}
+                        </ul>
                         <p class="text-[11px] text-zinc-400 pt-1 border-t border-white/10">
                           <span class="text-zinc-500">Notes:</span> <span class="text-zinc-200">${parsed.note}</span>
                         </p>
@@ -1423,13 +1443,12 @@
 
         const historySectionHtml = `
           <div class="bg-zinc-950/60 border border-white/15 rounded-2xl p-4 space-y-3">
-            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-white/15 pb-2">
-              <div>
-                <span class="text-[10px] uppercase tracking-wider text-orange-400 font-bold">Activity Log • ${activeStageObj.fullLabel}</span>
-                <h4 class="text-xs font-extrabold text-white">Progress History (${t.ticketId})</h4>
-              </div>
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-white/15 pb-2.5">
+              <h4 class="text-xs font-extrabold text-orange-400 tracking-wide">
+                Activity Log • ${activeStageObj.fullLabel} • <span class="text-white font-mono">(${t.ticketId})</span>
+              </h4>
               <button onclick="openHistoryModal('Survey', '${t.ticketId}', '${activeStageKey}')" class="text-[11px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/35 px-2.5 py-1 rounded-lg hover:bg-emerald-500/20 transition">
-                📄 Export PDF History
+                📄 Export PDF
               </button>
             </div>
             <div class="max-h-56 overflow-y-auto pr-1 pt-1">
@@ -1474,6 +1493,11 @@
             </div>
           </td>
           <td class="py-4 px-4 text-right text-xs font-medium text-zinc-300 whitespace-nowrap">${formatDisplayDate(t.lastUpdated)}</td>
+          <td class="py-4 px-4 text-center whitespace-nowrap">
+            <button onclick="openHistoryModal('Survey', '${t.ticketId}', null)" class="text-[11px] font-bold text-orange-400 hover:text-orange-300 bg-orange-500/10 hover:bg-orange-500/20 px-3 py-1.5 rounded-xl border border-orange-500/40 transition cursor-pointer">
+              📜 All Activity Log
+            </button>
+          </td>
         </tr>
       `;
     }
@@ -1532,11 +1556,6 @@
                 <div class="overflow-hidden">
                   <p class="font-extrabold text-white text-sm leading-snug">${item.customer || "-"}</p>
                   <span class="text-[11px] font-mono text-orange-400 font-bold">${item.ticketId}</span>
-                  <div class="mt-2">
-                    <button onclick="openHistoryModal('Mapping', '${item.ticketId}')" class="text-[10.5px] font-semibold text-amber-400 hover:text-amber-300 bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/35 transition">
-                      🕒 Activity Log
-                    </button>
-                  </div>
                 </div>
               </div>
             </td>
@@ -1573,6 +1592,11 @@
               </div>
             </td>
             <td class="py-4 px-4 text-right text-xs font-medium text-zinc-300 whitespace-nowrap">${formatDisplayDate(item.lastUpdated)}</td>
+            <td class="py-4 px-4 text-center whitespace-nowrap">
+              <button onclick="openHistoryModal('Mapping', '${item.ticketId}', null)" class="text-[11px] font-bold text-orange-400 hover:text-orange-300 bg-orange-500/10 hover:bg-orange-500/20 px-3 py-1.5 rounded-xl border border-orange-500/40 transition cursor-pointer">
+                📜 All Activity Log
+              </button>
+            </td>
           </tr>
         `;
       }).join("");
@@ -1586,6 +1610,7 @@
               <th class="py-3.5 px-4">Work Order</th>
               <th class="py-3.5 px-4 text-center min-w-[580px]">Workflow Progress</th>
               <th class="py-3.5 px-4 text-right">Last Update</th>
+              <th class="py-3.5 px-4 text-center">All Activity Log</th>
             </tr>
           </thead>
           <tbody>${rowsHtml}</tbody>
@@ -1672,6 +1697,7 @@
               <th class="py-3.5 px-4">Work Order</th>
               <th class="py-3.5 px-4 text-center min-w-[580px]">Workflow Progress</th>
               <th class="py-3.5 px-4 text-right">Last Update</th>
+              <th class="py-3.5 px-4 text-center">All Activity Log</th>
             </tr>
           </thead>
           <tbody>${rowsHtml}</tbody>
@@ -1775,7 +1801,10 @@
         const effSt = getEffectiveMappingStatus(t.status);
         const matchStatus = matchNeedAttentionStatus(effSt);
         const matchCov = covQuery === "ALL" || t.coverage === covQuery;
-        const matchSearch = (t.customer || "").toLowerCase().includes(searchQuery) || (t.description || "").toLowerCase().includes(searchQuery);
+        const matchSearch =
+          (t.customer || "").toLowerCase().includes(searchQuery) ||
+          (t.ticketId || "").toLowerCase().includes(searchQuery) ||
+          (t.description || "").toLowerCase().includes(searchQuery);
         const matchDate = matchDateRange(t.lastUpdated);
         return matchStatus && matchCov && matchSearch && matchDate;
       });
@@ -1809,11 +1838,6 @@
                 <div class="overflow-hidden">
                   <p class="font-extrabold text-white text-sm leading-snug">${t.customer || "-"}</p>
                   <span class="text-[11px] font-mono text-orange-400 font-bold">${t.ticketId}</span>
-                  <div class="mt-2">
-                    <button onclick="openHistoryModal('Mapping', '${t.ticketId}')" class="text-[10.5px] font-semibold text-amber-400 hover:text-amber-300 bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/35 transition">
-                      🕒 Activity Log
-                    </button>
-                  </div>
                 </div>
               </div>
             </td>
@@ -1842,6 +1866,11 @@
               </div>
             </td>
             <td class="py-4 px-4 text-right text-xs font-medium text-zinc-300 whitespace-nowrap">${formatDisplayDate(t.lastUpdated)}</td>
+            <td class="py-4 px-4 text-center whitespace-nowrap">
+              <button onclick="openHistoryModal('Mapping', '${t.ticketId}', null)" class="text-[11px] font-bold text-orange-400 hover:text-orange-300 bg-orange-500/10 hover:bg-orange-500/20 px-3 py-1.5 rounded-xl border border-orange-500/40 transition cursor-pointer">
+                📜 All Activity Log
+              </button>
+            </td>
           </tr>
         `;
       }).join("");
@@ -1855,6 +1884,7 @@
               <th class="py-3.5 px-4">Work Order</th>
               <th class="py-3.5 px-4">Workflow Progress</th>
               <th class="py-3.5 px-4 text-right">Last Update</th>
+              <th class="py-3.5 px-4 text-center">All Activity Log</th>
             </tr>
           </thead>
           <tbody>${rowsHtml}</tbody>
@@ -1896,9 +1926,7 @@
       }
     }
 
-    // ================= ACTIVITY LOG & VERTICAL PDF =================
-    let historyStageFilterKey = null;
-
+    // ================= ACTIVITY LOG & ALL ACTIVITY LOG MODAL + VERTICAL PDF =================
     async function openHistoryModal(type, selectedTicketId, stageKey = null) {
       historyTypeActive = type;
       historyStageFilterKey = type === "Survey" ? stageKey : null;
@@ -1907,8 +1935,13 @@
       const stageObj = historyStageFilterKey ? SURVEY_STAGE_DEFS.find(s => s.key === historyStageFilterKey) : null;
 
       document.getElementById("historyTypeLabel").innerText = stageObj
-        ? `Work Order Type: ${type} • ${stageObj.fullLabel} Log`
-        : `Work Order Type: ${type} • Activity Log`;
+        ? `Work Order Type: ${type} • Activity Log (${stageObj.fullLabel})`
+        : `Work Order Type: ${type} • All Activity Log`;
+
+      document.getElementById("historyModalTitle").innerText = stageObj
+        ? `Activity Log • ${stageObj.fullLabel}${selectedTicketId && selectedTicketId !== "ALL" ? ` • (${selectedTicketId})` : ""}`
+        : `All Activity Log${selectedTicketId && selectedTicketId !== "ALL" ? ` • (${selectedTicketId})` : ""}`;
+
       document.getElementById("historyListContainer").innerHTML = "";
       document.getElementById("historyLoader").classList.remove("hidden");
       document.getElementById("historyModal").classList.remove("hidden");
@@ -1939,13 +1972,18 @@
 
     function onHistoryFilterChange() {
       const selectedId = document.getElementById("historyCustomerFilter").value;
+      const stageObj = historyStageFilterKey ? SURVEY_STAGE_DEFS.find(s => s.key === historyStageFilterKey) : null;
+
+      document.getElementById("historyModalTitle").innerText = stageObj
+        ? `Activity Log • ${stageObj.fullLabel}${selectedId && selectedId !== "ALL" ? ` • (${selectedId})` : ""}`
+        : `All Activity Log${selectedId && selectedId !== "ALL" ? ` • (${selectedId})` : ""}`;
+
       filteredHistoryLogs = allHistoryForType.filter(log => {
         const matchTicket = selectedId === "ALL" || String(log.ticketId).trim() === String(selectedId).trim();
         if (!matchTicket) return false;
-        if (historyStageFilterKey) {
-          const stObj = SURVEY_STAGE_DEFS.find(s => s.key === historyStageFilterKey);
-          const dLower = String(log.detail || "").toLowerCase();
-          return stObj ? stObj.bracketTags.some(tag => dLower.includes(`[${tag}]`) || dLower.includes(`${tag}:`)) : true;
+        if (stageObj) {
+          const parsed = parseResiLogEntry(log, "-", "", stageObj);
+          return parsed.changes.length > 0;
         }
         return true;
       });
@@ -1985,7 +2023,7 @@
 
               ${parsed.changes.length > 0 ? `
                 <div class="bg-zinc-950/90 border border-white/10 rounded-xl px-3.5 py-2.5 space-y-1">
-                  <p class="text-[10px] uppercase tracking-wider text-zinc-500 font-bold">Progress Summary</p>
+                  <p class="text-[10px] uppercase tracking-wider text-zinc-500 font-bold">${stageObj ? `Activity Log • ${stageObj.label}` : "All Activity Log (Survey → Forward WO Installation)"}</p>
                   <ul class="space-y-1 text-xs text-zinc-200">
                     ${parsed.changes.map(c => `<li class="flex items-start gap-1.5"><span class="text-orange-400 font-bold">▸</span><span>${c}</span></li>`).join("")}
                   </ul>
@@ -2037,8 +2075,8 @@
         doc.setFont("helvetica", "bold");
         doc.setFontSize(13);
         const headingTitle = stageObj
-          ? `BLiP — ${stageObj.fullLabel.toUpperCase()} HISTORY (${historyTypeActive.toUpperCase()})`
-          : `BLiP — WORK ORDER PROGRESS HISTORY (${historyTypeActive.toUpperCase()})`;
+          ? `BLiP — ACTIVITY LOG • ${stageObj.fullLabel.toUpperCase()} (${historyTypeActive.toUpperCase()})`
+          : `BLiP — ALL ACTIVITY LOG (${historyTypeActive.toUpperCase()})`;
         doc.text(headingTitle, marginX, 11);
 
         doc.setTextColor(220, 220, 225);
@@ -2143,7 +2181,7 @@
       });
 
       const safeFile = targetLabel.replace(/[^a-zA-Z0-9-_]/g, "_");
-      doc.save(`BLiP_WorkOrder_History_${safeFile}.pdf`);
+      doc.save(`BLiP_All_Activity_Log_${safeFile}.pdf`);
     }
 
     // ================= ADD WORK ORDER & SETTINGS CONTROL =================
