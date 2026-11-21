@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BLiP Ticket Monitoring Dashboard v3.9.3 — Horizontal Dark Edition</title>
+  <title>BLiP Ticket Monitoring Dashboard v3.9.4 — Horizontal Dark Edition</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -42,7 +42,7 @@
     <div class="flex flex-col md:flex-row items-center gap-6 w-full lg:w-auto">
       <div class="flex items-center gap-2.5 shrink-0 select-none">
         <span class="tracking-tighter font-extrabold text-3xl text-white">BL<span class="text-orange-500">i</span>P</span>
-        <span class="text-[10px] bg-orange-500/20 border border-orange-500/50 px-2 py-0.5 rounded text-orange-400 font-mono font-bold">v3.9.3</span>
+        <span class="text-[10px] bg-orange-500/20 border border-orange-500/50 px-2 py-0.5 rounded text-orange-400 font-mono font-bold">v3.9.4</span>
       </div>
 
       <nav class="flex gap-1.5 overflow-x-auto w-full md:w-auto pb-1 md:pb-0">
@@ -52,7 +52,7 @@
         <button onclick="setActiveNav('monitor')" id="nav-monitor" class="nav-btn flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:bg-zinc-800/80 hover:text-white transition whitespace-nowrap">
           <span>Ticket Monitor</span>
         </button>
-        <button onclick="openHistoryModal(activeTab || 'Survey', 'ALL')" id="nav-report" class="nav-btn flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:bg-zinc-800/80 hover:text-white transition whitespace-nowrap">
+        <button onclick="openHistoryModal(activeTab === 'Mapping' ? 'Mapping' : 'Survey', 'ALL')" id="nav-report" class="nav-btn flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:bg-zinc-800/80 hover:text-white transition whitespace-nowrap">
           <span>Report & History</span>
         </button>
         <button onclick="openSettingsModal()" id="nav-settings" class="nav-btn flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:bg-zinc-800/80 hover:text-white transition whitespace-nowrap">
@@ -83,41 +83,70 @@
     </div>
   </header>
 
-  <!-- KPI Cards Gabungan (Survey + Mapping) -->
-  <div id="kpi-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6"></div>
+  <!-- 6 KPI Cards Gabungan (Total Ticket - Open - On Progress - Pending - Cancel - Closed) -->
+  <div id="kpi-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3.5 mb-6"></div>
 
-  <!-- Tombol Besar [Mapping] | [Survey] + Sub-Filter Collapse/Expand -->
+  <!-- 3 Tombol Sejajar [All] | [Mapping] | [Survey] + Sub-Filter (Selalu Terbuka) -->
   <div class="card-dark rounded-2xl p-4 md:p-5 mb-6 space-y-4">
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      <button onclick="toggleDivisionPanel('Mapping')" id="btn-div-Mapping" class="group flex items-center justify-between px-5 py-4 rounded-2xl border transition text-left bg-zinc-900/90 border-white/15 hover:border-orange-500/60">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <!-- All -->
+      <button onclick="selectDivisionTab('All')" id="btn-div-All" class="group flex items-center justify-between px-5 py-4 rounded-2xl border transition text-left bg-orange-600/15 border-orange-500 shadow-lg shadow-orange-600/10">
         <div class="flex items-center gap-3.5">
-          <span class="w-11 h-11 rounded-xl bg-zinc-950 border border-white/15 flex items-center justify-center text-lg group-hover:border-orange-500/50 transition">🗺️</span>
+          <span class="w-11 h-11 rounded-xl bg-zinc-950 border border-orange-500/40 flex items-center justify-center text-orange-400 transition">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <rect x="3" y="3" width="7" height="7" rx="1.5"/>
+              <rect x="14" y="3" width="7" height="7" rx="1.5"/>
+              <rect x="3" y="14" width="7" height="7" rx="1.5"/>
+              <rect x="14" y="14" width="7" height="7" rx="1.5"/>
+            </svg>
+          </span>
+          <div>
+            <p class="text-base font-extrabold text-white tracking-tight">All</p>
+            <p class="text-xs text-zinc-400 font-medium"><span id="count-All">0</span> Total Ticket</p>
+          </div>
+        </div>
+      </button>
+
+      <!-- Mapping (Icon Peta Zaman Dulu / Antique Scroll Map) -->
+      <button onclick="selectDivisionTab('Mapping')" id="btn-div-Mapping" class="group flex items-center justify-between px-5 py-4 rounded-2xl border transition text-left bg-zinc-900/90 border-white/15 hover:border-orange-500/60">
+        <div class="flex items-center gap-3.5">
+          <span class="w-11 h-11 rounded-xl bg-zinc-950 border border-white/15 flex items-center justify-center text-amber-400 group-hover:border-orange-500/50 transition">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 4h11a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V4z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 4a2 2 0 0 0-2 2v1a1 1 0 0 0 1 1h1"/>
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 17h1a1 1 0 0 1 1 1v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2"/>
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9.5 9.5l2 2m0-2l-2 2"/>
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12.5 13.5c1.2-.8 2.2-.3 3 0"/>
+              <circle cx="15.5" cy="9" r="1" fill="currentColor"/>
+            </svg>
+          </span>
           <div>
             <p class="text-base font-extrabold text-white tracking-tight">Mapping</p>
             <p class="text-xs text-zinc-400 font-medium"><span id="count-Mapping">0</span> Ticket Mapping</p>
           </div>
         </div>
-        <span id="arrow-Mapping" class="text-zinc-400 group-hover:text-orange-400 transition-transform duration-200">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
-        </span>
       </button>
 
-      <button onclick="toggleDivisionPanel('Survey')" id="btn-div-Survey" class="group flex items-center justify-between px-5 py-4 rounded-2xl border transition text-left bg-zinc-900/90 border-white/15 hover:border-orange-500/60">
+      <!-- Survey (Icon Route) -->
+      <button onclick="selectDivisionTab('Survey')" id="btn-div-Survey" class="group flex items-center justify-between px-5 py-4 rounded-2xl border transition text-left bg-zinc-900/90 border-white/15 hover:border-orange-500/60">
         <div class="flex items-center gap-3.5">
-          <span class="w-11 h-11 rounded-xl bg-zinc-950 border border-white/15 flex items-center justify-center text-lg group-hover:border-orange-500/50 transition">📡</span>
+          <span class="w-11 h-11 rounded-xl bg-zinc-950 border border-white/15 flex items-center justify-center text-orange-400 group-hover:border-orange-500/50 transition">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <circle cx="6" cy="19" r="3"/>
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/>
+              <circle cx="18" cy="5" r="3"/>
+            </svg>
+          </span>
           <div>
             <p class="text-base font-extrabold text-white tracking-tight">Survey</p>
             <p class="text-xs text-zinc-400 font-medium"><span id="count-Survey">0</span> Ticket Survey</p>
           </div>
         </div>
-        <span id="arrow-Survey" class="text-zinc-400 group-hover:text-orange-400 transition-transform duration-200">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
-        </span>
       </button>
     </div>
 
-    <!-- Sub-Filter Bar (Collapse saat pertama dibuka, muncul saat [Mapping] atau [Survey] diklik) -->
-    <div id="divisionFilterPanel" class="hidden pt-4 border-t border-white/15 flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-3">
+    <!-- Sub-Filter Bar (Selalu Tampil) -->
+    <div id="divisionFilterPanel" class="pt-4 border-t border-white/15 flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-3">
       <div id="status-filter-pills" class="flex gap-1.5 overflow-x-auto pb-1 lg:pb-0"></div>
 
       <div class="flex flex-wrap items-center gap-2 justify-between lg:justify-end">
@@ -142,8 +171,8 @@
     <p class="text-sm text-zinc-400 font-medium">Memuat data...</p>
   </div>
 
-  <!-- Main Data Table Wrapper (Collapse sampai [Mapping] atau [Survey] diklik) -->
-  <div id="table-wrapper" class="card-dark rounded-2xl overflow-hidden shadow-xl hidden">
+  <!-- Main Data Table Wrapper (Selalu Terbuka) -->
+  <div id="table-wrapper" class="card-dark rounded-2xl overflow-hidden shadow-xl">
     <div class="overflow-x-auto" id="main-table-container"></div>
   </div>
 
@@ -159,8 +188,8 @@
         <div>
           <label class="text-orange-400 font-bold block mb-1">Jenis Ticket *</label>
           <select id="newTicketType" onchange="toggleNewTicketFields()" class="w-full bg-zinc-900 border border-orange-500/40 rounded-xl px-3 py-2 font-semibold text-white">
-            <option value="Survey">📡 Survey (s/d Forward WO Installation)</option>
-            <option value="Mapping">🗺️ Mapping (Coverage & Description)</option>
+            <option value="Survey">Survey (s/d Forward WO Installation)</option>
+            <option value="Mapping">Mapping (Coverage & Description)</option>
           </select>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -316,8 +345,8 @@
         </div>
         <div class="bg-zinc-950 p-3.5 rounded-xl border border-white/15">
           <p class="text-zinc-500 text-[10px]">Versi Aplikasi</p>
-          <p class="font-semibold text-white mt-0.5">BLiP Ticket Monitoring Dashboard v3.9.3 (Horizontal Edition)</p>
-          <p class="text-[10px] text-zinc-500 mt-1">KPI Gabungan • Tombol Mapping & Survey Collapse/Expand • Stepper → Update → History Resi</p>
+          <p class="font-semibold text-white mt-0.5">BLiP Ticket Monitoring Dashboard v3.9.4 (Horizontal Edition)</p>
+          <p class="text-[10px] text-zinc-500 mt-1">6 KPI Cards • Tab All / Mapping / Survey Langsung Terbuka • Stepper → Update → History Resi</p>
         </div>
       </div>
       <div class="mt-5 flex justify-end">
@@ -333,8 +362,8 @@
     // ===============================================
 
     let appData = { survey: [], mapping: [] };
-    // Default null -> panel Mapping & Survey collapse saat pertama buka
-    let activeTab = null;
+    // Default langsung 'All' dan tabel langsung terbuka tanpa collapse
+    let activeTab = "All";
     let currentStatusFilter = "ALL";
     let authToken = "";
     try { authToken = localStorage.getItem("ticket_auth_token") || ""; } catch (e) {}
@@ -370,6 +399,7 @@
 
     document.addEventListener("DOMContentLoaded", function () {
       initGoogleSignIn();
+      syncDivisionButtonsUI();
       if (authToken) {
         verifyStoredSession(authToken);
       } else {
@@ -467,67 +497,44 @@
         };
         document.getElementById("count-Survey").innerText = appData.survey.length;
         document.getElementById("count-Mapping").innerText = appData.mapping.length;
+        document.getElementById("count-All").innerText = appData.survey.length + appData.mapping.length;
 
         renderCombinedKpi();
         syncDivisionButtonsUI();
-        if (activeTab) {
-          renderActiveTab();
-        }
+        renderActiveTab();
 
         refreshSurveyHistoryCache().then(() => {
-          if (Object.values(expandedRows).some(Boolean) && activeTab === "Survey") {
-            renderSurveyTable();
+          if (Object.values(expandedRows).some(Boolean) && (activeTab === "Survey" || activeTab === "All")) {
+            renderActiveTab();
           }
         });
       } catch (err) {
         console.error("Fetch error:", err);
         renderCombinedKpi();
         syncDivisionButtonsUI();
-        if (activeTab) renderActiveTab();
+        renderActiveTab();
       } finally {
         document.getElementById("loader").classList.add("hidden");
-        if (activeTab) {
-          document.getElementById("table-wrapper").classList.remove("hidden");
-        }
+        document.getElementById("table-wrapper").classList.remove("hidden");
       }
     }
 
     function syncDivisionButtonsUI() {
-      ["Mapping", "Survey"].forEach(type => {
+      ["All", "Mapping", "Survey"].forEach(type => {
         const btn = document.getElementById(`btn-div-${type}`);
-        const arrow = document.getElementById(`arrow-${type}`);
+        if (!btn) return;
         const isSelected = activeTab === type;
 
         if (isSelected) {
           btn.className = "group flex items-center justify-between px-5 py-4 rounded-2xl border transition text-left bg-orange-600/15 border-orange-500 shadow-lg shadow-orange-600/10";
-          arrow.className = "text-orange-400 rotate-180 transition-transform duration-200";
         } else {
           btn.className = "group flex items-center justify-between px-5 py-4 rounded-2xl border transition text-left bg-zinc-900/90 border-white/15 hover:border-orange-500/60";
-          arrow.className = "text-zinc-400 group-hover:text-orange-400 transition-transform duration-200";
         }
       });
-
-      const filterPanel = document.getElementById("divisionFilterPanel");
-      const tableWrapper = document.getElementById("table-wrapper");
-
-      if (!activeTab) {
-        filterPanel.classList.add("hidden");
-        tableWrapper.classList.add("hidden");
-      } else {
-        filterPanel.classList.remove("hidden");
-        tableWrapper.classList.remove("hidden");
-      }
     }
 
-    // Klik [Mapping] atau [Survey] -> toggle collapse/expand sub-filter & tabel
-    function toggleDivisionPanel(type) {
-      if (activeTab === type) {
-        activeTab = null;
-        currentStatusFilter = "ALL";
-        syncDivisionButtonsUI();
-        return;
-      }
-
+    // Klik [All] | [Mapping] | [Survey] -> langsung buka tabel tanpa collapse
+    function selectDivisionTab(type) {
       activeTab = type;
       currentStatusFilter = "ALL";
       document.getElementById("searchInput").value = "";
@@ -656,6 +663,12 @@
       return s || "Open";
     }
 
+    // Done pada Mapping dipetakan sebagai Closed saat filter/KPI Closed
+    function getEffectiveMappingStatus(rawStatus) {
+      const s = normalizeMappingStatus(rawStatus);
+      return (s === "Done" || s === "Closed") ? "Closed" : s;
+    }
+
     function parseResiLogEntry(log, fallbackPic, fallbackNote) {
       const detail = String(log.detail || "").trim();
       const blocks = detail.split(";").map(s => s.trim()).filter(Boolean);
@@ -739,108 +752,545 @@
     }
 
     function renderActiveTab() {
-      if (activeTab === "Survey") {
+      if (activeTab === "All") {
+        renderAllCombinedTable();
+      } else if (activeTab === "Survey") {
         renderSurveyTable();
       } else if (activeTab === "Mapping") {
         renderMappingTable();
       }
     }
 
-    // ================= KPI CARDS GABUNGAN (SURVEY + MAPPING) + OPEN =================
+    // ================= 6 KPI CARDS GABUNGAN =================
     function renderCombinedKpi() {
-      const surveyList = (appData.survey || []).map(t => {
+      const surveyStatuses = (appData.survey || []).map(t => {
         const cascaded = cascadeStages([t.survey, t.reportSurvey, t.boq, t.materialEquip, t.forwardWo], t.status);
         return computeAutoSurveyStatus(cascaded, t.status);
       });
-      const mappingList = (appData.mapping || []).map(t => normalizeMappingStatus(t.status));
+      const mappingStatuses = (appData.mapping || []).map(t => normalizeMappingStatus(t.status));
 
-      const mapCount = mappingList.length;
-      const srvCount = surveyList.length;
-      const totalAll = mapCount + srvCount;
+      const mapTotal = mappingStatuses.length;
+      const srvTotal = surveyStatuses.length;
 
-      const openCount =
-        surveyList.filter(s => s === "Open").length +
-        mappingList.filter(s => s === "Open").length;
-
-      const progressCount =
-        surveyList.filter(s => s === "On Progress").length +
-        mappingList.filter(s => s === "On Progress").length;
-
-      const doneClosedCount =
-        surveyList.filter(s => s === "Closed").length +
-        mappingList.filter(s => s === "Done").length;
-
-      const pendingCancelCount =
-        surveyList.filter(s => ["Pending", "Cancel"].includes(s)).length +
-        mappingList.filter(s => s === "Pending").length;
+      const countSrv = (targetList) => surveyStatuses.filter(s => targetList.includes(s)).length;
+      const countMap = (targetList) => mappingStatuses.filter(s => targetList.includes(s)).length;
 
       const cards = [
         {
           label: "Total Ticket",
-          value: totalAll,
-          detailLine: `(${mapCount} Ticket Mapping, ${srvCount} Ticket Survey)`,
-          subLabel: `Open: ${openCount}`,
+          mapCount: mapTotal,
+          srvCount: srvTotal,
           bgIcon: "bg-orange-500/15 text-orange-400 border border-orange-500/35",
           strokeColor: "#f97316",
-          trendColor: "text-rose-400",
           sparkPath: "M2 28 Q 20 18, 35 22 T 75 6",
           icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/></svg>`
         },
         {
-          label: "Open & On Progress",
-          value: openCount + progressCount,
-          detailLine: `Open: ${openCount} • On Progress: ${progressCount}`,
-          subLabel: `${totalAll ? Math.round(((openCount + progressCount) / totalAll) * 100) : 0}% Active`,
+          label: "Open",
+          mapCount: countMap(["Open"]),
+          srvCount: countSrv(["Open"]),
+          bgIcon: "bg-rose-500/15 text-rose-400 border border-rose-500/35",
+          strokeColor: "#fb7185",
+          sparkPath: "M2 24 Q 22 14, 42 20 T 76 10",
+          icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v4m0 4h.01"/></svg>`
+        },
+        {
+          label: "On Progress",
+          mapCount: countMap(["On Progress"]),
+          srvCount: countSrv(["On Progress"]),
           bgIcon: "bg-amber-500/15 text-amber-400 border border-amber-500/35",
           strokeColor: "#fbbf24",
-          trendColor: "text-amber-400",
           sparkPath: "M2 25 Q 25 28, 42 15 T 76 12",
           icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>`
         },
         {
-          label: "Closed / Done",
-          value: doneClosedCount,
-          detailLine: "Survey Closed + Mapping Done",
-          subLabel: `${totalAll ? Math.round((doneClosedCount / totalAll) * 100) : 0}% Done`,
-          bgIcon: "bg-emerald-500/15 text-emerald-400 border border-emerald-500/35",
-          strokeColor: "#10b981",
-          trendColor: "text-emerald-400",
-          sparkPath: "M2 28 Q 22 14, 45 18 T 76 5",
-          icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>`
-        },
-        {
-          label: "Pending / Cancel",
-          value: pendingCancelCount,
-          detailLine: "Butuh Follow-up / Batal",
-          subLabel: "Follow-up",
+          label: "Pending",
+          mapCount: countMap(["Pending"]),
+          srvCount: countSrv(["Pending"]),
           bgIcon: "bg-purple-500/15 text-purple-400 border border-purple-500/35",
           strokeColor: "#a855f7",
-          trendColor: "text-purple-400",
           sparkPath: "M2 20 Q 25 15, 45 22 T 76 16",
           icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 2h12M6 22h12M8 2v4l4 4 4-4V2M8 22v-4l4-4 4 4v4"/></svg>`
+        },
+        {
+          label: "Cancel",
+          mapCount: 0,
+          srvCount: countSrv(["Cancel"]),
+          bgIcon: "bg-zinc-700/40 text-zinc-300 border border-zinc-500/35",
+          strokeColor: "#a1a1aa",
+          sparkPath: "M2 18 Q 25 22, 48 16 T 76 22",
+          icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/></svg>`
+        },
+        {
+          label: "Closed",
+          mapCount: countMap(["Done", "Closed"]),
+          srvCount: countSrv(["Closed"]),
+          bgIcon: "bg-emerald-500/15 text-emerald-400 border border-emerald-500/35",
+          strokeColor: "#10b981",
+          sparkPath: "M2 28 Q 22 14, 45 18 T 76 5",
+          icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>`
         }
       ];
 
-      document.getElementById("kpi-container").innerHTML = cards.map(c => `
-        <div class="card-dark rounded-2xl p-4 flex items-center justify-between gap-2 hover:border-orange-500/70 transition">
-          <div class="flex items-start gap-3 min-w-0">
-            <div class="w-10 h-10 rounded-xl ${c.bgIcon} flex items-center justify-center shrink-0 mt-0.5">
-              ${c.icon}
+      document.getElementById("kpi-container").innerHTML = cards.map(c => {
+        const totalVal = c.mapCount + c.srvCount;
+        const detailLine = `(${c.mapCount} Ticket Mapping, ${c.srvCount} Ticket Survey)`;
+        return `
+          <div class="card-dark rounded-2xl p-3.5 flex flex-col justify-between gap-2.5 hover:border-orange-500/70 transition">
+            <div class="flex items-start justify-between gap-2">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <div class="w-9 h-9 rounded-xl ${c.bgIcon} flex items-center justify-center shrink-0">
+                  ${c.icon}
+                </div>
+                <div class="min-w-0">
+                  <p class="text-xl font-extrabold text-white leading-none">${totalVal}</p>
+                  <p class="text-xs font-bold text-zinc-200 mt-1 truncate">${c.label}</p>
+                </div>
+              </div>
+              <svg class="w-11 h-5 shrink-0" viewBox="0 0 80 35" fill="none">
+                <path d="${c.sparkPath}" stroke="${c.strokeColor}" stroke-width="2" stroke-linecap="round" fill="none"/>
+              </svg>
             </div>
-            <div class="min-w-0">
-              <p class="text-xl font-extrabold text-white leading-none">${c.value}</p>
-              <p class="text-[11px] font-semibold text-zinc-300 mt-1">${c.label}</p>
-              <p class="text-[10.5px] text-zinc-400 mt-0.5 truncate" title="${c.detailLine}">${c.detailLine}</p>
-            </div>
+            <p class="text-[11px] text-zinc-400 leading-snug" title="${detailLine}">${detailLine}</p>
           </div>
-          <div class="text-right shrink-0">
-            <svg class="w-12 h-6 ml-auto" viewBox="0 0 80 35" fill="none">
-              <path d="${c.sparkPath}" stroke="${c.strokeColor}" stroke-width="2" stroke-linecap="round" fill="none"/>
-            </svg>
-            <span class="text-[10px] font-bold ${c.trendColor}">${c.subLabel}</span>
-          </div>
+        `;
+      }).join("");
+    }
+
+    // ================= HELPER BUILDER SURVEY ROW & STEPPER =================
+    function buildSurveyRowHtml(t, displayNo, showDivBadge = false) {
+      const stageDefs = [
+        { key: "survey", label: "Survey", fullLabel: "Survey", bracketTags: ["survey"], opts: ["Not Yet", "Done", "On Progress", "Pending", "Cancel"] },
+        { key: "reportSurvey", label: "Report Survey", fullLabel: "Report Survey", bracketTags: ["report survey", "staging"], opts: ["Not Yet", "Done", "On Progress", "Pending", "Cancel"] },
+        { key: "boq", label: "BOQ", fullLabel: "BOQ", bracketTags: ["boq", "po procurement", "po"], opts: ["Not Yet", "Done", "On Progress", "Pending", "Cancel"] },
+        { key: "materialEquip", label: "Preparing Network Materials and Equipment", fullLabel: "Preparing Network Materials and Equipment", bracketTags: ["preparing network materials and equipment", "material & equipment", "material", "procurement"], opts: ["Not Yet", "Done", "On Progress", "Pending", "Waiting Approval", "Cancel"] },
+        { key: "forwardWo", label: "Forward WO Installation", fullLabel: "Forward WO Installation", bracketTags: ["forward wo installation", "forward wo", "installation wo"], opts: ["Not Yet", "Done", "On Progress", "Pending", "Cancel"] }
+      ];
+
+      const checkSvg = `<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>`;
+      const clockSvg = `<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 7v5l3 2"/></svg>`;
+      const crossSvg = `<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>`;
+
+      const canEdit = Boolean(currentUser);
+      const isAdmin = currentUser && currentUser.role === "Admin";
+      const autoPicName = currentUser ? formatPicLabel(currentUser.name) : "";
+
+      const isExpanded = Boolean(expandedRows[t.ticketId]);
+      const activeStageKey = activeStagePerTicket[t.ticketId] || "survey";
+
+      const stepperHtml = `
+        <div class="flex items-start justify-between min-w-[600px] py-1">
+          ${stageDefs.map((st, sIdx) => {
+            const val = normalizeStageVal(t[st.key]);
+            const isSelectedStage = isExpanded && st.key === activeStageKey;
+            const isDone = ["Done", "Deal", "Material Ready"].includes(val);
+            const isPending = ["Pending", "On Progress", "Waiting Approval"].includes(val);
+            const isCancel = ["Cancel", "Not Deal"].includes(val);
+
+            let isOngoingStep = false;
+            if (isPending) {
+              isOngoingStep = true;
+            } else if (sIdx === 0 && t.computedStatus === "On Progress" && !val) {
+              isOngoingStep = true;
+            } else if (sIdx > 0 && !val) {
+              const prevVal = normalizeStageVal(t[stageDefs[sIdx - 1].key]);
+              if (["Done", "Deal", "Material Ready"].includes(prevVal)) isOngoingStep = true;
+            }
+
+            const prevStageDone = sIdx > 0 && ["Done", "Deal", "Material Ready"].includes(normalizeStageVal(t[stageDefs[sIdx - 1].key]));
+            const leftLineColor = prevStageDone ? "bg-emerald-500" : "bg-white/20";
+            const rightLineColor = isDone ? "bg-emerald-500" : "bg-white/20";
+
+            let circleStyle = "bg-zinc-900 border-2 border-white/25 text-zinc-400";
+            let iconHtml = clockSvg;
+            let labelColor = "text-zinc-300";
+            let subText = "Not Yet";
+            let subColor = "text-zinc-500";
+
+            if (isDone) {
+              circleStyle = "bg-emerald-500 border-2 border-emerald-400 text-zinc-950 shadow-md shadow-emerald-500/25";
+              iconHtml = checkSvg;
+              labelColor = "text-white font-bold";
+              subText = val === "Done" ? "Completed" : val;
+              subColor = "text-emerald-400 font-semibold";
+            } else if (isCancel) {
+              circleStyle = "bg-zinc-800 border-2 border-zinc-500 text-zinc-400";
+              iconHtml = crossSvg;
+              labelColor = "text-zinc-400 font-bold";
+              subText = val;
+              subColor = "text-zinc-400 font-semibold";
+            } else if (isPending || isOngoingStep) {
+              circleStyle = "bg-orange-500/25 border-2 border-orange-500 text-orange-400 active-pulse";
+              iconHtml = clockSvg;
+              labelColor = "text-orange-400 font-bold";
+              subText = val || "Not Yet";
+              subColor = "text-orange-400 font-semibold";
+            }
+
+            if (isSelectedStage) {
+              circleStyle += " ring-4 ring-orange-500/35 scale-110";
+              labelColor = "text-orange-400 font-extrabold";
+            }
+
+            return `
+              <div class="flex-1 flex flex-col items-center text-center select-none">
+                <div class="w-full flex items-center">
+                  <div class="h-[2.5px] flex-1 ${sIdx === 0 ? 'opacity-0' : leftLineColor}"></div>
+                  <button onclick="clickStepperPoint('${t.ticketId}', '${st.key}')"
+                    title="Klik untuk lihat & update ${st.fullLabel}"
+                    class="w-9 h-9 rounded-full shrink-0 flex items-center justify-center transition-all duration-300 cursor-pointer hover:scale-110 focus:outline-none ${circleStyle}">
+                    ${iconHtml}
+                  </button>
+                  <div class="h-[2.5px] flex-1 ${sIdx === stageDefs.length - 1 ? 'opacity-0' : rightLineColor}"></div>
+                </div>
+
+                <span class="text-[11px] font-bold mt-2 leading-tight px-1 ${labelColor}">${st.label}</span>
+                <span class="text-[10px] mt-0.5 leading-tight ${subColor}">${subText}</span>
+
+                <button onclick="clickStepperPoint('${t.ticketId}', '${st.key}')"
+                  class="mt-1.5 px-2.5 py-1 rounded-lg hover:bg-orange-500/15 transition-transform duration-200 cursor-pointer ${isSelectedStage ? 'rotate-180 text-orange-400' : 'text-orange-500 hover:text-orange-400'}"
+                  title="Expand detail ${st.label}">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.6" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 7l6 5 6-5M6 13l6 5 6-5"/>
+                  </svg>
+                </button>
+              </div>
+            `;
+          }).join("")}
         </div>
+      `;
+
+      let expandedPanelHtml = "";
+      if (isExpanded) {
+        const activeStageObj = stageDefs.find(s => s.key === activeStageKey) || stageDefs[0];
+        const currentStageVal = normalizeStageVal(t[activeStageKey]);
+        const stageDetailObj = (t.stageDetails && t.stageDetails[activeStageKey]) || { pic: "", note: "" };
+        const headerDisplayStatus = currentStageVal || "Not Yet";
+
+        const ticketLogs = (cachedHistory.Survey || []).filter(log => String(log.ticketId).trim() === String(t.ticketId).trim());
+        const stageLogs = ticketLogs.filter(log => {
+          const dLower = (log.detail || "").toLowerCase();
+          return activeStageObj.bracketTags.some(tag => dLower.includes(`[${tag}]`) || dLower.includes(`${tag}:`));
+        });
+        const logsToShow = stageLogs.length > 0 ? stageLogs : ticketLogs.slice(0, 3);
+
+        const updateMenuHtml = canEdit ? `
+          <div class="bg-zinc-950 border border-orange-500/40 rounded-2xl p-4 space-y-3">
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-white/15 pb-2.5">
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-extrabold text-orange-400 uppercase tracking-wide">Menu Update: ${activeStageObj.fullLabel}</span>
+                ${getStatusPillHtml(headerDisplayStatus)}
+              </div>
+              ${isAdmin ? `
+                <div class="flex items-center gap-1.5 text-xs">
+                  <span class="text-zinc-400">Ticket Status:</span>
+                  <select id="exp-mainstatus-${t.rowIndex}" data-initial="${t.computedStatus}" class="bg-zinc-900 border border-white/20 rounded-lg px-2 py-1 text-[11px] font-bold text-white focus:border-orange-500 focus:outline-none">
+                    ${["Open", "On Progress", "Pending", "Closed", "Cancel"].map(s => `<option value="${s}" ${t.computedStatus === s ? "selected" : ""}>${s}</option>`).join("")}
+                  </select>
+                </div>
+              ` : `<input type="hidden" id="exp-mainstatus-${t.rowIndex}" data-initial="${t.computedStatus}" value="${t.computedStatus}">`}
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs items-end">
+              <div>
+                <label class="text-[10px] font-bold text-zinc-400 uppercase block mb-1">Status ${activeStageObj.label}</label>
+                <select id="exp-stageval-${t.rowIndex}" class="w-full bg-zinc-900 border border-white/20 rounded-xl px-3 py-2 font-bold text-white focus:border-orange-500 focus:outline-none">
+                  ${activeStageObj.opts.map(o => {
+                    const v = o === "Not Yet" ? "" : o;
+                    return `<option value="${v}" ${currentStageVal === v ? "selected" : ""}>${o}</option>`;
+                  }).join("")}
+                </select>
+              </div>
+              <div class="bg-zinc-900/90 border border-white/15 rounded-xl px-3 py-2 flex items-center justify-between">
+                <span class="text-[10px] font-bold text-zinc-400 uppercase">PIC</span>
+                <span class="text-xs font-extrabold text-orange-400 flex items-center gap-1">👤 ${autoPicName}</span>
+              </div>
+            </div>
+
+            <div>
+              <label class="text-[10px] font-bold text-zinc-400 uppercase block mb-1">Notes</label>
+              <textarea id="exp-note-${t.rowIndex}" rows="2" placeholder="Catatan progres..." class="w-full bg-zinc-900 border border-white/20 rounded-xl px-3 py-1.5 text-white focus:border-orange-500 focus:outline-none">${stageDetailObj.note || ''}</textarea>
+            </div>
+
+            <div class="flex justify-end pt-1">
+              <button onclick="saveExpandedSurveyStage(${t.rowIndex}, '${t.ticketId}', '${activeStageKey}', this)" class="bg-orange-600 hover:bg-orange-500 text-white px-5 py-2 rounded-xl text-xs font-bold shadow-md shadow-orange-600/20 transition">
+                Save & Notify Team
+              </button>
+            </div>
+          </div>
+        ` : `
+          <div class="bg-zinc-950/70 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-zinc-400">
+            Login dengan akun Google untuk mengupdate tahapan <strong class="text-white">${activeStageObj.fullLabel}</strong>.
+          </div>
+        `;
+
+        const resiItemsHtml = loadingHistoryTicket[t.ticketId]
+          ? `<div class="py-5 text-center"><div class="inline-block animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-orange-500"></div></div>`
+          : (logsToShow.length > 0
+              ? logsToShow.map((log, idx) => {
+                  const parsed = parseResiLogEntry(log, stageDetailObj.pic, stageDetailObj.note);
+                  const isLatest = idx === 0;
+                  return `
+                    <div class="relative pl-6 pb-3.5 last:pb-1 ${idx < logsToShow.length - 1 ? 'border-l border-dashed border-white/20 ml-2' : 'ml-2'}">
+                      <span class="w-2.5 h-2.5 rounded-full ${isLatest ? 'bg-orange-500 ring-4 ring-orange-500/20' : 'bg-zinc-500'} absolute -left-[5px] top-1.5"></span>
+                      <div class="bg-zinc-950 border border-white/15 rounded-xl p-3 text-xs space-y-1.5">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                          <span class="font-mono text-[11px] text-orange-300 font-semibold">${cleanTimestamp(log.timestamp)}</span>
+                          <span class="text-[11px] text-zinc-400">PIC: <strong class="text-white">${parsed.pic}</strong></span>
+                        </div>
+                        ${parsed.changes.length > 0 ? `
+                          <ul class="space-y-0.5 text-[11px] text-zinc-200">
+                            ${parsed.changes.map(ch => `<li>• ${ch}</li>`).join("")}
+                          </ul>
+                        ` : ""}
+                        <p class="text-[11px] text-zinc-400 pt-1 border-t border-white/10">
+                          <span class="text-zinc-500">Catatan:</span> <span class="text-zinc-200">${parsed.note}</span>
+                        </p>
+                      </div>
+                    </div>
+                  `;
+                }).join("")
+              : `<div class="bg-zinc-950 border border-white/15 rounded-xl p-3 text-xs text-zinc-400">
+                  Belum ada riwayat resi pada tahapan <strong class="text-white">${activeStageObj.label}</strong> (${headerDisplayStatus}).
+                </div>`
+            );
+
+        const historySectionHtml = `
+          <div class="bg-zinc-950/60 border border-white/15 rounded-2xl p-4 space-y-3">
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-white/15 pb-2">
+              <div>
+                <span class="text-[10px] uppercase tracking-wider text-orange-400 font-bold">Resi Tracking • ${activeStageObj.fullLabel}</span>
+                <h4 class="text-xs font-extrabold text-white">Riwayat Progress (${t.ticketId})</h4>
+              </div>
+              <button onclick="openHistoryModal('Survey', '${t.ticketId}')" class="text-[11px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/35 px-2.5 py-1 rounded-lg hover:bg-emerald-500/20 transition">
+                📄 Export PDF History
+              </button>
+            </div>
+            <div class="max-h-56 overflow-y-auto pr-1 pt-1">
+              ${resiItemsHtml}
+            </div>
+          </div>
+        `;
+
+        expandedPanelHtml = `
+          <div class="bg-zinc-900/80 border border-orange-500/40 rounded-2xl p-4 mt-2 space-y-3.5 shadow-lg">
+            ${updateMenuHtml}
+            ${historySectionHtml}
+          </div>
+        `;
+      }
+
+      const workOrderName = String(t.customer || "").trim() || "-";
+      const divBadgeHtml = showDivBadge
+        ? `<div class="mt-1.5"><span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded bg-orange-500/15 text-orange-400 border border-orange-500/35">Survey</span></div>`
+        : "";
+
+      return `
+        <tr class="border-b border-white/15 hover:bg-zinc-900/30 align-top transition divide-x divide-white/10">
+          <td class="py-4 px-4 font-extrabold text-zinc-500 text-sm w-12 text-center">${displayNo}</td>
+          <td class="py-4 px-4 whitespace-nowrap">
+            ${getStatusPillHtml(t.computedStatus)}
+            ${divBadgeHtml}
+          </td>
+          <td class="py-4 px-4 min-w-[210px]">
+            <div class="flex items-start gap-2.5">
+              <span class="text-zinc-400 shrink-0 mt-0.5">🏢</span>
+              <div class="overflow-hidden">
+                <p class="font-extrabold text-white text-sm leading-snug">${workOrderName}</p>
+                <span class="text-[11px] font-mono text-orange-400 font-bold">${t.ticketId}</span>
+              </div>
+            </div>
+          </td>
+          <td class="py-4 px-4">
+            <div class="flex flex-col">
+              ${stepperHtml}
+              ${expandedPanelHtml}
+            </div>
+          </td>
+          <td class="py-4 px-4 text-right text-xs font-medium text-zinc-300 whitespace-nowrap">${formatDisplayDate(t.lastUpdated)}</td>
+        </tr>
+      `;
+    }
+
+    // ================= RENDER ALL COMBINED TABLE (MAPPING + SURVEY) =================
+    function renderAllCombinedTable() {
+      document.getElementById("coverageFilter").classList.add("hidden");
+
+      const statuses = ["ALL", "Open", "On Progress", "Pending", "Closed", "Cancel"];
+      document.getElementById("status-filter-pills").innerHTML = statuses.map(st => `
+        <button onclick="setStatusFilter('${st}')" class="${currentStatusFilter === st ? 'bg-orange-600 text-white border border-orange-400' : 'bg-zinc-900 text-zinc-400 hover:bg-zinc-800 hover:text-white border border-white/15'} px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition">
+          ${st === "ALL" ? "All" : st}
+        </button>
       `).join("");
+
+      const searchQuery = document.getElementById("searchInput").value.toLowerCase();
+
+      const surveyNormalized = (appData.survey || []).map(t => {
+        const cascaded = cascadeStages([t.survey, t.reportSurvey, t.boq, t.materialEquip, t.forwardWo], t.status);
+        const computedSt = computeAutoSurveyStatus(cascaded, t.status);
+        return {
+          _kind: "Survey",
+          ...t,
+          survey: cascaded[0],
+          reportSurvey: cascaded[1],
+          boq: cascaded[2],
+          materialEquip: cascaded[3],
+          forwardWo: cascaded[4],
+          computedStatus: computedSt,
+          unifiedStatus: computedSt
+        };
+      });
+
+      const mappingNormalized = (appData.mapping || []).map(t => {
+        const rawSt = normalizeMappingStatus(t.status);
+        return {
+          _kind: "Mapping",
+          ...t,
+          rawStatus: rawSt,
+          unifiedStatus: getEffectiveMappingStatus(rawSt)
+        };
+      });
+
+      const merged = [...surveyNormalized, ...mappingNormalized].filter(item => {
+        const matchStatus = currentStatusFilter === "ALL" || item.unifiedStatus === currentStatusFilter;
+        const matchSearch =
+          (item.customer || "").toLowerCase().includes(searchQuery) ||
+          (item.ticketId || "").toLowerCase().includes(searchQuery) ||
+          (item.description || "").toLowerCase().includes(searchQuery);
+        const matchDate = matchDateRange(item.lastUpdated);
+        return matchStatus && matchSearch && matchDate;
+      });
+
+      merged.sort((a, b) => {
+        const da = parseLocalTimestamp(a.lastUpdated);
+        const db = parseLocalTimestamp(b.lastUpdated);
+        return (db ? db.getTime() : 0) - (da ? da.getTime() : 0);
+      });
+
+      const container = document.getElementById("main-table-container");
+      if (merged.length === 0) {
+        container.innerHTML = `<div class="text-center py-14 text-zinc-500 text-sm">Tidak ada data ticket Mapping maupun Survey yang sesuai filter.</div>`;
+        return;
+      }
+
+      const canEdit = Boolean(currentUser);
+      const autoPicName = currentUser ? formatPicLabel(currentUser.name) : "";
+
+      const rowsHtml = merged.map((item, idx) => {
+        const displayNo = idx + 1;
+        if (item._kind === "Survey") {
+          return buildSurveyRowHtml(item, displayNo, true);
+        }
+
+        const r = item.rowIndex;
+        return `
+          <tr class="border-b border-white/15 hover:bg-zinc-900/30 align-top transition divide-x divide-white/10">
+            <td class="py-4 px-4 font-extrabold text-zinc-500 text-sm w-12 text-center">${displayNo}</td>
+            <td class="py-4 px-4 whitespace-nowrap">
+              ${getStatusPillHtml(item.unifiedStatus)}
+              <div class="mt-1.5">
+                <span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded bg-sky-500/15 text-sky-400 border border-sky-500/35">Mapping</span>
+              </div>
+            </td>
+            <td class="py-4 px-4 min-w-[210px]">
+              <div class="flex items-start gap-2.5">
+                <span class="text-zinc-400 shrink-0 mt-0.5">🏢</span>
+                <div class="overflow-hidden">
+                  <p class="font-extrabold text-white text-sm leading-snug">${item.customer || "-"}</p>
+                  <span class="text-[11px] font-mono text-orange-400 font-bold">${item.ticketId}</span>
+                  <div class="mt-2">
+                    <button onclick="openHistoryModal('Mapping', '${item.ticketId}')" class="text-[10.5px] font-semibold text-amber-400 hover:text-amber-300 bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/35 transition">
+                      🕒 Log History
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </td>
+            <td class="py-4 px-4">
+              <div class="bg-zinc-950/80 border border-white/15 rounded-xl p-3.5 text-xs space-y-2.5">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                  <div class="flex items-center gap-2">
+                    <span class="text-[10px] uppercase tracking-wider text-zinc-400 font-bold">Mapping Status:</span>
+                    ${canEdit ? `
+                      <select id="cmb-map-status-${r}" class="bg-zinc-900 border border-white/20 rounded-lg px-2.5 py-1 text-xs font-bold text-white focus:border-orange-500 focus:outline-none">
+                        ${["Open", "On Progress", "Pending", "Done"].map(opt => `<option value="${opt}" ${item.rawStatus === opt ? "selected" : ""}>${opt}</option>`).join("")}
+                      </select>
+                    ` : getStatusPillHtml(item.rawStatus)}
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <span class="text-[10px] uppercase tracking-wider text-zinc-400 font-bold">Coverage:</span>
+                    ${canEdit ? `
+                      <select id="cmb-map-cov-${r}" class="bg-zinc-900 border border-white/20 rounded-lg px-2.5 py-1 text-xs font-bold text-white focus:border-orange-500 focus:outline-none">
+                        <option value="" ${!item.coverage ? "selected" : ""}>Not Yet</option>
+                        <option value="Onet" ${item.coverage === "Onet" ? "selected" : ""}>Onet</option>
+                        <option value="Partner" ${item.coverage === "Partner" ? "selected" : ""}>Partner</option>
+                        <option value="Not Cover" ${item.coverage === "Not Cover" ? "selected" : ""}>Not Cover</option>
+                      </select>
+                    ` : getStatusPillHtml(item.coverage || "Not Yet")}
+                  </div>
+                </div>
+                ${canEdit ? `
+                  <div class="flex flex-col sm:flex-row gap-2 items-stretch sm:items-end">
+                    <textarea id="cmb-map-desc-${r}" rows="1" placeholder="Description..." class="flex-1 bg-zinc-900 border border-white/20 rounded-lg px-2.5 py-1.5 text-xs text-white focus:border-orange-500 focus:outline-none">${item.description || ""}</textarea>
+                    <button onclick="updateCombinedMappingRow(${r}, this)" class="bg-orange-600 hover:bg-orange-500 text-white px-3.5 py-1.5 rounded-lg text-xs font-extrabold shadow shrink-0 transition">Save & Notify</button>
+                  </div>
+                  <p class="text-[10.5px] text-zinc-400">PIC: <strong class="text-orange-400">👤 ${autoPicName}</strong></p>
+                ` : `<p class="text-zinc-300 whitespace-pre-line leading-relaxed">${item.description || "-"}</p>`}
+              </div>
+            </td>
+            <td class="py-4 px-4 text-right text-xs font-medium text-zinc-300 whitespace-nowrap">${formatDisplayDate(item.lastUpdated)}</td>
+          </tr>
+        `;
+      }).join("");
+
+      container.innerHTML = `
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="table-header-dark text-xs uppercase tracking-wider divide-x divide-white/10">
+              <th class="py-3.5 px-4 text-center">#</th>
+              <th class="py-3.5 px-4">Ticket Status</th>
+              <th class="py-3.5 px-4">Work Order Ticket</th>
+              <th class="py-3.5 px-4 text-center min-w-[580px]">Progress Tracking & Detail</th>
+              <th class="py-3.5 px-4 text-right">Last Update</th>
+            </tr>
+          </thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>
+      `;
+    }
+
+    async function updateCombinedMappingRow(r, btn) {
+      if (!authToken || !currentUser) return alert("Silakan login dengan akun Gmail terlebih dahulu.");
+      const orig = btn.innerText;
+      btn.innerText = "Saving...";
+      btn.disabled = true;
+
+      const payload = {
+        ticketType: "Mapping",
+        action: "update",
+        token: authToken,
+        rowIndex: r,
+        status: document.getElementById(`cmb-map-status-${r}`).value,
+        coverage: document.getElementById(`cmb-map-cov-${r}`).value,
+        pic: formatPicLabel(currentUser.name),
+        description: document.getElementById(`cmb-map-desc-${r}`).value.trim()
+      };
+
+      try {
+        await fetch(API_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "text/plain" },
+          body: JSON.stringify(payload)
+        });
+        btn.innerText = "✓ Saved!";
+        btn.classList.replace("bg-orange-600", "bg-emerald-600");
+        setTimeout(() => fetchAllData(), 2200);
+      } catch (err) {
+        alert("Gagal menyimpan Mapping.");
+        btn.innerText = orig;
+        btn.disabled = false;
+      }
     }
 
     // ================= RENDER SURVEY TABLE =================
@@ -883,283 +1333,7 @@
         return;
       }
 
-      const stageDefs = [
-        {
-          key: "survey",
-          label: "Survey",
-          fullLabel: "Survey",
-          bracketTags: ["survey"],
-          opts: ["Not Yet", "Done", "On Progress", "Pending", "Cancel"]
-        },
-        {
-          key: "reportSurvey",
-          label: "Report Survey",
-          fullLabel: "Report Survey",
-          bracketTags: ["report survey", "staging"],
-          opts: ["Not Yet", "Done", "On Progress", "Pending", "Cancel"]
-        },
-        {
-          key: "boq",
-          label: "BOQ",
-          fullLabel: "BOQ",
-          bracketTags: ["boq", "po procurement", "po"],
-          opts: ["Not Yet", "Done", "On Progress", "Pending", "Cancel"]
-        },
-        {
-          key: "materialEquip",
-          label: "Preparing Network Materials and Equipment",
-          fullLabel: "Preparing Network Materials and Equipment",
-          bracketTags: ["preparing network materials and equipment", "material & equipment", "material", "procurement"],
-          opts: ["Not Yet", "Done", "On Progress", "Pending", "Waiting Approval", "Cancel"]
-        },
-        {
-          key: "forwardWo",
-          label: "Forward WO Installation",
-          fullLabel: "Forward WO Installation",
-          bracketTags: ["forward wo installation", "forward wo", "installation wo"],
-          opts: ["Not Yet", "Done", "On Progress", "Pending", "Cancel"]
-        }
-      ];
-
-      const checkSvg = `<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>`;
-      const clockSvg = `<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 7v5l3 2"/></svg>`;
-      const crossSvg = `<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>`;
-
-      const canEdit = Boolean(currentUser);
-      const isAdmin = currentUser && currentUser.role === "Admin";
-      const autoPicName = currentUser ? formatPicLabel(currentUser.name) : "";
-
-      let rowsHtml = filtered.map(t => {
-        const isExpanded = Boolean(expandedRows[t.ticketId]);
-        const activeStageKey = activeStagePerTicket[t.ticketId] || "survey";
-
-        const stepperHtml = `
-          <div class="flex items-start justify-between min-w-[600px] py-1">
-            ${stageDefs.map((st, sIdx) => {
-              const val = normalizeStageVal(t[st.key]);
-              const isSelectedStage = isExpanded && st.key === activeStageKey;
-              const isDone = ["Done", "Deal", "Material Ready"].includes(val);
-              const isPending = ["Pending", "On Progress", "Waiting Approval"].includes(val);
-              const isCancel = ["Cancel", "Not Deal"].includes(val);
-
-              let isOngoingStep = false;
-              if (isPending) {
-                isOngoingStep = true;
-              } else if (sIdx === 0 && t.computedStatus === "On Progress" && !val) {
-                isOngoingStep = true;
-              } else if (sIdx > 0 && !val) {
-                const prevVal = normalizeStageVal(t[stageDefs[sIdx - 1].key]);
-                if (["Done", "Deal", "Material Ready"].includes(prevVal)) isOngoingStep = true;
-              }
-
-              const prevStageDone = sIdx > 0 && ["Done", "Deal", "Material Ready"].includes(normalizeStageVal(t[stageDefs[sIdx - 1].key]));
-              const leftLineColor = prevStageDone ? "bg-emerald-500" : "bg-white/20";
-              const rightLineColor = isDone ? "bg-emerald-500" : "bg-white/20";
-
-              let circleStyle = "bg-zinc-900 border-2 border-white/25 text-zinc-400";
-              let iconHtml = clockSvg;
-              let labelColor = "text-zinc-300";
-              let subText = "Not Yet";
-              let subColor = "text-zinc-500";
-
-              if (isDone) {
-                circleStyle = "bg-emerald-500 border-2 border-emerald-400 text-zinc-950 shadow-md shadow-emerald-500/25";
-                iconHtml = checkSvg;
-                labelColor = "text-white font-bold";
-                subText = val === "Done" ? "Completed" : val;
-                subColor = "text-emerald-400 font-semibold";
-              } else if (isCancel) {
-                circleStyle = "bg-zinc-800 border-2 border-zinc-500 text-zinc-400";
-                iconHtml = crossSvg;
-                labelColor = "text-zinc-400 font-bold";
-                subText = val;
-                subColor = "text-zinc-400 font-semibold";
-              } else if (isPending || isOngoingStep) {
-                circleStyle = "bg-orange-500/25 border-2 border-orange-500 text-orange-400 active-pulse";
-                iconHtml = clockSvg;
-                labelColor = "text-orange-400 font-bold";
-                subText = val || "Not Yet";
-                subColor = "text-orange-400 font-semibold";
-              }
-
-              if (isSelectedStage) {
-                circleStyle += " ring-4 ring-orange-500/35 scale-110";
-                labelColor = "text-orange-400 font-extrabold";
-              }
-
-              return `
-                <div class="flex-1 flex flex-col items-center text-center select-none">
-                  <div class="w-full flex items-center">
-                    <div class="h-[2.5px] flex-1 ${sIdx === 0 ? 'opacity-0' : leftLineColor}"></div>
-                    <button onclick="clickStepperPoint('${t.ticketId}', '${st.key}')"
-                      title="Klik untuk lihat & update ${st.fullLabel}"
-                      class="w-9 h-9 rounded-full shrink-0 flex items-center justify-center transition-all duration-300 cursor-pointer hover:scale-110 focus:outline-none ${circleStyle}">
-                      ${iconHtml}
-                    </button>
-                    <div class="h-[2.5px] flex-1 ${sIdx === stageDefs.length - 1 ? 'opacity-0' : rightLineColor}"></div>
-                  </div>
-
-                  <span class="text-[11px] font-bold mt-2 leading-tight px-1 ${labelColor}">${st.label}</span>
-                  <span class="text-[10px] mt-0.5 leading-tight ${subColor}">${subText}</span>
-
-                  <button onclick="clickStepperPoint('${t.ticketId}', '${st.key}')"
-                    class="mt-1.5 px-2.5 py-1 rounded-lg hover:bg-orange-500/15 transition-transform duration-200 cursor-pointer ${isSelectedStage ? 'rotate-180 text-orange-400' : 'text-orange-500 hover:text-orange-400'}"
-                    title="Expand detail ${st.label}">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.6" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M6 7l6 5 6-5M6 13l6 5 6-5"/>
-                    </svg>
-                  </button>
-                </div>
-              `;
-            }).join("")}
-          </div>
-        `;
-
-        let expandedPanelHtml = "";
-        if (isExpanded) {
-          const activeStageObj = stageDefs.find(s => s.key === activeStageKey) || stageDefs[0];
-          const currentStageVal = normalizeStageVal(t[activeStageKey]);
-          const stageDetailObj = (t.stageDetails && t.stageDetails[activeStageKey]) || { pic: "", note: "" };
-          const headerDisplayStatus = currentStageVal || "Not Yet";
-
-          const ticketLogs = (cachedHistory.Survey || []).filter(log => String(log.ticketId).trim() === String(t.ticketId).trim());
-          const stageLogs = ticketLogs.filter(log => {
-            const dLower = (log.detail || "").toLowerCase();
-            return activeStageObj.bracketTags.some(tag => dLower.includes(`[${tag}]`) || dLower.includes(`${tag}:`));
-          });
-          const logsToShow = stageLogs.length > 0 ? stageLogs : ticketLogs.slice(0, 3);
-
-          const updateMenuHtml = canEdit ? `
-            <div class="bg-zinc-950 border border-orange-500/40 rounded-2xl p-4 space-y-3">
-              <div class="flex flex-wrap items-center justify-between gap-2 border-b border-white/15 pb-2.5">
-                <div class="flex items-center gap-2">
-                  <span class="text-xs font-extrabold text-orange-400 uppercase tracking-wide">Menu Update: ${activeStageObj.fullLabel}</span>
-                  ${getStatusPillHtml(headerDisplayStatus)}
-                </div>
-                ${isAdmin ? `
-                  <div class="flex items-center gap-1.5 text-xs">
-                    <span class="text-zinc-400">Ticket Status:</span>
-                    <select id="exp-mainstatus-${t.rowIndex}" data-initial="${t.computedStatus}" class="bg-zinc-900 border border-white/20 rounded-lg px-2 py-1 text-[11px] font-bold text-white focus:border-orange-500 focus:outline-none">
-                      ${["Open", "On Progress", "Pending", "Closed", "Cancel"].map(s => `<option value="${s}" ${t.computedStatus === s ? "selected" : ""}>${s}</option>`).join("")}
-                    </select>
-                  </div>
-                ` : `<input type="hidden" id="exp-mainstatus-${t.rowIndex}" data-initial="${t.computedStatus}" value="${t.computedStatus}">`}
-              </div>
-
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs items-end">
-                <div>
-                  <label class="text-[10px] font-bold text-zinc-400 uppercase block mb-1">Status ${activeStageObj.label}</label>
-                  <select id="exp-stageval-${t.rowIndex}" class="w-full bg-zinc-900 border border-white/20 rounded-xl px-3 py-2 font-bold text-white focus:border-orange-500 focus:outline-none">
-                    ${activeStageObj.opts.map(o => {
-                      const v = o === "Not Yet" ? "" : o;
-                      return `<option value="${v}" ${currentStageVal === v ? "selected" : ""}>${o}</option>`;
-                    }).join("")}
-                  </select>
-                </div>
-                <div class="bg-zinc-900/90 border border-white/15 rounded-xl px-3 py-2 flex items-center justify-between">
-                  <span class="text-[10px] font-bold text-zinc-400 uppercase">PIC</span>
-                  <span class="text-xs font-extrabold text-orange-400 flex items-center gap-1">👤 ${autoPicName}</span>
-                </div>
-              </div>
-
-              <div>
-                <label class="text-[10px] font-bold text-zinc-400 uppercase block mb-1">Notes</label>
-                <textarea id="exp-note-${t.rowIndex}" rows="2" placeholder="Catatan progres..." class="w-full bg-zinc-900 border border-white/20 rounded-xl px-3 py-1.5 text-white focus:border-orange-500 focus:outline-none">${stageDetailObj.note || ''}</textarea>
-              </div>
-
-              <div class="flex justify-end pt-1">
-                <button onclick="saveExpandedSurveyStage(${t.rowIndex}, '${t.ticketId}', '${activeStageKey}', this)" class="bg-orange-600 hover:bg-orange-500 text-white px-5 py-2 rounded-xl text-xs font-bold shadow-md shadow-orange-600/20 transition">
-                  Save & Notify Team
-                </button>
-              </div>
-            </div>
-          ` : `
-            <div class="bg-zinc-950/70 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-zinc-400">
-              Login dengan akun Google untuk mengupdate tahapan <strong class="text-white">${activeStageObj.fullLabel}</strong>.
-            </div>
-          `;
-
-          const resiItemsHtml = loadingHistoryTicket[t.ticketId]
-            ? `<div class="py-5 text-center"><div class="inline-block animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-orange-500"></div></div>`
-            : (logsToShow.length > 0
-                ? logsToShow.map((log, idx) => {
-                    const parsed = parseResiLogEntry(log, stageDetailObj.pic, stageDetailObj.note);
-                    const isLatest = idx === 0;
-                    return `
-                      <div class="relative pl-6 pb-3.5 last:pb-1 ${idx < logsToShow.length - 1 ? 'border-l border-dashed border-white/20 ml-2' : 'ml-2'}">
-                        <span class="w-2.5 h-2.5 rounded-full ${isLatest ? 'bg-orange-500 ring-4 ring-orange-500/20' : 'bg-zinc-500'} absolute -left-[5px] top-1.5"></span>
-                        <div class="bg-zinc-950 border border-white/15 rounded-xl p-3 text-xs space-y-1.5">
-                          <div class="flex flex-wrap items-center justify-between gap-2">
-                            <span class="font-mono text-[11px] text-orange-300 font-semibold">${cleanTimestamp(log.timestamp)}</span>
-                            <span class="text-[11px] text-zinc-400">PIC: <strong class="text-white">${parsed.pic}</strong></span>
-                          </div>
-                          ${parsed.changes.length > 0 ? `
-                            <ul class="space-y-0.5 text-[11px] text-zinc-200">
-                              ${parsed.changes.map(ch => `<li>• ${ch}</li>`).join("")}
-                            </ul>
-                          ` : ""}
-                          <p class="text-[11px] text-zinc-400 pt-1 border-t border-white/10">
-                            <span class="text-zinc-500">Catatan:</span> <span class="text-zinc-200">${parsed.note}</span>
-                          </p>
-                        </div>
-                      </div>
-                    `;
-                  }).join("")
-                : `<div class="bg-zinc-950 border border-white/15 rounded-xl p-3 text-xs text-zinc-400">
-                    Belum ada riwayat resi pada tahapan <strong class="text-white">${activeStageObj.label}</strong> (${headerDisplayStatus}).
-                  </div>`
-              );
-
-          const historySectionHtml = `
-            <div class="bg-zinc-950/60 border border-white/15 rounded-2xl p-4 space-y-3">
-              <div class="flex flex-wrap items-center justify-between gap-2 border-b border-white/15 pb-2">
-                <div>
-                  <span class="text-[10px] uppercase tracking-wider text-orange-400 font-bold">Resi Tracking • ${activeStageObj.fullLabel}</span>
-                  <h4 class="text-xs font-extrabold text-white">Riwayat Progress (${t.ticketId})</h4>
-                </div>
-                <button onclick="openHistoryModal('Survey', '${t.ticketId}')" class="text-[11px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/35 px-2.5 py-1 rounded-lg hover:bg-emerald-500/20 transition">
-                  📄 Export PDF History
-                </button>
-              </div>
-              <div class="max-h-56 overflow-y-auto pr-1 pt-1">
-                ${resiItemsHtml}
-              </div>
-            </div>
-          `;
-
-          expandedPanelHtml = `
-            <div class="bg-zinc-900/80 border border-orange-500/40 rounded-2xl p-4 mt-2 space-y-3.5 shadow-lg">
-              ${updateMenuHtml}
-              ${historySectionHtml}
-            </div>
-          `;
-        }
-
-        const workOrderName = String(t.customer || "").trim() || "-";
-
-        return `
-          <tr class="border-b border-white/15 hover:bg-zinc-900/30 align-top transition divide-x divide-white/10">
-            <td class="py-4 px-4 font-extrabold text-zinc-500 text-sm w-12 text-center">${t.no}</td>
-            <td class="py-4 px-4 whitespace-nowrap">${getStatusPillHtml(t.computedStatus)}</td>
-            <td class="py-4 px-4 min-w-[210px]">
-              <div class="flex items-start gap-2.5">
-                <span class="text-zinc-400 shrink-0 mt-0.5">🏢</span>
-                <div class="overflow-hidden">
-                  <p class="font-extrabold text-white text-sm leading-snug">${workOrderName}</p>
-                  <span class="text-[11px] font-mono text-orange-400 font-bold">${t.ticketId}</span>
-                </div>
-              </div>
-            </td>
-            <td class="py-4 px-4">
-              <div class="flex flex-col">
-                ${stepperHtml}
-                ${expandedPanelHtml}
-              </div>
-            </td>
-            <td class="py-4 px-4 text-right text-xs font-medium text-zinc-300 whitespace-nowrap">${formatDisplayDate(t.lastUpdated)}</td>
-          </tr>
-        `;
-      }).join("");
+      const rowsHtml = filtered.map(t => buildSurveyRowHtml(t, t.no, false)).join("");
 
       container.innerHTML = `
         <table class="w-full text-left border-collapse">
@@ -1184,11 +1358,11 @@
         expandedRows[ticketId] = true;
         activeStagePerTicket[ticketId] = stageKey;
         loadingHistoryTicket[ticketId] = true;
-        renderSurveyTable();
+        renderActiveTab();
         await refreshSurveyHistoryCache();
         loadingHistoryTicket[ticketId] = false;
       }
-      renderSurveyTable();
+      renderActiveTab();
     }
 
     async function saveExpandedSurveyStage(rowIndex, ticketId, stageKey, btn) {
@@ -1263,7 +1437,7 @@
       const list = appData.mapping || [];
       document.getElementById("coverageFilter").classList.remove("hidden");
 
-      const statuses = ["ALL", "Open", "On Progress", "Pending", "Done"];
+      const statuses = ["ALL", "Open", "On Progress", "Pending", "Closed", "Cancel"];
       document.getElementById("status-filter-pills").innerHTML = statuses.map(st => `
         <button onclick="setStatusFilter('${st}')" class="${currentStatusFilter === st ? 'bg-orange-600 text-white border border-orange-400' : 'bg-zinc-900 text-zinc-400 hover:bg-zinc-800 hover:text-white border border-white/15'} px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition">
           ${st === "ALL" ? "All" : st}
@@ -1274,8 +1448,8 @@
       const searchQuery = document.getElementById("searchInput").value.toLowerCase();
 
       const filtered = list.filter(t => {
-        const stNorm = normalizeMappingStatus(t.status);
-        const matchStatus = currentStatusFilter === "ALL" || stNorm === currentStatusFilter;
+        const effSt = getEffectiveMappingStatus(t.status);
+        const matchStatus = currentStatusFilter === "ALL" || effSt === currentStatusFilter;
         const matchCov = covQuery === "ALL" || t.coverage === covQuery;
         const matchSearch = (t.customer || "").toLowerCase().includes(searchQuery) || (t.description || "").toLowerCase().includes(searchQuery);
         const matchDate = matchDateRange(t.lastUpdated);
@@ -1620,7 +1794,7 @@
     // ================= ADD TICKET & SETTINGS CONTROL =================
     function openAddModal() {
       if (!currentUser || currentUser.role !== "Admin") return alert("Khusus Admin.");
-      document.getElementById("newTicketType").value = activeTab || "Survey";
+      document.getElementById("newTicketType").value = activeTab === "Mapping" ? "Mapping" : "Survey";
       toggleNewTicketFields();
       document.getElementById("addModal").classList.remove("hidden");
       document.getElementById("addModal").classList.add("flex");
