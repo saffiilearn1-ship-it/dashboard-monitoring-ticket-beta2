@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BLiP Ticket Monitoring Dashboard v3.8.1 — Horizontal Dark Edition</title>
+  <title>BLiP Ticket Monitoring Dashboard v3.9.0 — Horizontal Dark Edition</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -21,7 +21,6 @@
       border-bottom: 1px solid rgba(249, 115, 22, 0.35);
     }
 
-    /* Animasi Kelip-kelip (Pulse & Glow) Oranye BLiP untuk bullet aktif / on progress */
     @keyframes pulse-glow-orange {
       0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.85); }
       70% { transform: scale(1.06); box-shadow: 0 0 0 10px rgba(249, 115, 22, 0); }
@@ -44,7 +43,7 @@
     <div class="flex flex-col md:flex-row items-center gap-6 w-full lg:w-auto">
       <div class="flex items-center gap-2.5 shrink-0 select-none">
         <span class="tracking-tighter font-extrabold text-3xl text-white">BL<span class="text-orange-500">i</span>P</span>
-        <span class="text-[10px] bg-orange-500/20 border border-orange-500/50 px-2 py-0.5 rounded text-orange-400 font-mono font-bold">v3.8.1</span>
+        <span class="text-[10px] bg-orange-500/20 border border-orange-500/50 px-2 py-0.5 rounded text-orange-400 font-mono font-bold">v3.9.0</span>
       </div>
 
       <nav class="flex gap-1.5 overflow-x-auto w-full md:w-auto pb-1 md:pb-0">
@@ -113,7 +112,7 @@
         </select>
 
         <div class="relative">
-          <input type="text" id="searchInput" oninput="renderActiveTab()" placeholder="Cari customer..." class="bg-zinc-900 border border-white/20 text-zinc-100 rounded-xl pl-8 pr-3 py-1.5 text-xs w-44 sm:w-52 focus:outline-none focus:border-orange-500">
+          <input type="text" id="searchInput" oninput="renderActiveTab()" placeholder="Cari work order ticket..." class="bg-zinc-900 border border-white/20 text-zinc-100 rounded-xl pl-8 pr-3 py-1.5 text-xs w-44 sm:w-52 focus:outline-none focus:border-orange-500">
           <svg class="w-3.5 h-3.5 text-zinc-500 absolute left-2.5 top-2.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
         </div>
       </div>
@@ -149,13 +148,14 @@
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label class="text-zinc-400 font-semibold block mb-1">Customer Name *</label>
+            <label class="text-zinc-400 font-semibold block mb-1">Work Order Ticket *</label>
             <input type="text" id="newCustomer" placeholder="Contoh: PT Hura Jaya" class="w-full bg-zinc-900 border border-white/20 rounded-xl px-3 py-2 text-white">
           </div>
           <div id="newSurveyStatusWrap">
             <label class="text-zinc-400 font-semibold block mb-1">Ticket Status</label>
             <select id="newSurveyStatus" class="w-full bg-zinc-900 border border-white/20 rounded-xl px-3 py-2 text-white">
               <option value="Open" selected>Open</option>
+              <option value="Waiting Process">Waiting Process</option>
               <option value="On Progress">On Progress</option>
               <option value="Pending">Pending</option>
               <option value="Closed">Closed</option>
@@ -169,7 +169,7 @@
             <div>
               <label class="text-zinc-400 font-semibold block mb-1">1. Survey</label>
               <select id="newSurveyProg" class="w-full bg-zinc-900 border border-white/20 rounded-xl px-3 py-2 text-white">
-                <option value="">-</option>
+                <option value="">Waiting Process</option>
                 <option value="Done">Done</option>
                 <option value="On Progress">On Progress</option>
                 <option value="Pending">Pending</option>
@@ -179,7 +179,7 @@
             <div>
               <label class="text-zinc-400 font-semibold block mb-1">2. Report Survey</label>
               <select id="newReportSurvey" class="w-full bg-zinc-900 border border-white/20 rounded-xl px-3 py-2 text-white">
-                <option value="">-</option>
+                <option value="">Waiting Process</option>
                 <option value="Done">Done</option>
                 <option value="On Progress">On Progress</option>
                 <option value="Pending">Pending</option>
@@ -192,7 +192,7 @@
             <div>
               <label class="text-zinc-400 font-semibold block mb-1">3. BOQ</label>
               <select id="newBoq" class="w-full bg-zinc-900 border border-white/20 rounded-xl px-3 py-2 text-white">
-                <option value="">-</option>
+                <option value="">Waiting Process</option>
                 <option value="Done">Done</option>
                 <option value="On Progress">On Progress</option>
                 <option value="Pending">Pending</option>
@@ -202,7 +202,7 @@
             <div>
               <label class="text-zinc-400 font-semibold block mb-1">4. Preparing Network Materials and Equipment</label>
               <select id="newMaterialEquip" class="w-full bg-zinc-900 border border-white/20 rounded-xl px-3 py-2 text-white">
-                <option value="">-</option>
+                <option value="">Waiting Process</option>
                 <option value="Done">Done</option>
                 <option value="On Progress">On Progress</option>
                 <option value="Pending">Pending</option>
@@ -215,7 +215,7 @@
           <div>
             <label class="text-zinc-400 font-semibold block mb-1">5. Forward WO Installation</label>
             <select id="newForwardWo" class="w-full bg-zinc-900 border border-white/20 rounded-xl px-3 py-2 text-white">
-              <option value="">-</option>
+              <option value="">Waiting Process</option>
               <option value="Done">Done</option>
               <option value="On Progress">On Progress</option>
               <option value="Pending">Pending</option>
@@ -236,7 +236,7 @@
             <div>
               <label class="text-zinc-400 font-semibold block mb-1">Coverage</label>
               <select id="newCoverage" class="w-full bg-zinc-950 border border-white/20 rounded-xl px-3 py-2 text-white">
-                <option value="">-</option>
+                <option value="">Waiting Process</option>
                 <option value="Onet">Onet</option>
                 <option value="Partner">Partner</option>
                 <option value="Not Cover">Not Cover</option>
@@ -298,7 +298,7 @@
         </div>
         <div class="bg-zinc-950 p-3.5 rounded-xl border border-white/15">
           <p class="text-zinc-500 text-[10px]">Versi Aplikasi</p>
-          <p class="font-semibold text-white mt-0.5">BLiP Ticket Monitoring Dashboard v3.8.1 (Horizontal Edition)</p>
+          <p class="font-semibold text-white mt-0.5">BLiP Ticket Monitoring Dashboard v3.9.0 (Horizontal Edition)</p>
           <p class="text-[10px] text-zinc-500 mt-1">Alur: Survey → Report Survey → BOQ → Preparing Network Materials and Equipment → Forward WO Installation</p>
         </div>
       </div>
@@ -516,7 +516,6 @@
     function parseLocalTimestamp(rawTs) {
       if (!rawTs || rawTs === "-") return null;
       const str = String(rawTs).trim();
-      // Mendukung format YYYY-MM-DD H:mm:ss maupun YYYY-MM-DD HH:mm:ss
       const m = str.match(/^(\d{4})-(\d{1,2})-(\d{1,2})[T ](\d{1,2}):(\d{1,2})(?::(\d{1,2}))?/);
       if (m) {
         return new Date(
@@ -562,6 +561,35 @@
       return p.replace(/(\([^)]+\))\s*\1$/i, "$1");
     }
 
+    function computeAutoSurveyStatus(stages, fallbackStatus) {
+      const doneSet = ["Done", "Deal", "Material Ready"];
+      const activeSet = ["On Progress", "Waiting Approval"];
+      const vals = stages.map(v => {
+        const s = String(v || "").trim();
+        return (!s || s === "-" || s === "Waiting Process" || s === "Not Yet") ? "" : s;
+      });
+
+      if (vals.every(v => v === "")) {
+        return fallbackStatus === "Cancel" ? "Cancel" : "Open";
+      }
+      if (vals.every(v => doneSet.includes(v))) {
+        return "Closed";
+      }
+      if (vals.some(v => activeSet.includes(v))) {
+        return "On Progress";
+      }
+      if (vals.some(v => v === "Pending")) {
+        return "Pending";
+      }
+      if (vals.some(v => doneSet.includes(v)) && vals.some(v => v === "")) {
+        return "Waiting Process";
+      }
+      if (vals.every(v => v === "Cancel" || v === "") && vals.some(v => v === "Cancel")) {
+        return "Cancel";
+      }
+      return fallbackStatus || "Open";
+    }
+
     function extractStageInfoFromLog(log, stageObj, fallbackPic, fallbackNote) {
       const detail = String(log.detail || "");
 
@@ -601,7 +629,6 @@
       };
     }
 
-    // Skema 1: Open = Merah (Rose), On Progress = Kuning (Amber), Pending = Ungu (Purple), Closed = Hijau (Emerald), Cancel = Abu-abu (Zinc)
     function getStatusPillHtml(status) {
       const st = status || "Open";
       if (st === "Open") {
@@ -609,6 +636,9 @@
       }
       if (st === "On Progress" || st === "Waiting Approval") {
         return `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/15 text-amber-400 border border-amber-500/35"><span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>${st}</span>`;
+      }
+      if (st === "Waiting Process") {
+        return `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-sky-500/15 text-sky-400 border border-sky-500/35"><span class="w-1.5 h-1.5 rounded-full bg-sky-400"></span>${st}</span>`;
       }
       if (st === "Pending") {
         return `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-purple-500/15 text-purple-400 border border-purple-500/35"><span class="w-1.5 h-1.5 rounded-full bg-purple-400"></span>${st}</span>`;
@@ -661,10 +691,17 @@
       const list = appData.survey || [];
       document.getElementById("coverageFilter").classList.add("hidden");
 
-      const totalCount = list.length;
-      const inProgCount = list.filter(t => t.status === "On Progress" || t.status === "Open").length;
-      const closedCount = list.filter(t => t.status === "Closed").length;
-      const pendingCount = list.filter(t => t.status === "Pending" || t.status === "Cancel").length;
+      const normalizedList = list.map(t => {
+        const computedSt = t.status === "Cancel"
+          ? "Cancel"
+          : computeAutoSurveyStatus([t.survey, t.reportSurvey, t.boq, t.materialEquip, t.forwardWo], t.status);
+        return { ...t, computedStatus: computedSt };
+      });
+
+      const totalCount = normalizedList.length;
+      const inProgCount = normalizedList.filter(t => ["On Progress", "Open", "Waiting Process"].includes(t.computedStatus)).length;
+      const closedCount = normalizedList.filter(t => t.computedStatus === "Closed").length;
+      const pendingCount = normalizedList.filter(t => ["Pending", "Cancel"].includes(t.computedStatus)).length;
 
       renderKpiCards([
         {
@@ -693,7 +730,7 @@
         }
       ]);
 
-      const statuses = ["ALL", "Open", "On Progress", "Pending", "Closed", "Cancel"];
+      const statuses = ["ALL", "Open", "Waiting Process", "On Progress", "Pending", "Closed", "Cancel"];
       document.getElementById("status-filter-pills").innerHTML = statuses.map(st => `
         <button onclick="setStatusFilter('${st}')" class="${currentStatusFilter === st ? 'bg-orange-600 text-white border border-orange-400' : 'bg-zinc-900 text-zinc-400 hover:bg-zinc-800 hover:text-white border border-white/15'} px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition">
           ${st === "ALL" ? "All" : st}
@@ -701,8 +738,8 @@
       `).join("");
 
       const searchQuery = document.getElementById("searchInput").value.toLowerCase();
-      const filtered = list.filter(t => {
-        const matchStatus = currentStatusFilter === "ALL" || t.status === currentStatusFilter;
+      const filtered = normalizedList.filter(t => {
+        const matchStatus = currentStatusFilter === "ALL" || t.computedStatus === currentStatusFilter;
         const matchSearch = (t.customer || "").toLowerCase().includes(searchQuery) || (t.ticketId || "").toLowerCase().includes(searchQuery);
         const matchDate = matchDateRange(t.lastUpdated);
         return matchStatus && matchSearch && matchDate;
@@ -721,7 +758,7 @@
           fullLabel: "Survey",
           bracketTags: ["survey"],
           keywords: ["survey"],
-          opts: ["-", "Done", "On Progress", "Pending", "Cancel"]
+          opts: ["Waiting Process", "Done", "On Progress", "Pending", "Cancel"]
         },
         {
           key: "reportSurvey",
@@ -729,7 +766,7 @@
           fullLabel: "Report Survey",
           bracketTags: ["report survey", "staging"],
           keywords: ["report survey", "staging"],
-          opts: ["-", "Done", "On Progress", "Pending", "Cancel"]
+          opts: ["Waiting Process", "Done", "On Progress", "Pending", "Cancel"]
         },
         {
           key: "boq",
@@ -737,7 +774,7 @@
           fullLabel: "BOQ",
           bracketTags: ["boq", "po procurement", "po"],
           keywords: ["boq", "po procurement", "po"],
-          opts: ["-", "Done", "On Progress", "Pending", "Cancel"]
+          opts: ["Waiting Process", "Done", "On Progress", "Pending", "Cancel"]
         },
         {
           key: "materialEquip",
@@ -745,7 +782,7 @@
           fullLabel: "Preparing Network Materials and Equipment",
           bracketTags: ["preparing network materials and equipment", "material & equipment", "material", "procurement"],
           keywords: ["preparing network materials and equipment", "material & equipment", "material", "procurement"],
-          opts: ["-", "Done", "On Progress", "Pending", "Waiting Approval", "Cancel"]
+          opts: ["Waiting Process", "Done", "On Progress", "Pending", "Waiting Approval", "Cancel"]
         },
         {
           key: "forwardWo",
@@ -753,7 +790,7 @@
           fullLabel: "Forward WO Installation",
           bracketTags: ["forward wo installation", "forward wo", "installation wo"],
           keywords: ["forward wo installation", "forward wo", "installation wo"],
-          opts: ["-", "Done", "On Progress", "Pending", "Cancel"]
+          opts: ["Waiting Process", "Done", "On Progress", "Pending", "Cancel"]
         }
       ];
 
@@ -772,7 +809,8 @@
         const stepperHtml = `
           <div class="flex items-start justify-between min-w-[600px] py-1">
             ${stageDefs.map((st, sIdx) => {
-              const val = t[st.key] || "";
+              const rawVal = t[st.key] || "";
+              const val = (!rawVal || rawVal === "-" || rawVal === "Not Yet") ? "" : rawVal;
               const isSelectedStage = isExpanded && st.key === activeStageKey;
               const isDone = ["Done", "Deal", "Material Ready"].includes(val);
               const isPending = ["Pending", "On Progress", "Waiting Approval"].includes(val);
@@ -781,7 +819,7 @@
               let isOngoingStep = false;
               if (isPending) {
                 isOngoingStep = true;
-              } else if (sIdx === 0 && (t.status === "On Progress" || t.status === "Open") && !val) {
+              } else if (sIdx === 0 && t.computedStatus === "On Progress" && !val) {
                 isOngoingStep = true;
               } else if (sIdx > 0 && !val) {
                 const prevVal = t[stageDefs[sIdx - 1].key] || "";
@@ -795,7 +833,7 @@
               let circleStyle = "bg-zinc-900 border-2 border-white/25 text-zinc-400";
               let iconHtml = clockSvg;
               let labelColor = "text-zinc-300";
-              let subText = "Not Yet";
+              let subText = "Waiting Process";
               let subColor = "text-zinc-500";
 
               if (isDone) {
@@ -814,7 +852,7 @@
                 circleStyle = "bg-orange-500/25 border-2 border-orange-500 text-orange-400 active-pulse";
                 iconHtml = clockSvg;
                 labelColor = "text-orange-400 font-bold";
-                subText = val || "On Progress";
+                subText = val || "Waiting Process";
                 subColor = "text-orange-400 font-semibold";
               }
 
@@ -858,12 +896,7 @@
           const currentStageVal = t[activeStageKey] || "";
           const stageDetailObj = (t.stageDetails && t.stageDetails[activeStageKey]) || { pic: "", note: "" };
 
-          const activeStageIdx = stageDefs.findIndex(s => s.key === activeStageKey);
-          let headerDisplayStatus = currentStageVal;
-          if (!headerDisplayStatus) {
-            const prevOk = activeStageIdx === 0 || ["Done", "Deal", "Material Ready"].includes(t[stageDefs[activeStageIdx - 1].key] || "");
-            headerDisplayStatus = prevOk && (t.status === "Open" || t.status === "On Progress") ? "On Progress" : "-";
-          }
+          const headerDisplayStatus = currentStageVal || "Waiting Process";
 
           const ticketLogs = (cachedHistory.Survey || []).filter(log => String(log.ticketId).trim() === String(t.ticketId).trim());
 
@@ -927,11 +960,11 @@
                 ${isAdmin ? `
                   <div class="flex items-center gap-1.5 text-xs">
                     <span class="text-zinc-400">Ticket Status:</span>
-                    <select id="exp-mainstatus-${t.rowIndex}" class="bg-zinc-900 border border-white/20 rounded-lg px-2 py-1 text-[11px] font-bold text-white focus:border-orange-500 focus:outline-none">
-                      ${["Open", "On Progress", "Pending", "Closed", "Cancel"].map(s => `<option value="${s}" ${t.status === s ? "selected" : ""}>${s}</option>`).join("")}
+                    <select id="exp-mainstatus-${t.rowIndex}" data-initial="${t.computedStatus}" class="bg-zinc-900 border border-white/20 rounded-lg px-2 py-1 text-[11px] font-bold text-white focus:border-orange-500 focus:outline-none">
+                      ${["Open", "Waiting Process", "On Progress", "Pending", "Closed", "Cancel"].map(s => `<option value="${s}" ${t.computedStatus === s ? "selected" : ""}>${s}</option>`).join("")}
                     </select>
                   </div>
-                ` : `<input type="hidden" id="exp-mainstatus-${t.rowIndex}" value="${t.status}">`}
+                ` : `<input type="hidden" id="exp-mainstatus-${t.rowIndex}" data-initial="${t.computedStatus}" value="${t.computedStatus}">`}
               </div>
 
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs items-end">
@@ -939,7 +972,7 @@
                   <label class="text-[10px] font-bold text-zinc-400 uppercase block mb-1">Status ${activeStageObj.label}</label>
                   <select id="exp-stageval-${t.rowIndex}" class="w-full bg-zinc-900 border border-white/20 rounded-xl px-3 py-2 font-bold text-white focus:border-orange-500 focus:outline-none">
                     ${activeStageObj.opts.map(o => {
-                      const v = o === "-" ? "" : o;
+                      const v = o === "Waiting Process" ? "" : o;
                       return `<option value="${v}" ${currentStageVal === v ? "selected" : ""}>${o}</option>`;
                     }).join("")}
                   </select>
@@ -988,6 +1021,7 @@
         return `
           <tr class="border-b border-white/15 hover:bg-zinc-900/30 align-top transition divide-x divide-white/10">
             <td class="py-4 px-4 font-extrabold text-zinc-500 text-sm w-12 text-center">${t.no}</td>
+            <td class="py-4 px-4 whitespace-nowrap">${getStatusPillHtml(t.computedStatus)}</td>
             <td class="py-4 px-4 min-w-[200px]">
               <div class="flex items-start gap-2.5">
                 <span class="text-zinc-400 shrink-0 mt-0.5">🏢</span>
@@ -997,7 +1031,6 @@
                 </div>
               </div>
             </td>
-            <td class="py-4 px-4 whitespace-nowrap">${getStatusPillHtml(t.status)}</td>
             <td class="py-4 px-4">
               <div class="flex flex-col">
                 ${stepperHtml}
@@ -1014,8 +1047,8 @@
           <thead>
             <tr class="table-header-dark text-xs uppercase tracking-wider divide-x divide-white/10">
               <th class="py-3.5 px-4 text-center">#</th>
-              <th class="py-3.5 px-4">Customer Name</th>
               <th class="py-3.5 px-4">Ticket Status</th>
+              <th class="py-3.5 px-4">Work Order Ticket</th>
               <th class="py-3.5 px-4 text-center min-w-[580px]">Progress Tracking & Stepper</th>
               <th class="py-3.5 px-4 text-right">Last Update</th>
             </tr>
@@ -1051,7 +1084,21 @@
       const updatedStageVal = document.getElementById(`exp-stageval-${rowIndex}`).value;
       const autoPic = formatPicLabel(currentUser.name);
       const updatedNote = document.getElementById(`exp-note-${rowIndex}`).value.trim();
-      const updatedMainStatus = document.getElementById(`exp-mainstatus-${rowIndex}`).value;
+
+      const statusEl = document.getElementById(`exp-mainstatus-${rowIndex}`);
+      const selectedMainStatus = statusEl.value;
+      const initialMainStatus = statusEl.getAttribute("data-initial") || ticket.status;
+      const isManualStatusChanged = selectedMainStatus !== initialMainStatus;
+
+      const nextSurvey = stageKey === "survey" ? updatedStageVal : (ticket.survey || "");
+      const nextReport = stageKey === "reportSurvey" ? updatedStageVal : (ticket.reportSurvey || "");
+      const nextBoq = stageKey === "boq" ? updatedStageVal : (ticket.boq || "");
+      const nextMat = stageKey === "materialEquip" ? updatedStageVal : (ticket.materialEquip || "");
+      const nextWo = stageKey === "forwardWo" ? updatedStageVal : (ticket.forwardWo || "");
+
+      const autoSyncedStatus = isManualStatusChanged
+        ? selectedMainStatus
+        : computeAutoSurveyStatus([nextSurvey, nextReport, nextBoq, nextMat, nextWo], selectedMainStatus);
 
       const sd = JSON.parse(JSON.stringify(ticket.stageDetails || {}));
       sd[stageKey] = { pic: autoPic, note: updatedNote };
@@ -1061,12 +1108,13 @@
         action: "update",
         token: authToken,
         rowIndex: rowIndex,
-        status: updatedMainStatus,
-        survey: stageKey === "survey" ? updatedStageVal : ticket.survey,
-        reportSurvey: stageKey === "reportSurvey" ? updatedStageVal : (ticket.reportSurvey || ""),
-        boq: stageKey === "boq" ? updatedStageVal : (ticket.boq || ""),
-        materialEquip: stageKey === "materialEquip" ? updatedStageVal : (ticket.materialEquip || ""),
-        forwardWo: stageKey === "forwardWo" ? updatedStageVal : ticket.forwardWo,
+        status: autoSyncedStatus,
+        manualStatusOverride: isManualStatusChanged,
+        survey: nextSurvey,
+        reportSurvey: nextReport,
+        boq: nextBoq,
+        materialEquip: nextMat,
+        forwardWo: nextWo,
         stageDetails: sd
       };
 
@@ -1176,12 +1224,12 @@
             <td class="py-4 px-4 whitespace-nowrap font-bold">
               ${canEdit ? `
                 <select id="map-cov-${r}" class="bg-zinc-900 border border-white/20 rounded-lg px-2.5 py-1 text-xs font-bold text-white focus:border-orange-500 focus:outline-none">
-                  <option value="" ${!t.coverage ? "selected" : ""}>-</option>
+                  <option value="" ${!t.coverage ? "selected" : ""}>Waiting Process</option>
                   <option value="Onet" ${t.coverage === "Onet" ? "selected" : ""}>Onet</option>
                   <option value="Partner" ${t.coverage === "Partner" ? "selected" : ""}>Partner</option>
                   <option value="Not Cover" ${t.coverage === "Not Cover" ? "selected" : ""}>Not Cover</option>
                 </select>
-              ` : getStatusPillHtml(t.coverage || "-")}
+              ` : getStatusPillHtml(t.coverage || "Waiting Process")}
             </td>
             <td class="py-4 px-4 min-w-[260px]">
               ${canEdit ? `
@@ -1263,7 +1311,7 @@
 
       const custSelect = document.getElementById("historyCustomerFilter");
       const sourceList = type === "Survey" ? (appData.survey || []) : (appData.mapping || []);
-      custSelect.innerHTML = `<option value="ALL">Semua Customer (${type})</option>` +
+      custSelect.innerHTML = `<option value="ALL">Semua Work Order / Customer (${type})</option>` +
         sourceList.map(item => `<option value="${item.ticketId}" ${item.ticketId === selectedTicketId ? "selected" : ""}>${item.ticketId} - ${item.customer}</option>`).join("");
 
       try {
@@ -1373,7 +1421,7 @@
 
       doc.autoTable({
         startY: 30,
-        head: [["No", "Timestamp", "ID", "Customer Name", "Status", "PIC", "Detail Perubahan & Notes"]],
+        head: [["No", "Timestamp", "ID", "Work Order Ticket", "Status", "PIC", "Detail Perubahan & Notes"]],
         body: rows,
         theme: "grid",
         styles: { fontSize: 8, cellPadding: 2.5, valign: "middle" },
@@ -1428,7 +1476,7 @@
     async function submitNewTicket() {
       if (!currentUser || currentUser.role !== "Admin") return alert("Akses ditolak.");
       const customer = document.getElementById("newCustomer").value.trim();
-      if (!customer) return alert("Customer Name wajib diisi!");
+      if (!customer) return alert("Work Order Ticket wajib diisi!");
 
       const type = document.getElementById("newTicketType").value;
       const btn = document.getElementById("btnSubmitNew");
@@ -1438,12 +1486,21 @@
       let payload = { ticketType: type, action: "add", token: authToken, customer: customer };
 
       if (type === "Survey") {
-        payload.status = document.getElementById("newSurveyStatus").value;
-        payload.survey = document.getElementById("newSurveyProg").value;
-        payload.reportSurvey = document.getElementById("newReportSurvey").value;
-        payload.boq = document.getElementById("newBoq").value;
-        payload.materialEquip = document.getElementById("newMaterialEquip").value;
-        payload.forwardWo = document.getElementById("newForwardWo").value;
+        const s1 = document.getElementById("newSurveyProg").value;
+        const s2 = document.getElementById("newReportSurvey").value;
+        const s3 = document.getElementById("newBoq").value;
+        const s4 = document.getElementById("newMaterialEquip").value;
+        const s5 = document.getElementById("newForwardWo").value;
+        const chosenStatus = document.getElementById("newSurveyStatus").value;
+
+        payload.status = chosenStatus === "Cancel"
+          ? "Cancel"
+          : computeAutoSurveyStatus([s1, s2, s3, s4, s5], chosenStatus);
+        payload.survey = s1;
+        payload.reportSurvey = s2;
+        payload.boq = s3;
+        payload.materialEquip = s4;
+        payload.forwardWo = s5;
       } else {
         payload.status = document.getElementById("newMappingStatus").value;
         payload.coverage = document.getElementById("newCoverage").value;
