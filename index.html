@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BLiP Ticket Monitoring Dashboard v3.9.2 — Horizontal Dark Edition</title>
+  <title>BLiP Ticket Monitoring Dashboard v3.9.3 — Horizontal Dark Edition</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -42,7 +42,7 @@
     <div class="flex flex-col md:flex-row items-center gap-6 w-full lg:w-auto">
       <div class="flex items-center gap-2.5 shrink-0 select-none">
         <span class="tracking-tighter font-extrabold text-3xl text-white">BL<span class="text-orange-500">i</span>P</span>
-        <span class="text-[10px] bg-orange-500/20 border border-orange-500/50 px-2 py-0.5 rounded text-orange-400 font-mono font-bold">v3.9.2</span>
+        <span class="text-[10px] bg-orange-500/20 border border-orange-500/50 px-2 py-0.5 rounded text-orange-400 font-mono font-bold">v3.9.3</span>
       </div>
 
       <nav class="flex gap-1.5 overflow-x-auto w-full md:w-auto pb-1 md:pb-0">
@@ -52,7 +52,7 @@
         <button onclick="setActiveNav('monitor')" id="nav-monitor" class="nav-btn flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:bg-zinc-800/80 hover:text-white transition whitespace-nowrap">
           <span>Ticket Monitor</span>
         </button>
-        <button onclick="openHistoryModal(activeTab, 'ALL')" id="nav-report" class="nav-btn flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:bg-zinc-800/80 hover:text-white transition whitespace-nowrap">
+        <button onclick="openHistoryModal(activeTab || 'Survey', 'ALL')" id="nav-report" class="nav-btn flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:bg-zinc-800/80 hover:text-white transition whitespace-nowrap">
           <span>Report & History</span>
         </button>
         <button onclick="openSettingsModal()" id="nav-settings" class="nav-btn flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:bg-zinc-800/80 hover:text-white transition whitespace-nowrap">
@@ -83,27 +83,45 @@
     </div>
   </header>
 
-  <!-- KPI Cards (4 Cards Horizontal) -->
+  <!-- KPI Cards Gabungan (Survey + Mapping) -->
   <div id="kpi-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6"></div>
 
-  <!-- Filter & Tab Switcher Bar -->
-  <div class="card-dark rounded-2xl p-4 mb-6 flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4">
-    <div class="flex items-center gap-2 shrink-0">
-      <div class="inline-flex bg-zinc-950 p-1 rounded-xl border border-white/15">
-        <button onclick="switchTicketType('Survey')" id="tab-Survey" class="px-4 py-1.5 rounded-lg text-xs font-bold transition bg-orange-600 text-white shadow">
-          📡 Survey (<span id="count-Survey">0</span>)
-        </button>
-        <button onclick="switchTicketType('Mapping')" id="tab-Mapping" class="px-4 py-1.5 rounded-lg text-xs font-bold transition text-zinc-400 hover:text-white">
-          🗺️ Mapping (<span id="count-Mapping">0</span>)
-        </button>
-      </div>
+  <!-- Tombol Besar [Mapping] | [Survey] + Sub-Filter Collapse/Expand -->
+  <div class="card-dark rounded-2xl p-4 md:p-5 mb-6 space-y-4">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <button onclick="toggleDivisionPanel('Mapping')" id="btn-div-Mapping" class="group flex items-center justify-between px-5 py-4 rounded-2xl border transition text-left bg-zinc-900/90 border-white/15 hover:border-orange-500/60">
+        <div class="flex items-center gap-3.5">
+          <span class="w-11 h-11 rounded-xl bg-zinc-950 border border-white/15 flex items-center justify-center text-lg group-hover:border-orange-500/50 transition">🗺️</span>
+          <div>
+            <p class="text-base font-extrabold text-white tracking-tight">Mapping</p>
+            <p class="text-xs text-zinc-400 font-medium"><span id="count-Mapping">0</span> Ticket Mapping</p>
+          </div>
+        </div>
+        <span id="arrow-Mapping" class="text-zinc-400 group-hover:text-orange-400 transition-transform duration-200">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+        </span>
+      </button>
+
+      <button onclick="toggleDivisionPanel('Survey')" id="btn-div-Survey" class="group flex items-center justify-between px-5 py-4 rounded-2xl border transition text-left bg-zinc-900/90 border-white/15 hover:border-orange-500/60">
+        <div class="flex items-center gap-3.5">
+          <span class="w-11 h-11 rounded-xl bg-zinc-950 border border-white/15 flex items-center justify-center text-lg group-hover:border-orange-500/50 transition">📡</span>
+          <div>
+            <p class="text-base font-extrabold text-white tracking-tight">Survey</p>
+            <p class="text-xs text-zinc-400 font-medium"><span id="count-Survey">0</span> Ticket Survey</p>
+          </div>
+        </div>
+        <span id="arrow-Survey" class="text-zinc-400 group-hover:text-orange-400 transition-transform duration-200">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+        </span>
+      </button>
     </div>
 
-    <div class="flex flex-wrap items-center gap-2 justify-between md:justify-end">
-      <div id="status-filter-pills" class="flex gap-1.5 overflow-x-auto"></div>
+    <!-- Sub-Filter Bar (Collapse saat pertama dibuka, muncul saat [Mapping] atau [Survey] diklik) -->
+    <div id="divisionFilterPanel" class="hidden pt-4 border-t border-white/15 flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-3">
+      <div id="status-filter-pills" class="flex gap-1.5 overflow-x-auto pb-1 lg:pb-0"></div>
 
-      <div class="flex items-center gap-2">
-        <select id="coverageFilter" onchange="renderActiveTab()" class="hidden bg-zinc-900 border border-white/20 text-zinc-200 rounded-xl px-2.5 py-1.5 text-xs font-medium focus:outline-none focus:border-orange-500">
+      <div class="flex flex-wrap items-center gap-2 justify-between lg:justify-end">
+        <select id="coverageFilter" onchange="renderActiveTab()" class="hidden bg-zinc-900 border border-white/20 text-zinc-200 rounded-xl px-3 py-1.5 text-xs font-medium focus:outline-none focus:border-orange-500">
           <option value="ALL">Coverage: Semua</option>
           <option value="Onet">Onet</option>
           <option value="Partner">Partner</option>
@@ -111,7 +129,7 @@
         </select>
 
         <div class="relative">
-          <input type="text" id="searchInput" oninput="renderActiveTab()" placeholder="Cari work order ticket..." class="bg-zinc-900 border border-white/20 text-zinc-100 rounded-xl pl-8 pr-3 py-1.5 text-xs w-44 sm:w-52 focus:outline-none focus:border-orange-500">
+          <input type="text" id="searchInput" oninput="renderActiveTab()" placeholder="Cari work order ticket..." class="bg-zinc-900 border border-white/20 text-zinc-100 rounded-xl pl-8 pr-3 py-1.5 text-xs w-48 sm:w-56 focus:outline-none focus:border-orange-500">
           <svg class="w-3.5 h-3.5 text-zinc-500 absolute left-2.5 top-2.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
         </div>
       </div>
@@ -124,8 +142,8 @@
     <p class="text-sm text-zinc-400 font-medium">Memuat data...</p>
   </div>
 
-  <!-- Main Data Table Wrapper -->
-  <div id="table-wrapper" class="card-dark rounded-2xl overflow-hidden shadow-xl">
+  <!-- Main Data Table Wrapper (Collapse sampai [Mapping] atau [Survey] diklik) -->
+  <div id="table-wrapper" class="card-dark rounded-2xl overflow-hidden shadow-xl hidden">
     <div class="overflow-x-auto" id="main-table-container"></div>
   </div>
 
@@ -227,7 +245,9 @@
             <div>
               <label class="text-zinc-400 font-semibold block mb-1">Mapping Status</label>
               <select id="newMappingStatus" class="w-full bg-zinc-950 border border-white/20 rounded-xl px-3 py-2 text-white">
+                <option value="Open">Open</option>
                 <option value="On Progress" selected>On Progress</option>
+                <option value="Pending">Pending</option>
                 <option value="Done">Done</option>
               </select>
             </div>
@@ -296,8 +316,8 @@
         </div>
         <div class="bg-zinc-950 p-3.5 rounded-xl border border-white/15">
           <p class="text-zinc-500 text-[10px]">Versi Aplikasi</p>
-          <p class="font-semibold text-white mt-0.5">BLiP Ticket Monitoring Dashboard v3.9.2 (Horizontal Edition)</p>
-          <p class="text-[10px] text-zinc-500 mt-1">Panel: Stepper → Menu Ticket Update → History (Gaya Resi & Vertical PDF)</p>
+          <p class="font-semibold text-white mt-0.5">BLiP Ticket Monitoring Dashboard v3.9.3 (Horizontal Edition)</p>
+          <p class="text-[10px] text-zinc-500 mt-1">KPI Gabungan • Tombol Mapping & Survey Collapse/Expand • Stepper → Update → History Resi</p>
         </div>
       </div>
       <div class="mt-5 flex justify-end">
@@ -313,7 +333,8 @@
     // ===============================================
 
     let appData = { survey: [], mapping: [] };
-    let activeTab = "Survey";
+    // Default null -> panel Mapping & Survey collapse saat pertama buka
+    let activeTab = null;
     let currentStatusFilter = "ALL";
     let authToken = "";
     try { authToken = localStorage.getItem("ticket_auth_token") || ""; } catch (e) {}
@@ -446,7 +467,12 @@
         };
         document.getElementById("count-Survey").innerText = appData.survey.length;
         document.getElementById("count-Mapping").innerText = appData.mapping.length;
-        renderActiveTab();
+
+        renderCombinedKpi();
+        syncDivisionButtonsUI();
+        if (activeTab) {
+          renderActiveTab();
+        }
 
         refreshSurveyHistoryCache().then(() => {
           if (Object.values(expandedRows).some(Boolean) && activeTab === "Survey") {
@@ -455,27 +481,57 @@
         });
       } catch (err) {
         console.error("Fetch error:", err);
-        renderActiveTab();
+        renderCombinedKpi();
+        syncDivisionButtonsUI();
+        if (activeTab) renderActiveTab();
       } finally {
         document.getElementById("loader").classList.add("hidden");
-        document.getElementById("table-wrapper").classList.remove("hidden");
+        if (activeTab) {
+          document.getElementById("table-wrapper").classList.remove("hidden");
+        }
       }
     }
 
-    function switchTicketType(type) {
+    function syncDivisionButtonsUI() {
+      ["Mapping", "Survey"].forEach(type => {
+        const btn = document.getElementById(`btn-div-${type}`);
+        const arrow = document.getElementById(`arrow-${type}`);
+        const isSelected = activeTab === type;
+
+        if (isSelected) {
+          btn.className = "group flex items-center justify-between px-5 py-4 rounded-2xl border transition text-left bg-orange-600/15 border-orange-500 shadow-lg shadow-orange-600/10";
+          arrow.className = "text-orange-400 rotate-180 transition-transform duration-200";
+        } else {
+          btn.className = "group flex items-center justify-between px-5 py-4 rounded-2xl border transition text-left bg-zinc-900/90 border-white/15 hover:border-orange-500/60";
+          arrow.className = "text-zinc-400 group-hover:text-orange-400 transition-transform duration-200";
+        }
+      });
+
+      const filterPanel = document.getElementById("divisionFilterPanel");
+      const tableWrapper = document.getElementById("table-wrapper");
+
+      if (!activeTab) {
+        filterPanel.classList.add("hidden");
+        tableWrapper.classList.add("hidden");
+      } else {
+        filterPanel.classList.remove("hidden");
+        tableWrapper.classList.remove("hidden");
+      }
+    }
+
+    // Klik [Mapping] atau [Survey] -> toggle collapse/expand sub-filter & tabel
+    function toggleDivisionPanel(type) {
+      if (activeTab === type) {
+        activeTab = null;
+        currentStatusFilter = "ALL";
+        syncDivisionButtonsUI();
+        return;
+      }
+
       activeTab = type;
       currentStatusFilter = "ALL";
       document.getElementById("searchInput").value = "";
-
-      const tabS = document.getElementById("tab-Survey");
-      const tabM = document.getElementById("tab-Mapping");
-      if (type === "Survey") {
-        tabS.className = "px-4 py-1.5 rounded-lg text-xs font-bold transition bg-orange-600 text-white shadow";
-        tabM.className = "px-4 py-1.5 rounded-lg text-xs font-bold transition text-zinc-400 hover:text-white";
-      } else {
-        tabM.className = "px-4 py-1.5 rounded-lg text-xs font-bold transition bg-orange-600 text-white shadow";
-        tabS.className = "px-4 py-1.5 rounded-lg text-xs font-bold transition text-zinc-400 hover:text-white";
-      }
+      syncDivisionButtonsUI();
       renderActiveTab();
     }
 
@@ -595,7 +651,11 @@
       return fallbackStatus || "Open";
     }
 
-    // Parse detail log menjadi ringkasan resi yang bersih (tanpa badge biru panjang yang riweh)
+    function normalizeMappingStatus(rawStatus) {
+      const s = String(rawStatus || "").trim();
+      return s || "Open";
+    }
+
     function parseResiLogEntry(log, fallbackPic, fallbackNote) {
       const detail = String(log.detail || "").trim();
       const blocks = detail.split(";").map(s => s.trim()).filter(Boolean);
@@ -618,7 +678,6 @@
           notes.push(notePart);
         }
 
-        // Ambil poin perubahan status/tahapan secara ringkas
         const cleanMain = mainPart.replace(/\s*\|\s*PIC:[^|;]+/i, "").trim();
         const transMatch = cleanMain.match(/^\[([^\]]+)\]\s*[^:]+:\s*(.+)$/);
         if (transMatch) {
@@ -682,26 +741,100 @@
     function renderActiveTab() {
       if (activeTab === "Survey") {
         renderSurveyTable();
-      } else {
+      } else if (activeTab === "Mapping") {
         renderMappingTable();
       }
     }
 
-    // ================= KPI CARDS GENERATOR =================
-    function renderKpiCards(cards) {
+    // ================= KPI CARDS GABUNGAN (SURVEY + MAPPING) + OPEN =================
+    function renderCombinedKpi() {
+      const surveyList = (appData.survey || []).map(t => {
+        const cascaded = cascadeStages([t.survey, t.reportSurvey, t.boq, t.materialEquip, t.forwardWo], t.status);
+        return computeAutoSurveyStatus(cascaded, t.status);
+      });
+      const mappingList = (appData.mapping || []).map(t => normalizeMappingStatus(t.status));
+
+      const mapCount = mappingList.length;
+      const srvCount = surveyList.length;
+      const totalAll = mapCount + srvCount;
+
+      const openCount =
+        surveyList.filter(s => s === "Open").length +
+        mappingList.filter(s => s === "Open").length;
+
+      const progressCount =
+        surveyList.filter(s => s === "On Progress").length +
+        mappingList.filter(s => s === "On Progress").length;
+
+      const doneClosedCount =
+        surveyList.filter(s => s === "Closed").length +
+        mappingList.filter(s => s === "Done").length;
+
+      const pendingCancelCount =
+        surveyList.filter(s => ["Pending", "Cancel"].includes(s)).length +
+        mappingList.filter(s => s === "Pending").length;
+
+      const cards = [
+        {
+          label: "Total Ticket",
+          value: totalAll,
+          detailLine: `(${mapCount} Ticket Mapping, ${srvCount} Ticket Survey)`,
+          subLabel: `Open: ${openCount}`,
+          bgIcon: "bg-orange-500/15 text-orange-400 border border-orange-500/35",
+          strokeColor: "#f97316",
+          trendColor: "text-rose-400",
+          sparkPath: "M2 28 Q 20 18, 35 22 T 75 6",
+          icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/></svg>`
+        },
+        {
+          label: "Open & On Progress",
+          value: openCount + progressCount,
+          detailLine: `Open: ${openCount} • On Progress: ${progressCount}`,
+          subLabel: `${totalAll ? Math.round(((openCount + progressCount) / totalAll) * 100) : 0}% Active`,
+          bgIcon: "bg-amber-500/15 text-amber-400 border border-amber-500/35",
+          strokeColor: "#fbbf24",
+          trendColor: "text-amber-400",
+          sparkPath: "M2 25 Q 25 28, 42 15 T 76 12",
+          icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>`
+        },
+        {
+          label: "Closed / Done",
+          value: doneClosedCount,
+          detailLine: "Survey Closed + Mapping Done",
+          subLabel: `${totalAll ? Math.round((doneClosedCount / totalAll) * 100) : 0}% Done`,
+          bgIcon: "bg-emerald-500/15 text-emerald-400 border border-emerald-500/35",
+          strokeColor: "#10b981",
+          trendColor: "text-emerald-400",
+          sparkPath: "M2 28 Q 22 14, 45 18 T 76 5",
+          icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>`
+        },
+        {
+          label: "Pending / Cancel",
+          value: pendingCancelCount,
+          detailLine: "Butuh Follow-up / Batal",
+          subLabel: "Follow-up",
+          bgIcon: "bg-purple-500/15 text-purple-400 border border-purple-500/35",
+          strokeColor: "#a855f7",
+          trendColor: "text-purple-400",
+          sparkPath: "M2 20 Q 25 15, 45 22 T 76 16",
+          icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 2h12M6 22h12M8 2v4l4 4 4-4V2M8 22v-4l4-4 4 4v4"/></svg>`
+        }
+      ];
+
       document.getElementById("kpi-container").innerHTML = cards.map(c => `
-        <div class="card-dark rounded-2xl p-4 flex items-center justify-between hover:border-orange-500/70 transition">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl ${c.bgIcon} flex items-center justify-center shrink-0">
+        <div class="card-dark rounded-2xl p-4 flex items-center justify-between gap-2 hover:border-orange-500/70 transition">
+          <div class="flex items-start gap-3 min-w-0">
+            <div class="w-10 h-10 rounded-xl ${c.bgIcon} flex items-center justify-center shrink-0 mt-0.5">
               ${c.icon}
             </div>
-            <div>
+            <div class="min-w-0">
               <p class="text-xl font-extrabold text-white leading-none">${c.value}</p>
-              <p class="text-[11px] font-medium text-zinc-400 mt-1">${c.label}</p>
+              <p class="text-[11px] font-semibold text-zinc-300 mt-1">${c.label}</p>
+              <p class="text-[10.5px] text-zinc-400 mt-0.5 truncate" title="${c.detailLine}">${c.detailLine}</p>
             </div>
           </div>
-          <div class="text-right">
-            <svg class="w-14 h-7" viewBox="0 0 80 35" fill="none">
+          <div class="text-right shrink-0">
+            <svg class="w-12 h-6 ml-auto" viewBox="0 0 80 35" fill="none">
               <path d="${c.sparkPath}" stroke="${c.strokeColor}" stroke-width="2" stroke-linecap="round" fill="none"/>
             </svg>
             <span class="text-[10px] font-bold ${c.trendColor}">${c.subLabel}</span>
@@ -728,38 +861,6 @@
           computedStatus: computedSt
         };
       });
-
-      const totalCount = normalizedList.length;
-      const inProgCount = normalizedList.filter(t => ["On Progress", "Open"].includes(t.computedStatus)).length;
-      const closedCount = normalizedList.filter(t => t.computedStatus === "Closed").length;
-      const pendingCount = normalizedList.filter(t => ["Pending", "Cancel"].includes(t.computedStatus)).length;
-
-      renderKpiCards([
-        {
-          label: "Total Ticket", value: totalCount, subLabel: "Survey Div.",
-          bgIcon: "bg-orange-500/15 text-orange-400 border border-orange-500/35", strokeColor: "#f97316", trendColor: "text-orange-400",
-          sparkPath: "M2 28 Q 20 18, 35 22 T 75 6",
-          icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/></svg>`
-        },
-        {
-          label: "In Progress", value: inProgCount, subLabel: `${totalCount ? Math.round((inProgCount/totalCount)*100) : 0}% Active`,
-          bgIcon: "bg-amber-500/15 text-amber-400 border border-amber-500/35", strokeColor: "#fbbf24", trendColor: "text-amber-400",
-          sparkPath: "M2 25 Q 25 28, 42 15 T 76 12",
-          icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>`
-        },
-        {
-          label: "Closed", value: closedCount, subLabel: `${totalCount ? Math.round((closedCount/totalCount)*100) : 0}% Done`,
-          bgIcon: "bg-emerald-500/15 text-emerald-400 border border-emerald-500/35", strokeColor: "#10b981", trendColor: "text-emerald-400",
-          sparkPath: "M2 28 Q 22 14, 45 18 T 76 5",
-          icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>`
-        },
-        {
-          label: "Pending / Cancel", value: pendingCount, subLabel: "Follow-up",
-          bgIcon: "bg-purple-500/15 text-purple-400 border border-purple-500/35", strokeColor: "#a855f7", trendColor: "text-purple-400",
-          sparkPath: "M2 20 Q 25 15, 45 22 T 76 16",
-          icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 2h12M6 22h12M8 2v4l4 4 4-4V2M8 22v-4l4-4 4 4v4"/></svg>`
-        }
-      ]);
 
       const statuses = ["ALL", "Open", "On Progress", "Pending", "Closed", "Cancel"];
       document.getElementById("status-filter-pills").innerHTML = statuses.map(st => `
@@ -832,7 +933,6 @@
         const isExpanded = Boolean(expandedRows[t.ticketId]);
         const activeStageKey = activeStagePerTicket[t.ticketId] || "survey";
 
-        // 1. STEPPER
         const stepperHtml = `
           <div class="flex items-start justify-between min-w-[600px] py-1">
             ${stageDefs.map((st, sIdx) => {
@@ -915,7 +1015,6 @@
           </div>
         `;
 
-        // Expanded Section: Stepper -> Menu Ticket Update -> History (Gaya Resi)
         let expandedPanelHtml = "";
         if (isExpanded) {
           const activeStageObj = stageDefs.find(s => s.key === activeStageKey) || stageDefs[0];
@@ -930,7 +1029,6 @@
           });
           const logsToShow = stageLogs.length > 0 ? stageLogs : ticketLogs.slice(0, 3);
 
-          // 2. MENU TICKET UPDATE (di atas History)
           const updateMenuHtml = canEdit ? `
             <div class="bg-zinc-950 border border-orange-500/40 rounded-2xl p-4 space-y-3">
               <div class="flex flex-wrap items-center justify-between gap-2 border-b border-white/15 pb-2.5">
@@ -981,7 +1079,6 @@
             </div>
           `;
 
-          // 3. HISTORY GAYA RESI PENGIRIMAN (di bawah Menu Ticket Update)
           const resiItemsHtml = loadingHistoryTicket[t.ticketId]
             ? `<div class="py-5 text-center"><div class="inline-block animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-orange-500"></div></div>`
             : (logsToShow.length > 0
@@ -1166,39 +1263,7 @@
       const list = appData.mapping || [];
       document.getElementById("coverageFilter").classList.remove("hidden");
 
-      const total = list.length;
-      const onProg = list.filter(t => t.status === "On Progress").length;
-      const done = list.filter(t => t.status === "Done").length;
-      const onet = list.filter(t => t.coverage === "Onet").length;
-
-      renderKpiCards([
-        {
-          label: "Total Mapping", value: total, subLabel: "Mapping Div.",
-          bgIcon: "bg-orange-500/15 text-orange-400 border border-orange-500/35", strokeColor: "#f97316", trendColor: "text-orange-400",
-          sparkPath: "M2 28 Q 20 18, 35 22 T 75 6",
-          icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>`
-        },
-        {
-          label: "On Progress", value: onProg, subLabel: "Checking Area",
-          bgIcon: "bg-amber-500/15 text-amber-400 border border-amber-500/35", strokeColor: "#fbbf24", trendColor: "text-amber-400",
-          sparkPath: "M2 25 Q 25 28, 42 15 T 76 12",
-          icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>`
-        },
-        {
-          label: "Done", value: done, subLabel: `${total ? Math.round((done/total)*100) : 0}% Completed`,
-          bgIcon: "bg-emerald-500/15 text-emerald-400 border border-emerald-500/35", strokeColor: "#10b981", trendColor: "text-emerald-400",
-          sparkPath: "M2 28 Q 22 14, 45 18 T 76 5",
-          icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>`
-        },
-        {
-          label: "Onet Coverage", value: onet, subLabel: "Direct Network",
-          bgIcon: "bg-purple-500/15 text-purple-400 border border-purple-500/35", strokeColor: "#a855f7", trendColor: "text-purple-400",
-          sparkPath: "M2 24 Q 25 12, 48 16 T 76 6",
-          icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0114.08 0M1.42 9a16 16 0 0121.16 0M8.53 16.11a6 6 0 016.95 0M12 20h.01"/></svg>`
-        }
-      ]);
-
-      const statuses = ["ALL", "On Progress", "Done"];
+      const statuses = ["ALL", "Open", "On Progress", "Pending", "Done"];
       document.getElementById("status-filter-pills").innerHTML = statuses.map(st => `
         <button onclick="setStatusFilter('${st}')" class="${currentStatusFilter === st ? 'bg-orange-600 text-white border border-orange-400' : 'bg-zinc-900 text-zinc-400 hover:bg-zinc-800 hover:text-white border border-white/15'} px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition">
           ${st === "ALL" ? "All" : st}
@@ -1209,7 +1274,8 @@
       const searchQuery = document.getElementById("searchInput").value.toLowerCase();
 
       const filtered = list.filter(t => {
-        const matchStatus = currentStatusFilter === "ALL" || t.status === currentStatusFilter;
+        const stNorm = normalizeMappingStatus(t.status);
+        const matchStatus = currentStatusFilter === "ALL" || stNorm === currentStatusFilter;
         const matchCov = covQuery === "ALL" || t.coverage === covQuery;
         const matchSearch = (t.customer || "").toLowerCase().includes(searchQuery) || (t.description || "").toLowerCase().includes(searchQuery);
         const matchDate = matchDateRange(t.lastUpdated);
@@ -1227,6 +1293,7 @@
 
       const rowsHtml = filtered.map(t => {
         const r = t.rowIndex;
+        const stNorm = normalizeMappingStatus(t.status);
         return `
           <tr class="border-b border-white/15 hover:bg-zinc-900/30 align-top transition divide-x divide-white/10">
             <td class="py-4 px-4 font-extrabold text-zinc-500 text-sm w-12 text-center">${t.no}</td>
@@ -1242,10 +1309,9 @@
             <td class="py-4 px-4 whitespace-nowrap font-semibold">
               ${canEdit ? `
                 <select id="map-status-${r}" class="bg-zinc-900 border border-white/20 rounded-lg px-2.5 py-1 text-xs font-bold text-white focus:border-orange-500 focus:outline-none">
-                  <option value="On Progress" ${t.status === "On Progress" ? "selected" : ""}>On Progress</option>
-                  <option value="Done" ${t.status === "Done" ? "selected" : ""}>Done</option>
+                  ${["Open", "On Progress", "Pending", "Done"].map(opt => `<option value="${opt}" ${stNorm === opt ? "selected" : ""}>${opt}</option>`).join("")}
                 </select>
-              ` : getStatusPillHtml(t.status)}
+              ` : getStatusPillHtml(stNorm)}
             </td>
             <td class="py-4 px-4 whitespace-nowrap font-bold">
               ${canEdit ? `
@@ -1418,7 +1484,6 @@
       }).join("");
     }
 
-    // Export PDF model vertikal (portrait) bergaya resi/blok tanpa terpotong
     function exportHistoryPDF() {
       if (filteredHistoryLogs.length === 0) {
         return alert("Tidak ada data history untuk di-export ke PDF.");
@@ -1481,18 +1546,15 @@
 
         ensureSpace(cardH);
 
-        // Kartu vertikal per entri resi
         doc.setDrawColor(215, 218, 224);
         doc.setFillColor(252, 252, 253);
         doc.roundedRect(marginX, y, contentW, cardH - 2, 2.5, 2.5, "FD");
 
-        // Garis aksen kiri oranye
         doc.setFillColor(234, 88, 12);
         doc.rect(marginX, y, 2.2, cardH - 2, "F");
 
         let cy = y + 5.5;
 
-        // Baris 1: ID Tiket, Nama WO, Status & Waktu
         doc.setFont("helvetica", "bold");
         doc.setFontSize(9.5);
         doc.setTextColor(24, 24, 27);
@@ -1513,7 +1575,6 @@
 
         cy += 4.5;
 
-        // Blok perubahan tahapan (vertikal)
         if (changeLines.length > 0) {
           doc.setFillColor(241, 245, 249);
           doc.roundedRect(marginX + 4.5, cy, contentW - 9, changesBlockH - 1.5, 1.5, 1.5, "F");
@@ -1533,7 +1594,6 @@
           cy += changesBlockH + 1;
         }
 
-        // Blok catatan (vertikal, full wrap)
         doc.setFillColor(255, 247, 237);
         doc.roundedRect(marginX + 4.5, cy, contentW - 9, noteBlockH - 1.5, 1.5, 1.5, "F");
         doc.setFont("helvetica", "bold");
@@ -1560,7 +1620,7 @@
     // ================= ADD TICKET & SETTINGS CONTROL =================
     function openAddModal() {
       if (!currentUser || currentUser.role !== "Admin") return alert("Khusus Admin.");
-      document.getElementById("newTicketType").value = activeTab;
+      document.getElementById("newTicketType").value = activeTab || "Survey";
       toggleNewTicketFields();
       document.getElementById("addModal").classList.remove("hidden");
       document.getElementById("addModal").classList.add("flex");
