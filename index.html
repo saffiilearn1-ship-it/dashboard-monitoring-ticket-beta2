@@ -3,322 +3,362 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BLiP Work Order Monitoring Dashboard v4.4.1 — Neon Border & Clean 3-Point Toggle</title>
+  <title>BLiP OpsPulse — Work Order Monitoring Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --bg-canvas: #090b10;
+      --bg-surface: rgba(17, 20, 29, 0.82);
+      --bg-surface-elevated: #161a26;
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --accent-primary: #f97316;
+      --accent-glow: rgba(249, 115, 22, 0.22);
+    }
+
     body {
-      background-color: #070709;
+      background-color: var(--bg-canvas);
       background-image:
-        radial-gradient(circle at 60% 0%, rgba(249, 115, 22, 0.08), transparent 55%),
-        radial-gradient(circle at 12% 35%, rgba(249, 115, 22, 0.05), transparent 45%);
-      color: #f4f4f5;
-      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        radial-gradient(ellipse 80% 45% at 50% -10%, rgba(249, 115, 22, 0.12), transparent 65%),
+        radial-gradient(circle at 88% 20%, rgba(56, 189, 248, 0.06), transparent 45%);
+      color: #e2e8f0;
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
     }
 
-    .card-dark {
-      background: linear-gradient(180deg, #18181e 0%, #121216 100%);
-      border: 1.5px solid rgba(249, 115, 22, 0.48);
-      box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.12),
-        0 0 14px -2px rgba(249, 115, 22, 0.22),
-        0 8px 20px -4px rgba(0, 0, 0, 0.85);
+    .font-mono-code {
+      font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
     }
 
-    /* Neon Border + Shadow Effects */
-    .neon-sidebar {
-      background: linear-gradient(180deg, #17171d 0%, #0f0f13 100%);
-      border: 1.5px solid rgba(249, 115, 22, 0.72);
-      box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.14),
-        0 0 18px rgba(249, 115, 22, 0.28),
-        0 0 38px -6px rgba(249, 115, 22, 0.22),
-        0 14px 30px -6px rgba(0, 0, 0, 0.92);
+    .surface-card {
+      background: var(--bg-surface);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid var(--border-subtle);
+      box-shadow: 0 10px 30px -12px rgba(0, 0, 0, 0.65);
     }
 
-    .neon-search {
-      background: linear-gradient(180deg, #18181f 0%, #101015 100%);
-      border: 1.5px solid rgba(249, 115, 22, 0.78);
-      box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.15),
-        0 0 16px rgba(249, 115, 22, 0.34),
-        0 0 34px -4px rgba(249, 115, 22, 0.25),
-        0 10px 24px -6px rgba(0, 0, 0, 0.9);
+    .surface-card-hover {
+      transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
     }
 
-    .neon-weekly {
-      background: linear-gradient(180deg, #17171c 0%, #101014 100%);
-      border: 1.5px solid rgba(249, 115, 22, 0.75);
-      box-shadow:
-        inset 0 1.5px 0 rgba(255, 255, 255, 0.14),
-        inset 0 -1px 0 rgba(0, 0, 0, 0.75),
-        0 0 18px rgba(249, 115, 22, 0.3),
-        0 0 40px -6px rgba(249, 115, 22, 0.22),
-        0 14px 28px -8px rgba(0, 0, 0, 0.92);
+    .surface-card-hover:hover {
+      transform: translateY(-2px);
+      border-color: rgba(249, 115, 22, 0.45);
+      box-shadow: 0 14px 32px -12px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(249, 115, 22, 0.15);
     }
 
-    .neon-attention {
-      background: linear-gradient(180deg, #17171c 0%, #101014 100%);
-      border: 1.5px solid rgba(251, 191, 36, 0.72);
-      box-shadow:
-        inset 0 1.5px 0 rgba(255, 255, 255, 0.14),
-        inset 0 -1px 0 rgba(0, 0, 0, 0.75),
-        0 0 18px rgba(251, 191, 36, 0.28),
-        0 0 40px -6px rgba(249, 115, 22, 0.2),
-        0 14px 28px -8px rgba(0, 0, 0, 0.92);
+    .glass-topbar {
+      background: rgba(9, 11, 16, 0.78);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border-subtle);
     }
 
-    .sticky-box-header {
-      position: sticky;
-      top: 74px;
-      z-index: 20;
-      background: linear-gradient(180deg, #1c1c24 0%, #131318 100%);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid rgba(249, 115, 22, 0.35);
-      box-shadow:
-        0 0 14px -2px rgba(249, 115, 22, 0.22),
-        0 8px 18px -6px rgba(0, 0, 0, 0.85);
+    .table-head-modern {
+      background: rgba(22, 26, 38, 0.92);
+      color: #94a3b8;
+      border-bottom: 1px solid var(--border-subtle);
     }
 
-    .table-header-dark {
-      background: linear-gradient(180deg, #1e1e26 0%, #16161c 100%);
-      color: #e4e4e7;
-      border-bottom: 1.5px solid rgba(249, 115, 22, 0.52);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    @keyframes pulse-ring {
+      0% { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.55); }
+      70% { box-shadow: 0 0 0 9px rgba(249, 115, 22, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0); }
+    }
+    .step-active-ring {
+      animation: pulse-ring 1.8s infinite ease-out;
     }
 
-    @keyframes pulse-glow-orange {
-      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.85); }
-      70% { transform: scale(1.06); box-shadow: 0 0 0 10px rgba(249, 115, 22, 0); }
-      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(249, 115, 22, 0); }
-    }
-    .active-pulse {
-      animation: pulse-glow-orange 1.6s infinite ease-in-out;
+    input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(0.8);
+      cursor: pointer;
     }
 
-    input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
     ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: #09090b; }
-    ::-webkit-scrollbar-thumb { background: rgba(249, 115, 22, 0.42); border-radius: 3px; }
+    ::-webkit-scrollbar-track { background: #090b10; }
+    ::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.25); border-radius: 999px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(249, 115, 22, 0.55); }
   </style>
 </head>
-<body class="min-h-screen bg-[#070709] text-zinc-100">
+<body class="min-h-screen text-slate-100 antialiased">
 
   <div class="min-h-screen flex flex-col lg:flex-row">
-    <!-- Left Sidebar (Neon Border + Collapsible / Expandable + Sticky Full Height) -->
-    <aside id="mainSidebar" class="neon-sidebar w-full lg:w-72 shrink-0 lg:sticky lg:top-0 lg:h-screen flex flex-col justify-between p-4 lg:p-5 z-40 transition-all duration-200">
+    <!-- Left Navigation Rail -->
+    <aside id="mainSidebar" class="surface-card w-full lg:w-68 shrink-0 lg:sticky lg:top-0 lg:h-screen flex flex-col justify-between p-4 lg:p-5 z-40 transition-all duration-200 border-b lg:border-b-0 lg:border-r border-white/[0.08]">
       <div class="space-y-6 overflow-y-auto pr-0.5">
-        <!-- Brand + Expand/Collapse Button -->
-        <div id="sidebarHeaderRow" class="flex items-center justify-between gap-2 pb-4 border-b border-white/10">
+        <!-- Brand Header + Collapse Toggle -->
+        <div id="sidebarHeaderRow" class="flex items-center justify-between gap-2 pb-4 border-b border-white/[0.08]">
           <div id="sidebarBrandFull" class="flex items-center gap-2.5 select-none min-w-0">
-            <span class="tracking-tighter font-extrabold text-3xl text-white">BL<span class="text-orange-500">i</span>P</span>
-            <span class="text-[10px] bg-orange-500/20 border border-orange-500/50 px-2 py-0.5 rounded text-orange-400 font-mono font-bold">v4.4.1</span>
+            <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center text-slate-950 font-extrabold text-sm shadow-lg shadow-orange-500/25 shrink-0">
+              B
+            </div>
+            <div class="min-w-0">
+              <div class="flex items-center gap-1.5">
+                <span class="tracking-tight font-extrabold text-lg text-white leading-none">BL<span class="text-orange-400">i</span>P</span>
+                <span class="text-[10px] bg-orange-500/15 text-orange-300 border border-orange-500/30 px-1.5 py-0.5 rounded-md font-mono-code font-bold">v5.0</span>
+              </div>
+              <p class="text-[10px] text-slate-400 font-medium mt-0.5 truncate">OpsPulse Console</p>
+            </div>
           </div>
-          <div id="sidebarTopActions" class="flex items-center gap-1.5 shrink-0">
-            <button id="btnSidebarRefresh" onclick="fetchAllData()" title="Refresh Data" class="bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-orange-500/35 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer">
-              ↻ <span class="sidebar-label">Refresh</span>
-            </button>
-            <button id="btnSidebarToggle" onclick="toggleSidebarExpand()" title="Expand / Collapse Sidebar" class="bg-zinc-900 hover:bg-orange-500/20 text-orange-400 border border-orange-500/50 px-2.5 py-1.5 rounded-xl text-xs font-extrabold transition cursor-pointer">
-              <span id="sidebarToggleIcon">«</span>
-            </button>
-          </div>
-        </div>
 
-        <!-- Navigation Menus -->
-        <div class="space-y-1.5">
-          <p class="sidebar-label text-[10px] font-extrabold uppercase tracking-wider text-zinc-500 px-2 mb-2">Navigation</p>
-          <button onclick="setActiveNav('dashboard')" id="nav-dashboard" title="Dashboard Monitoring Work Orders" class="nav-btn w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold bg-orange-600 text-white shadow-[0_0_14px_rgba(249,115,22,0.45)] text-left transition cursor-pointer">
-            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
-            <span class="sidebar-label truncate">Dashboard Monitoring Work Orders</span>
-          </button>
-
-          <button onclick="openHistoryModal(activeTab === 'Mapping' ? 'Mapping' : 'Survey', 'ALL', null)" id="nav-report" title="Report Activity Log" class="nav-btn w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-medium text-zinc-400 hover:bg-zinc-800/80 hover:text-white text-left transition cursor-pointer">
-            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-            <span class="sidebar-label truncate">Report Activity Log</span>
-          </button>
-
-          <button onclick="openSettingsModal()" id="nav-settings" title="Settings" class="nav-btn w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-medium text-zinc-400 hover:bg-zinc-800/80 hover:text-white text-left transition cursor-pointer">
-            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
-            <span class="sidebar-label truncate">Settings</span>
+          <button id="btnSidebarToggle" onclick="toggleSidebarExpand()" title="Collapse / Expand Sidebar" class="hidden lg:flex w-8 h-8 rounded-xl bg-white/[0.04] hover:bg-white/[0.09] text-slate-300 hover:text-white border border-white/[0.08] items-center justify-center transition cursor-pointer shrink-0">
+            <svg id="sidebarToggleSvg" class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+            </svg>
           </button>
         </div>
 
-        <!-- Primary Action -->
-        <div id="sidebarActionWrap" class="hidden pt-2 border-t border-white/10">
-          <button id="btnNewTicket" onclick="openAddModal()" title="New Work Order" class="w-full bg-orange-600 hover:bg-orange-500 text-white px-3 py-2.5 rounded-xl text-xs font-bold shadow-[0_0_16px_rgba(249,115,22,0.4)] transition cursor-pointer flex items-center justify-center gap-1.5">
-            <span>+</span>
-            <span class="sidebar-label truncate">New Work Order</span>
+        <!-- Primary Menu -->
+        <div class="space-y-1">
+          <p class="sidebar-label text-[10px] font-bold uppercase tracking-widest text-slate-500 px-2.5 mb-2">Workspace</p>
+
+          <button onclick="setActiveNav('dashboard')" id="nav-dashboard" title="Monitoring Dashboard" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-orange-500/20 to-amber-500/10 text-orange-300 border border-orange-500/35 text-left transition cursor-pointer">
+            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+            </svg>
+            <span class="sidebar-label truncate">Work Order Monitor</span>
           </button>
+
+          <button onclick="openHistoryModal(activeTab === 'Mapping' ? 'Mapping' : 'Survey', 'ALL', null)" id="nav-report" title="Activity Logs & Export" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium text-slate-400 hover:bg-white/[0.05] hover:text-slate-100 border border-transparent text-left transition cursor-pointer">
+            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            <span class="sidebar-label truncate">Activity Logs &amp; Export</span>
+          </button>
+
+          <button onclick="openSettingsModal()" id="nav-settings" title="System Info" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium text-slate-400 hover:bg-white/[0.05] hover:text-slate-100 border border-transparent text-left transition cursor-pointer">
+            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="3"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
+            </svg>
+            <span class="sidebar-label truncate">System &amp; Access</span>
+          </button>
+        </div>
+
+        <!-- Quick Sync Card -->
+        <div class="sidebar-label bg-white/[0.03] border border-white/[0.07] rounded-2xl p-3.5 space-y-2.5">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-semibold text-slate-300 flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              Live Sheet Sync
+            </span>
+            <button id="btnSidebarRefresh" onclick="fetchAllData()" class="text-[11px] font-bold text-orange-400 hover:text-orange-300 flex items-center gap-1 cursor-pointer transition">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+              Sync
+            </button>
+          </div>
+          <p id="weekRangeBadge" class="text-[11px] font-mono-code text-slate-400 bg-black/30 px-2.5 py-1.5 rounded-lg border border-white/[0.05] text-center"></p>
         </div>
       </div>
 
-      <!-- Bottom of Sidebar: Google Sign-In / Account Badge -->
-      <div class="pt-4 mt-6 border-t border-white/15">
+      <!-- Bottom User Profile / Sign In -->
+      <div class="pt-4 mt-4 border-t border-white/[0.07]">
         <div id="googleBtnWrapper" class="flex justify-center"></div>
-        <div id="sidebarUserBadge" class="hidden items-center justify-between gap-2 bg-zinc-950/90 border border-orange-500/50 shadow-[0_0_12px_rgba(249,115,22,0.2)] px-3 py-2.5 rounded-xl text-xs">
-          <div class="flex items-center gap-2 min-w-0">
-            <span class="h-2.5 w-2.5 rounded-full bg-emerald-500 shrink-0"></span>
+        <div id="sidebarUserBadge" class="hidden items-center justify-between gap-2.5 bg-white/[0.04] border border-white/[0.09] px-3 py-2.5 rounded-2xl text-xs">
+          <div class="flex items-center gap-2.5 min-w-0">
+            <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-orange-500 to-amber-400 flex items-center justify-center text-slate-950 font-extrabold text-xs shrink-0">
+              <span id="sidebarUserInitial">U</span>
+            </div>
             <div class="sidebar-label truncate">
-              <p id="sidebarUserName" class="font-bold text-white truncate"></p>
-              <p id="sidebarUserRole" class="text-[10px] text-orange-400 font-semibold"></p>
+              <p id="sidebarUserName" class="font-bold text-white truncate leading-tight"></p>
+              <p id="sidebarUserRole" class="text-[10px] text-orange-400 font-semibold mt-0.5"></p>
             </div>
           </div>
-          <button onclick="logoutUser()" class="sidebar-label text-rose-400 hover:text-rose-300 font-semibold shrink-0 cursor-pointer">Sign Out</button>
+          <button onclick="logoutUser()" title="Sign Out" class="sidebar-label p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition cursor-pointer shrink-0">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+          </button>
         </div>
       </div>
     </aside>
 
-    <!-- Main Content Column -->
-    <div class="flex-1 min-w-0 p-4 md:p-6 lg:px-8 space-y-7">
+    <!-- Main Workspace -->
+    <div class="flex-1 min-w-0 flex flex-col">
 
-      <!-- Freeze Layer 1: Sticky Top Search Bar (Neon Border + Shadow) -->
-      <header class="neon-search sticky top-3 z-30 rounded-2xl p-3 md:p-3.5 backdrop-blur-md">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <!-- Search Work Orders By Name/ID -->
-          <div class="relative flex items-center bg-zinc-950/95 border border-orange-500/35 focus-within:border-orange-400 focus-within:shadow-[0_0_12px_rgba(249,115,22,0.35)] rounded-xl px-3.5 py-2 transition">
-            <svg class="w-4 h-4 text-orange-500 shrink-0 mr-2.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-              <circle cx="11" cy="11" r="8"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35"/>
-            </svg>
-            <input type="text" id="searchInput" oninput="onGlobalSearchChange()" placeholder="Search Work Orders By Name/ID..." class="w-full bg-transparent text-xs sm:text-sm text-zinc-100 placeholder-zinc-400 focus:outline-none">
+      <!-- Sticky Top Command Header -->
+      <header class="glass-topbar sticky top-0 z-30 px-4 md:px-8 py-3.5">
+        <div class="max-w-[1600px] mx-auto flex flex-col xl:flex-row xl:items-center justify-between gap-3">
+          <!-- Left Title & Friendly Greeting -->
+          <div class="flex items-center justify-between gap-3">
+            <div>
+              <h1 class="text-base md:text-lg font-extrabold text-white tracking-tight flex items-center gap-2">
+                <span>Survey &amp; Mapping Operations</span>
+                <span class="hidden sm:inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/25">
+                  Realtime
+                </span>
+              </h1>
+              <p id="friendlyGreeting" class="text-xs text-slate-400 mt-0.5">Monitor active field surveys, dark fiber mapping &amp; installation handovers.</p>
+            </div>
+
+            <!-- Mobile Refresh -->
+            <button onclick="fetchAllData()" class="lg:hidden bg-white/[0.05] hover:bg-white/[0.1] text-slate-200 border border-white/10 px-3 py-2 rounded-xl text-xs font-semibold cursor-pointer">
+              ↻ Sync
+            </button>
           </div>
 
-          <!-- Search Work Orders By Date (Popover: Start - End + Reset) -->
-          <div id="dateSearchWrapper" class="relative">
-            <button type="button" onclick="toggleDatePopover(event)" class="w-full flex items-center justify-between gap-2 bg-zinc-950/95 border border-orange-500/35 hover:border-orange-400 hover:shadow-[0_0_12px_rgba(249,115,22,0.3)] rounded-xl px-3.5 py-2 text-left transition cursor-pointer">
-              <div class="flex items-center min-w-0">
-                <svg class="w-4 h-4 text-orange-500 shrink-0 mr-2.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                  <line x1="16" y1="2" x2="16" y2="6"/>
-                  <line x1="8" y1="2" x2="8" y2="6"/>
-                  <line x1="3" y1="10" x2="21" y2="10"/>
-                </svg>
-                <span id="dateSearchSummary" class="text-xs sm:text-sm text-zinc-400 truncate">Search Work Orders By Date...</span>
-              </div>
-              <span id="dateActiveBadge" class="hidden text-[10px] font-bold bg-orange-500/20 text-orange-400 border border-orange-500/40 px-2 py-0.5 rounded shrink-0">Filtered</span>
-            </button>
+          <!-- Right Search, Date Filter & Primary Action -->
+          <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+            <!-- Search Input -->
+            <div class="relative flex items-center bg-[#0d1017] border border-white/10 focus-within:border-orange-500/60 focus-within:ring-2 focus-within:ring-orange-500/15 rounded-xl px-3.5 py-2 sm:w-64 md:w-72 transition">
+              <svg class="w-4 h-4 text-slate-400 shrink-0 mr-2.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="8"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35"/>
+              </svg>
+              <input type="text" id="searchInput" oninput="onGlobalSearchChange()" placeholder="Search customer, ticket ID..." class="w-full bg-transparent text-xs text-slate-100 placeholder-slate-500 focus:outline-none">
+            </div>
 
-            <!-- Popover: Start - End + Reset -->
-            <div id="datePopover" onclick="event.stopPropagation()" class="hidden absolute right-0 mt-2 w-full sm:w-96 card-dark rounded-2xl p-4 z-50 shadow-2xl space-y-3">
-              <div class="flex items-center justify-between border-b border-white/10 pb-2">
-                <span class="text-xs font-bold text-orange-400">Filter Date Range</span>
-                <button type="button" onclick="clearDateFilter()" class="text-xs font-bold text-rose-400 hover:text-rose-300 cursor-pointer">Reset</button>
-              </div>
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                <div>
-                  <label class="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block mb-1">Start</label>
-                  <input type="date" id="dateStart" onchange="onDateRangeChanged()" class="w-full bg-zinc-900 border border-white/20 rounded-xl px-3 py-2 text-zinc-100 focus:border-orange-500 focus:outline-none">
+            <!-- Date Range Popover Trigger -->
+            <div id="dateSearchWrapper" class="relative">
+              <button type="button" onclick="toggleDatePopover(event)" class="w-full sm:w-auto flex items-center justify-between gap-2.5 bg-[#0d1017] border border-white/10 hover:border-orange-500/45 rounded-xl px-3.5 py-2 text-left transition cursor-pointer">
+                <div class="flex items-center min-w-0">
+                  <svg class="w-4 h-4 text-orange-400 shrink-0 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                  </svg>
+                  <span id="dateSearchSummary" class="text-xs text-slate-400 truncate">Date Range</span>
                 </div>
-                <div>
-                  <label class="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block mb-1">End</label>
-                  <input type="date" id="dateEnd" onchange="onDateRangeChanged()" class="w-full bg-zinc-900 border border-white/20 rounded-xl px-3 py-2 text-zinc-100 focus:border-orange-500 focus:outline-none">
+                <span id="dateActiveBadge" class="hidden text-[10px] font-bold bg-orange-500/20 text-orange-300 px-1.5 py-0.5 rounded-md">Active</span>
+              </button>
+
+              <!-- Date Popover -->
+              <div id="datePopover" onclick="event.stopPropagation()" class="hidden absolute right-0 mt-2 w-full sm:w-80 surface-card rounded-2xl p-4 z-50 space-y-3 border border-white/15">
+                <div class="flex items-center justify-between border-b border-white/10 pb-2">
+                  <span class="text-xs font-bold text-white">Filter by Last Update</span>
+                  <button type="button" onclick="clearDateFilter()" class="text-xs font-semibold text-rose-400 hover:text-rose-300 cursor-pointer">Reset</button>
+                </div>
+                <div class="grid grid-cols-2 gap-2.5 text-xs">
+                  <div>
+                    <label class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">From</label>
+                    <input type="date" id="dateStart" onchange="onDateRangeChanged()" class="w-full bg-[#090b10] border border-white/15 rounded-xl px-2.5 py-1.5 text-slate-100 focus:border-orange-500 focus:outline-none">
+                  </div>
+                  <div>
+                    <label class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">To</label>
+                    <input type="date" id="dateEnd" onchange="onDateRangeChanged()" class="w-full bg-[#090b10] border border-white/15 rounded-xl px-2.5 py-1.5 text-slate-100 focus:border-orange-500 focus:outline-none">
+                  </div>
                 </div>
               </div>
+            </div>
+
+            <!-- Admin Action Button -->
+            <div id="sidebarActionWrap" class="hidden">
+              <button id="btnNewTicket" onclick="openAddModal()" class="w-full sm:w-auto bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-slate-950 px-4 py-2 rounded-xl text-xs font-extrabold shadow-lg shadow-orange-500/25 transition cursor-pointer flex items-center justify-center gap-1.5">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.6" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                <span>New Work Order</span>
+              </button>
             </div>
           </div>
         </div>
       </header>
 
-      <!-- Zone 2: WEEKLY WORK ORDERS (Neon Border + Sticky Box Header + 6 KPI Cards + Auto-Expanded Weekly Panel) -->
-      <section class="neon-weekly rounded-2xl pb-4 md:pb-5 space-y-4">
-        <div class="sticky-box-header rounded-t-2xl px-4 md:px-5 py-3 flex flex-wrap items-center justify-between gap-2">
-          <div class="flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-orange-500 shadow-[0_0_8px_#f97316]"></span>
-            <h2 class="text-xs font-extrabold uppercase tracking-wider text-zinc-200">WEEKLY WORK ORDERS</h2>
+      <!-- Main Content Container -->
+      <main class="flex-1 p-4 md:p-8 max-w-[1600px] w-full mx-auto space-y-8">
+
+        <!-- Section 1: Weekly Overview Bento Grid -->
+        <section class="space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-2.5">
+              <div class="w-2 h-5 rounded-full bg-gradient-to-b from-orange-400 to-amber-600"></div>
+              <h2 class="text-sm font-extrabold uppercase tracking-wider text-slate-200">Weekly Overview</h2>
+              <span class="text-xs text-slate-500 hidden sm:inline">• Click any metric card to inspect list</span>
+            </div>
           </div>
-          <span id="weekRangeBadge" class="text-[11px] font-mono text-zinc-400 bg-zinc-900 border border-orange-500/35 px-2.5 py-0.5 rounded-lg"></span>
-        </div>
 
-        <div class="px-4 md:px-5 space-y-4">
-          <div id="kpi-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3.5"></div>
+          <!-- 6 Modern KPI Cards -->
+          <div id="kpi-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3.5"></div>
 
-          <!-- Auto-Expanded Weekly Data Panel when a KPI card is clicked -->
-          <div id="weeklyExpandedPanel" class="hidden card-dark rounded-2xl shadow-xl border-orange-500/60">
-            <div class="px-4 py-3 bg-zinc-900/90 border-b border-white/15 rounded-t-2xl flex flex-wrap items-center justify-between gap-2">
+          <!-- Expanded Weekly Data Drawer -->
+          <div id="weeklyExpandedPanel" class="hidden surface-card rounded-2xl overflow-hidden border border-orange-500/35">
+            <div class="px-5 py-3.5 bg-orange-500/[0.06] border-b border-white/10 flex flex-wrap items-center justify-between gap-2">
               <div class="flex items-center gap-2.5">
-                <span class="px-2 py-0.5 rounded bg-orange-500/20 border border-orange-500/40 text-orange-400 text-[10px] font-extrabold uppercase tracking-wider">Weekly View</span>
+                <span class="px-2.5 py-0.5 rounded-full bg-orange-500/20 text-orange-300 text-[10px] font-extrabold uppercase tracking-wider">Filtered View</span>
                 <h3 id="weeklyExpandedTitle" class="text-xs sm:text-sm font-extrabold text-white"></h3>
-                <span id="weeklyExpandedCount" class="text-[11px] font-mono text-zinc-400"></span>
+                <span id="weeklyExpandedCount" class="text-xs font-mono-code text-slate-400"></span>
               </div>
-              <button type="button" onclick="clearWeeklyKpiFilter()" class="text-xs font-semibold text-zinc-300 hover:text-white bg-zinc-800 hover:bg-zinc-700 border border-white/15 px-3 py-1 rounded-lg transition cursor-pointer">
-                ✕ Close Weekly View
+              <button type="button" onclick="clearWeeklyKpiFilter()" class="text-xs font-semibold text-slate-300 hover:text-white bg-white/[0.06] hover:bg-white/[0.12] px-3 py-1.5 rounded-xl transition cursor-pointer">
+                ✕ Close View
               </button>
             </div>
-            <div class="overflow-x-auto rounded-b-2xl" id="weekly-table-container"></div>
+            <div class="overflow-x-auto" id="weekly-table-container"></div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <!-- Zone 3: NEED ATTENTION WORK ORDERS (Neon Border + Sticky Box Header + Clean 3-Point Toggle Cards + Expandable Detail Panel) -->
-      <section id="needAttentionSection" class="neon-attention rounded-2xl pb-4 md:pb-5 space-y-4">
-        <div class="sticky-box-header rounded-t-2xl px-4 md:px-5 py-3 flex flex-wrap items-center justify-between gap-2">
-          <div class="flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_8px_#fbbf24]"></span>
-            <h2 class="text-xs font-extrabold uppercase tracking-wider text-zinc-200">NEED ATTENTION WORK ORDERS</h2>
+        <!-- Section 2: Need Attention Work Orders -->
+        <section id="needAttentionSection" class="space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-2.5">
+              <div class="w-2 h-5 rounded-full bg-gradient-to-b from-sky-400 to-indigo-500"></div>
+              <h2 class="text-sm font-extrabold uppercase tracking-wider text-slate-200">Need Attention Queue</h2>
+              <span class="text-xs text-slate-500 hidden sm:inline">• Active tickets awaiting completion</span>
+            </div>
           </div>
-          <span class="text-[10.5px] text-zinc-400">Click All, Mapping, or Survey to toggle • Active items only</span>
-        </div>
 
-        <div class="px-4 md:px-5 space-y-5">
-          <!-- Clean 3 Point Cards: All, Mapping, Survey (No extra badge text; click to expand/unexpand) -->
+          <!-- 3 Division Selector Cards -->
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <!-- All -->
-            <button type="button" onclick="selectDivisionTab('All')" id="btn-div-All" class="group flex items-center gap-3.5 px-5 py-4 rounded-2xl border transition text-left bg-zinc-900/90 border-white/15 hover:border-orange-500/75 hover:shadow-[0_0_16px_-2px_rgba(249,115,22,0.3)] cursor-pointer">
-              <span class="w-11 h-11 rounded-xl bg-zinc-950 border border-white/15 flex items-center justify-center text-orange-400 group-hover:border-orange-500/60 transition shrink-0">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                  <rect x="3" y="3" width="7" height="7" rx="1.5"/>
-                  <rect x="14" y="3" width="7" height="7" rx="1.5"/>
-                  <rect x="3" y="14" width="7" height="7" rx="1.5"/>
-                  <rect x="14" y="14" width="7" height="7" rx="1.5"/>
-                </svg>
-              </span>
-              <div class="min-w-0">
-                <p class="text-base font-extrabold text-white tracking-tight">All</p>
-                <p class="text-xs text-zinc-400 font-medium"><span id="count-All">0</span> Need Attention</p>
+            <!-- All Queue -->
+            <button type="button" onclick="selectDivisionTab('All')" id="btn-div-All" class="surface-card surface-card-hover group flex items-center justify-between p-5 rounded-2xl text-left cursor-pointer">
+              <div class="flex items-center gap-4 min-w-0">
+                <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500/20 to-amber-500/10 border border-orange-500/30 flex items-center justify-center text-orange-400 shrink-0 group-hover:scale-105 transition">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+                  </svg>
+                </div>
+                <div class="min-w-0">
+                  <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Combined Queue</p>
+                  <p class="text-lg font-extrabold text-white tracking-tight mt-0.5">All Divisions</p>
+                  <p class="text-xs text-slate-400 mt-0.5"><span id="count-All" class="font-bold text-orange-400">0</span> active work orders</p>
+                </div>
               </div>
+              <span class="div-chevron w-8 h-8 rounded-full bg-white/[0.04] flex items-center justify-center text-slate-400 group-hover:text-white transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+              </span>
             </button>
 
-            <!-- Mapping -->
-            <button type="button" onclick="selectDivisionTab('Mapping')" id="btn-div-Mapping" class="group flex items-center gap-3.5 px-5 py-4 rounded-2xl border transition text-left bg-zinc-900/90 border-white/15 hover:border-orange-500/75 hover:shadow-[0_0_16px_-2px_rgba(249,115,22,0.3)] cursor-pointer">
-              <span class="w-11 h-11 rounded-xl bg-zinc-950 border border-white/15 flex items-center justify-center text-amber-400 group-hover:border-orange-500/60 transition shrink-0">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 4h11a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V4z"/>
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 4a2 2 0 0 0-2 2v1a1 1 0 0 0 1 1h1"/>
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 17h1a1 1 0 0 1 1 1v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2"/>
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M9.5 9.5l2 2m0-2l-2 2"/>
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12.5 13.5c1.2-.8 2.2-.3 3 0"/>
-                  <circle cx="15.5" cy="9" r="1" fill="currentColor"/>
-                </svg>
-              </span>
-              <div class="min-w-0">
-                <p class="text-base font-extrabold text-white tracking-tight">Mapping</p>
-                <p class="text-xs text-zinc-400 font-medium"><span id="count-Mapping">0</span> Need Attention</p>
+            <!-- Mapping Queue -->
+            <button type="button" onclick="selectDivisionTab('Mapping')" id="btn-div-Mapping" class="surface-card surface-card-hover group flex items-center justify-between p-5 rounded-2xl text-left cursor-pointer">
+              <div class="flex items-center gap-4 min-w-0">
+                <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-sky-500/20 to-cyan-500/10 border border-sky-500/30 flex items-center justify-center text-sky-400 shrink-0 group-hover:scale-105 transition">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+                  </svg>
+                </div>
+                <div class="min-w-0">
+                  <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Coverage &amp; Route</p>
+                  <p class="text-lg font-extrabold text-white tracking-tight mt-0.5">Mapping</p>
+                  <p class="text-xs text-slate-400 mt-0.5"><span id="count-Mapping" class="font-bold text-sky-400">0</span> active work orders</p>
+                </div>
               </div>
+              <span class="div-chevron w-8 h-8 rounded-full bg-white/[0.04] flex items-center justify-center text-slate-400 group-hover:text-white transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+              </span>
             </button>
 
-            <!-- Survey -->
-            <button type="button" onclick="selectDivisionTab('Survey')" id="btn-div-Survey" class="group flex items-center gap-3.5 px-5 py-4 rounded-2xl border transition text-left bg-zinc-900/90 border-white/15 hover:border-orange-500/75 hover:shadow-[0_0_16px_-2px_rgba(249,115,22,0.3)] cursor-pointer">
-              <span class="w-11 h-11 rounded-xl bg-zinc-950 border border-white/15 flex items-center justify-center text-orange-400 group-hover:border-orange-500/60 transition shrink-0">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                  <circle cx="6" cy="19" r="3"/>
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/>
-                  <circle cx="18" cy="5" r="3"/>
-                </svg>
-              </span>
-              <div class="min-w-0">
-                <p class="text-base font-extrabold text-white tracking-tight">Survey</p>
-                <p class="text-xs text-zinc-400 font-medium"><span id="count-Survey">0</span> Need Attention</p>
+            <!-- Survey Queue -->
+            <button type="button" onclick="selectDivisionTab('Survey')" id="btn-div-Survey" class="surface-card surface-card-hover group flex items-center justify-between p-5 rounded-2xl text-left cursor-pointer">
+              <div class="flex items-center gap-4 min-w-0">
+                <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-teal-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0 group-hover:scale-105 transition">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><circle cx="12" cy="11" r="3"/>
+                  </svg>
+                </div>
+                <div class="min-w-0">
+                  <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Field &amp; BOQ</p>
+                  <p class="text-lg font-extrabold text-white tracking-tight mt-0.5">Survey</p>
+                  <p class="text-xs text-slate-400 mt-0.5"><span id="count-Survey" class="font-bold text-emerald-400">0</span> active work orders</p>
+                </div>
               </div>
+              <span class="div-chevron w-8 h-8 rounded-full bg-white/[0.04] flex items-center justify-center text-slate-400 group-hover:text-white transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+              </span>
             </button>
           </div>
 
-          <!-- Expandable Detail Panel for the Selected Point (Unexpanded / Hidden by default) -->
-          <div id="needAttentionExpandedPanel" class="hidden space-y-4">
-            <div id="workOrderControlPanel" class="card-dark rounded-2xl px-4 py-3">
+          <!-- Expandable Detail Panel -->
+          <div id="needAttentionExpandedPanel" class="hidden space-y-4 pt-1">
+            <div id="workOrderControlPanel" class="surface-card rounded-2xl px-4 py-3">
               <div id="divisionFilterPanel" class="flex flex-wrap justify-between items-center gap-3">
                 <div id="status-filter-pills" class="flex gap-1.5 overflow-x-auto pb-1 sm:pb-0"></div>
 
-                <select id="coverageFilter" onchange="renderActiveTab()" class="hidden bg-zinc-900 border border-white/20 text-zinc-200 rounded-xl px-3 py-1.5 text-xs font-medium focus:outline-none focus:border-orange-500">
+                <select id="coverageFilter" onchange="renderActiveTab()" class="hidden bg-[#0d1017] border border-white/15 text-slate-200 rounded-xl px-3 py-1.5 text-xs font-semibold focus:outline-none focus:border-orange-500">
                   <option value="ALL">Coverage: All</option>
                   <option value="Onet">Onet</option>
                   <option value="Partner">Partner</option>
@@ -329,44 +369,48 @@
 
             <!-- Loader -->
             <div id="loader" class="text-center py-14 hidden">
-              <div class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-orange-500 mb-3"></div>
-              <p class="text-sm text-zinc-400 font-medium">Loading work orders...</p>
+              <div class="inline-block animate-spin rounded-full h-8 w-8 border-2 border-orange-500 border-t-transparent mb-3"></div>
+              <p class="text-xs text-slate-400 font-medium">Fetching work orders...</p>
             </div>
 
-            <!-- Main Data Table Wrapper -->
-            <div id="table-wrapper" class="card-dark rounded-2xl shadow-xl">
-              <div class="overflow-x-auto rounded-2xl" id="main-table-container"></div>
+            <!-- Main Data Table -->
+            <div id="table-wrapper" class="surface-card rounded-2xl overflow-hidden">
+              <div class="overflow-x-auto" id="main-table-container"></div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </main>
     </div>
   </div>
 
-  <!-- Modal New Work Order -->
-  <div id="addModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
-    <div class="card-dark rounded-2xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl">
-      <div class="flex justify-between items-center mb-4 border-b border-white/15 pb-3">
-        <h2 class="text-lg font-bold text-white">Create New Work Order</h2>
-        <button onclick="closeAddModal()" class="text-zinc-400 hover:text-white text-xl cursor-pointer">&times;</button>
+  <!-- Modal: Create New Work Order -->
+  <div id="addModal" class="fixed inset-0 bg-black/75 backdrop-blur-md hidden items-center justify-center p-4 z-50">
+    <div class="surface-card rounded-3xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto border border-white/15">
+      <div class="flex justify-between items-center mb-5 pb-3 border-b border-white/10">
+        <div>
+          <span class="text-[10px] font-bold uppercase tracking-widest text-orange-400">Work Order Dispatch</span>
+          <h2 class="text-lg font-extrabold text-white">Create New Work Order</h2>
+        </div>
+        <button onclick="closeAddModal()" class="w-8 h-8 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-slate-400 hover:text-white flex items-center justify-center cursor-pointer">&times;</button>
       </div>
 
-      <div class="space-y-3.5 text-xs">
+      <div class="space-y-4 text-xs">
         <div>
-          <label class="text-orange-400 font-bold block mb-1">Work Order Type *</label>
-          <select id="newTicketType" onchange="toggleNewTicketFields()" class="w-full bg-zinc-900 border border-orange-500/40 rounded-xl px-3 py-2 font-semibold text-white">
-            <option value="Survey">Survey (through Forward WO Installation)</option>
-            <option value="Mapping">Mapping (Coverage &amp; Description)</option>
+          <label class="text-slate-300 font-bold block mb-1.5">Work Order Type *</label>
+          <select id="newTicketType" onchange="toggleNewTicketFields()" class="w-full bg-[#0d1017] border border-orange-500/40 rounded-xl px-3.5 py-2.5 font-semibold text-white focus:outline-none">
+            <option value="Survey">Survey (5-Stage Pipeline)</option>
+            <option value="Mapping">Mapping (Coverage &amp; Route)</option>
           </select>
         </div>
+
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label class="text-zinc-400 font-semibold block mb-1">Work Order / Customer *</label>
-            <input type="text" id="newCustomer" placeholder="e.g., PT Hura Jaya" class="w-full bg-zinc-900 border border-white/20 rounded-xl px-3 py-2 text-white">
+            <label class="text-slate-300 font-semibold block mb-1.5">Customer / Site Name *</label>
+            <input type="text" id="newCustomer" placeholder="e.g., PT Hura Jaya" class="w-full bg-[#0d1017] border border-white/15 rounded-xl px-3.5 py-2.5 text-white focus:border-orange-500 focus:outline-none">
           </div>
           <div id="newSurveyStatusWrap">
-            <label class="text-zinc-400 font-semibold block mb-1">Work Order Status</label>
-            <select id="newSurveyStatus" class="w-full bg-zinc-900 border border-white/20 rounded-xl px-3 py-2 text-white">
+            <label class="text-slate-300 font-semibold block mb-1.5">Initial Status</label>
+            <select id="newSurveyStatus" class="w-full bg-[#0d1017] border border-white/15 rounded-xl px-3.5 py-2.5 text-white focus:outline-none">
               <option value="Open" selected>Open</option>
               <option value="On Progress">On Progress</option>
               <option value="Pending">Pending</option>
@@ -376,148 +420,123 @@
           </div>
         </div>
 
-        <div id="newSurveyFields" class="space-y-3">
+        <div id="newSurveyFields" class="space-y-3 bg-white/[0.02] p-3.5 rounded-2xl border border-white/[0.07]">
+          <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Initial Stage States</p>
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="text-zinc-400 font-semibold block mb-1">1. Survey</label>
-              <select id="newSurveyProg" class="w-full bg-zinc-900 border border-white/20 rounded-xl px-3 py-2 text-white">
-                <option value="">Not Yet</option>
-                <option value="Done">Done</option>
-                <option value="On Progress">On Progress</option>
-                <option value="Pending">Pending</option>
-                <option value="Cancel">Cancel</option>
+              <label class="text-slate-400 font-semibold block mb-1">1. Survey</label>
+              <select id="newSurveyProg" class="w-full bg-[#0d1017] border border-white/15 rounded-xl px-3 py-2 text-white">
+                <option value="">Not Yet</option><option value="Done">Done</option><option value="On Progress">On Progress</option><option value="Pending">Pending</option><option value="Cancel">Cancel</option>
               </select>
             </div>
             <div>
-              <label class="text-zinc-400 font-semibold block mb-1">2. Report Survey</label>
-              <select id="newReportSurvey" class="w-full bg-zinc-900 border border-white/20 rounded-xl px-3 py-2 text-white">
-                <option value="">Not Yet</option>
-                <option value="Done">Done</option>
-                <option value="On Progress">On Progress</option>
-                <option value="Pending">Pending</option>
-                <option value="Cancel">Cancel</option>
+              <label class="text-slate-400 font-semibold block mb-1">2. Report Survey</label>
+              <select id="newReportSurvey" class="w-full bg-[#0d1017] border border-white/15 rounded-xl px-3 py-2 text-white">
+                <option value="">Not Yet</option><option value="Done">Done</option><option value="On Progress">On Progress</option><option value="Pending">Pending</option><option value="Cancel">Cancel</option>
               </select>
             </div>
           </div>
 
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="text-zinc-400 font-semibold block mb-1">3. BOQ</label>
-              <select id="newBoq" class="w-full bg-zinc-900 border border-white/20 rounded-xl px-3 py-2 text-white">
-                <option value="">Not Yet</option>
-                <option value="Done">Done</option>
-                <option value="On Progress">On Progress</option>
-                <option value="Pending">Pending</option>
-                <option value="Cancel">Cancel</option>
+              <label class="text-slate-400 font-semibold block mb-1">3. BOQ</label>
+              <select id="newBoq" class="w-full bg-[#0d1017] border border-white/15 rounded-xl px-3 py-2 text-white">
+                <option value="">Not Yet</option><option value="Done">Done</option><option value="On Progress">On Progress</option><option value="Pending">Pending</option><option value="Cancel">Cancel</option>
               </select>
             </div>
             <div>
-              <label class="text-zinc-400 font-semibold block mb-1">4. Preparing Network Materials and Equipment</label>
-              <select id="newMaterialEquip" class="w-full bg-zinc-900 border border-white/20 rounded-xl px-3 py-2 text-white">
-                <option value="">Not Yet</option>
-                <option value="Done">Done</option>
-                <option value="On Progress">On Progress</option>
-                <option value="Pending">Pending</option>
-                <option value="Waiting Approval">Waiting Approval</option>
-                <option value="Cancel">Cancel</option>
+              <label class="text-slate-400 font-semibold block mb-1">4. Materials &amp; Equip.</label>
+              <select id="newMaterialEquip" class="w-full bg-[#0d1017] border border-white/15 rounded-xl px-3 py-2 text-white">
+                <option value="">Not Yet</option><option value="Done">Done</option><option value="On Progress">On Progress</option><option value="Pending">Pending</option><option value="Waiting Approval">Waiting Approval</option><option value="Cancel">Cancel</option>
               </select>
             </div>
           </div>
 
           <div>
-            <label class="text-zinc-400 font-semibold block mb-1">5. Forward WO Installation</label>
-            <select id="newForwardWo" class="w-full bg-zinc-900 border border-white/20 rounded-xl px-3 py-2 text-white">
-              <option value="">Not Yet</option>
-              <option value="Done">Done</option>
-              <option value="On Progress">On Progress</option>
-              <option value="Pending">Pending</option>
-              <option value="Cancel">Cancel</option>
+            <label class="text-slate-400 font-semibold block mb-1">5. Forward WO Installation</label>
+            <select id="newForwardWo" class="w-full bg-[#0d1017] border border-white/15 rounded-xl px-3 py-2 text-white">
+              <option value="">Not Yet</option><option value="Done">Done</option><option value="On Progress">On Progress</option><option value="Pending">Pending</option><option value="Cancel">Cancel</option>
             </select>
           </div>
         </div>
 
-        <div id="newMappingFields" class="space-y-3 hidden">
+        <div id="newMappingFields" class="space-y-3 hidden bg-white/[0.02] p-3.5 rounded-2xl border border-white/[0.07]">
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="text-zinc-400 font-semibold block mb-1">Mapping Status</label>
-              <select id="newMappingStatus" class="w-full bg-zinc-950 border border-white/20 rounded-xl px-3 py-2 text-white">
-                <option value="Open">Open</option>
-                <option value="On Progress" selected>On Progress</option>
-                <option value="Pending">Pending</option>
-                <option value="Done">Done</option>
+              <label class="text-slate-400 font-semibold block mb-1">Mapping Status</label>
+              <select id="newMappingStatus" class="w-full bg-[#0d1017] border border-white/15 rounded-xl px-3 py-2 text-white">
+                <option value="Open">Open</option><option value="On Progress" selected>On Progress</option><option value="Pending">Pending</option><option value="Done">Done</option>
               </select>
             </div>
             <div>
-              <label class="text-zinc-400 font-semibold block mb-1">Coverage</label>
-              <select id="newCoverage" class="w-full bg-zinc-950 border border-white/20 rounded-xl px-3 py-2 text-white">
-                <option value="">Not Yet</option>
-                <option value="Onet">Onet</option>
-                <option value="Partner">Partner</option>
-                <option value="Not Cover">Not Cover</option>
+              <label class="text-slate-400 font-semibold block mb-1">Coverage</label>
+              <select id="newCoverage" class="w-full bg-[#0d1017] border border-white/15 rounded-xl px-3 py-2 text-white">
+                <option value="">Not Yet</option><option value="Onet">Onet</option><option value="Partner">Partner</option><option value="Not Cover">Not Cover</option>
               </select>
             </div>
           </div>
           <div>
-            <label class="text-zinc-400 font-semibold block mb-1">Description</label>
-            <textarea id="newMappingDesc" rows="3" placeholder="Vendor details, fiber route distance, coordinates..." class="w-full bg-zinc-950 border border-white/20 rounded-xl px-3 py-2 text-white"></textarea>
+            <label class="text-slate-400 font-semibold block mb-1">Technical Notes / Coordinates</label>
+            <textarea id="newMappingDesc" rows="3" placeholder="Vendor details, fiber route distance, coordinates..." class="w-full bg-[#0d1017] border border-white/15 rounded-xl px-3 py-2 text-white focus:border-orange-500 focus:outline-none"></textarea>
           </div>
         </div>
       </div>
 
-      <div class="flex justify-end gap-2 mt-6 pt-3 border-t border-white/15">
-        <button onclick="closeAddModal()" class="px-4 py-2 text-xs text-zinc-400 hover:text-white font-medium cursor-pointer">Cancel</button>
-        <button onclick="submitNewTicket()" id="btnSubmitNew" class="bg-orange-600 hover:bg-orange-500 text-white px-5 py-2 rounded-xl text-xs font-bold shadow cursor-pointer">Create &amp; Notify</button>
+      <div class="flex justify-end gap-2.5 mt-6 pt-4 border-t border-white/10">
+        <button onclick="closeAddModal()" class="px-4 py-2 rounded-xl text-xs text-slate-400 hover:text-white hover:bg-white/[0.05] font-semibold cursor-pointer">Cancel</button>
+        <button onclick="submitNewTicket()" id="btnSubmitNew" class="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-slate-950 px-5 py-2 rounded-xl text-xs font-extrabold shadow-lg shadow-orange-500/20 cursor-pointer">Create &amp; Notify</button>
       </div>
     </div>
   </div>
 
-  <!-- Modal Activity Log / All Activity Log & Vertical PDF -->
-  <div id="historyModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
-    <div class="card-dark rounded-2xl p-6 w-full max-w-3xl max-h-[88vh] flex flex-col shadow-2xl">
-      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 border-b border-white/15 pb-4">
+  <!-- Modal: Activity Log & Vertical PDF -->
+  <div id="historyModal" class="fixed inset-0 bg-black/75 backdrop-blur-md hidden items-center justify-center p-4 z-50">
+    <div class="surface-card rounded-3xl p-6 w-full max-w-3xl max-h-[88vh] flex flex-col border border-white/15">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 pb-4 border-b border-white/10">
         <div>
-          <span id="historyTypeLabel" class="text-[10px] uppercase tracking-wider text-orange-400 font-bold">All Activity Log</span>
+          <span id="historyTypeLabel" class="text-[10px] uppercase tracking-widest text-orange-400 font-bold">All Activity Log</span>
           <h2 id="historyModalTitle" class="text-base font-extrabold text-white mt-0.5">All Activity Log</h2>
         </div>
 
         <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
-          <select id="historyCustomerFilter" onchange="onHistoryFilterChange()" class="bg-zinc-900 border border-white/20 text-zinc-200 rounded-xl px-3 py-1.5 text-xs font-medium max-w-[220px]"></select>
-          <button onclick="exportHistoryPDF()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-lg shadow-emerald-600/20 cursor-pointer">
-            <span>📄</span> Export PDF (Portrait)
+          <select id="historyCustomerFilter" onchange="onHistoryFilterChange()" class="bg-[#0d1017] border border-white/15 text-slate-200 rounded-xl px-3 py-1.5 text-xs font-medium max-w-[220px]"></select>
+          <button onclick="exportHistoryPDF()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-3.5 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-1.5 shadow-lg shadow-emerald-500/20 cursor-pointer transition">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            Export PDF
           </button>
-          <button onclick="closeHistoryModal()" class="bg-zinc-800 hover:bg-zinc-700 border border-white/15 text-zinc-200 px-3 py-1 rounded-xl text-sm font-bold cursor-pointer">&times;</button>
+          <button onclick="closeHistoryModal()" class="w-8 h-8 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-slate-300 flex items-center justify-center text-sm font-bold cursor-pointer">&times;</button>
         </div>
       </div>
 
       <div id="historyLoader" class="text-center py-12 hidden">
-        <div class="inline-block animate-spin rounded-full h-7 w-7 border-t-2 border-b-2 border-orange-500 mb-2"></div>
-        <p class="text-xs text-zinc-400">Loading Activity Log...</p>
+        <div class="inline-block animate-spin rounded-full h-7 w-7 border-2 border-orange-500 border-t-transparent mb-2"></div>
+        <p class="text-xs text-slate-400">Loading Activity Log...</p>
       </div>
 
       <div id="historyListContainer" class="overflow-y-auto space-y-3 pr-1 flex-1"></div>
     </div>
   </div>
 
-  <!-- Settings Modal -->
-  <div id="settingsModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
-    <div class="card-dark rounded-2xl p-6 w-full max-w-md shadow-2xl">
-      <div class="flex justify-between items-center mb-4 border-b border-white/15 pb-3">
-        <h2 class="text-base font-bold text-white">System &amp; Access Info</h2>
-        <button onclick="closeSettingsModal()" class="text-zinc-400 hover:text-white text-xl cursor-pointer">&times;</button>
+  <!-- Modal: System & Access -->
+  <div id="settingsModal" class="fixed inset-0 bg-black/75 backdrop-blur-md hidden items-center justify-center p-4 z-50">
+    <div class="surface-card rounded-3xl p-6 w-full max-w-md border border-white/15">
+      <div class="flex justify-between items-center mb-4 pb-3 border-b border-white/10">
+        <h2 class="text-base font-extrabold text-white">System &amp; Access Info</h2>
+        <button onclick="closeSettingsModal()" class="w-8 h-8 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-slate-400 hover:text-white flex items-center justify-center cursor-pointer">&times;</button>
       </div>
-      <div class="space-y-3 text-xs text-zinc-300">
-        <div class="bg-zinc-950 p-3.5 rounded-xl border border-white/15">
-          <p class="text-zinc-500 text-[10px]">Current Session Status</p>
-          <p id="settingsAuthStatus" class="font-bold text-white text-sm mt-0.5">Viewer Mode (Read-Only)</p>
+      <div class="space-y-3 text-xs text-slate-300">
+        <div class="bg-[#0d1017] p-4 rounded-2xl border border-white/[0.08]">
+          <p class="text-slate-500 text-[10px] uppercase tracking-wider font-bold">Session Role</p>
+          <p id="settingsAuthStatus" class="font-bold text-white text-sm mt-1">Viewer Mode (Read-Only)</p>
         </div>
-        <div class="bg-zinc-950 p-3.5 rounded-xl border border-white/15">
-          <p class="text-zinc-500 text-[10px]">Application Version</p>
-          <p class="font-semibold text-white mt-0.5">BLiP Work Order Monitoring Dashboard v4.4.1</p>
-          <p class="text-[10px] text-zinc-500 mt-1">Neon Borders • Collapsible Sidebar • Dual Freeze • Toggleable 3-Point Need Attention</p>
+        <div class="bg-[#0d1017] p-4 rounded-2xl border border-white/[0.08]">
+          <p class="text-slate-500 text-[10px] uppercase tracking-wider font-bold">Build Release</p>
+          <p class="font-bold text-white mt-1">BLiP OpsPulse Dashboard v5.0</p>
+          <p class="text-[11px] text-slate-400 mt-1">Modern Glass-Slate UI • Bento Metrics • Interactive 5-Stage Pipeline</p>
         </div>
       </div>
       <div class="mt-5 flex justify-end">
-        <button onclick="closeSettingsModal()" class="bg-orange-600 hover:bg-orange-500 text-white px-4 py-2 rounded-xl text-xs font-semibold shadow cursor-pointer">Close</button>
+        <button onclick="closeSettingsModal()" class="bg-orange-500 hover:bg-orange-400 text-slate-950 px-4 py-2 rounded-xl text-xs font-extrabold cursor-pointer">Done</button>
       </div>
     </div>
   </div>
@@ -532,16 +551,15 @@
       { key: "survey", label: "Survey", fullLabel: "Survey", bracketTags: ["survey"], opts: ["Not Yet", "Done", "On Progress", "Pending", "Cancel"] },
       { key: "reportSurvey", label: "Report Survey", fullLabel: "Report Survey", bracketTags: ["report survey", "staging"], opts: ["Not Yet", "Done", "On Progress", "Pending", "Cancel"] },
       { key: "boq", label: "BOQ", fullLabel: "BOQ", bracketTags: ["boq", "po procurement", "po"], opts: ["Not Yet", "Done", "On Progress", "Pending", "Cancel"] },
-      { key: "materialEquip", label: "Preparing Network Materials and Equipment", fullLabel: "Preparing Network Materials and Equipment", bracketTags: ["preparing network materials and equipment", "material & equipment", "material", "procurement"], opts: ["Not Yet", "Done", "On Progress", "Pending", "Waiting Approval", "Cancel"] },
-      { key: "forwardWo", label: "Forward WO Installation", fullLabel: "Forward WO Installation", bracketTags: ["forward wo installation", "forward wo", "installation wo"], opts: ["Not Yet", "Done", "On Progress", "Pending", "Cancel"] }
+      { key: "materialEquip", label: "Materials & Equip.", fullLabel: "Preparing Network Materials and Equipment", bracketTags: ["preparing network materials and equipment", "material & equipment", "material", "procurement"], opts: ["Not Yet", "Done", "On Progress", "Pending", "Waiting Approval", "Cancel"] },
+      { key: "forwardWo", label: "Forward WO", fullLabel: "Forward WO Installation", bracketTags: ["forward wo installation", "forward wo", "installation wo"], opts: ["Not Yet", "Done", "On Progress", "Pending", "Cancel"] }
     ];
 
     let appData = { survey: [], mapping: [] };
     let activeTab = "All";
-    let needAttentionExpanded = false; // Default unexpanded until one of the 3 points is clicked
+    let needAttentionExpanded = false;
     let currentStatusFilter = "NEED_ATTENTION";
     let activeWeeklyKpi = null;
-
     let sidebarCollapsed = false;
 
     let authToken = "";
@@ -558,7 +576,7 @@
     let allHistoryForType = [];
     let filteredHistoryLogs = [];
 
-    // ================= SIDEBAR EXPAND & UNEXPAND =================
+    // ================= SIDEBAR COLLAPSE =================
     function toggleSidebarExpand() {
       sidebarCollapsed = !sidebarCollapsed;
       applySidebarExpandUI();
@@ -568,44 +586,34 @@
       const aside = document.getElementById("mainSidebar");
       const brandFull = document.getElementById("sidebarBrandFull");
       const headerRow = document.getElementById("sidebarHeaderRow");
-      const refreshBtn = document.getElementById("btnSidebarRefresh");
-      const toggleIcon = document.getElementById("sidebarToggleIcon");
+      const toggleSvg = document.getElementById("sidebarToggleSvg");
       const labels = document.querySelectorAll(".sidebar-label");
       const navBtns = document.querySelectorAll(".nav-btn");
 
       if (!aside) return;
 
       if (sidebarCollapsed) {
-        aside.classList.remove("lg:w-72");
-        aside.classList.add("lg:w-20");
+        aside.classList.remove("lg:w-68");
+        aside.classList.add("lg:w-[76px]");
         brandFull.classList.add("lg:hidden");
-        headerRow.classList.remove("justify-between");
-        headerRow.classList.add("lg:flex-col", "lg:items-center");
-        refreshBtn.classList.add("lg:hidden");
-        toggleIcon.innerText = "»";
+        headerRow.classList.add("lg:justify-center");
+        toggleSvg.classList.add("rotate-180");
         labels.forEach(el => el.classList.add("lg:hidden"));
-        navBtns.forEach(btn => {
-          btn.classList.add("lg:justify-center", "lg:px-2");
-        });
+        navBtns.forEach(btn => btn.classList.add("lg:justify-center", "lg:px-0"));
       } else {
-        aside.classList.remove("lg:w-20");
-        aside.classList.add("lg:w-72");
+        aside.classList.remove("lg:w-[76px]");
+        aside.classList.add("lg:w-68");
         brandFull.classList.remove("lg:hidden");
-        headerRow.classList.add("justify-between");
-        headerRow.classList.remove("lg:flex-col", "lg:items-center");
-        refreshBtn.classList.remove("lg:hidden");
-        toggleIcon.innerText = "«";
+        headerRow.classList.remove("lg:justify-center");
+        toggleSvg.classList.remove("rotate-180");
         labels.forEach(el => el.classList.remove("lg:hidden"));
-        navBtns.forEach(btn => {
-          btn.classList.remove("lg:justify-center", "lg:px-2");
-        });
+        navBtns.forEach(btn => btn.classList.remove("lg:justify-center", "lg:px-0"));
       }
     }
 
     function toggleDatePopover(event) {
       event.stopPropagation();
-      const pop = document.getElementById("datePopover");
-      pop.classList.toggle("hidden");
+      document.getElementById("datePopover").classList.toggle("hidden");
     }
 
     document.addEventListener("click", function (e) {
@@ -623,14 +631,12 @@
       const badgeEl = document.getElementById("dateActiveBadge");
 
       if (!startVal && !endVal) {
-        summaryEl.innerText = "Search Work Orders By Date...";
-        summaryEl.className = "text-xs sm:text-sm text-zinc-400 truncate";
+        summaryEl.innerText = "Date Range";
+        summaryEl.className = "text-xs text-slate-400 truncate";
         badgeEl.classList.add("hidden");
       } else {
-        const sTxt = startVal || "...";
-        const eTxt = endVal || "...";
-        summaryEl.innerText = `${sTxt} – ${eTxt}`;
-        summaryEl.className = "text-xs sm:text-sm text-zinc-100 font-semibold truncate";
+        summaryEl.innerText = `${startVal || "..."} → ${endVal || "..."}`;
+        summaryEl.className = "text-xs text-slate-100 font-semibold truncate";
         badgeEl.classList.remove("hidden");
       }
     }
@@ -651,8 +657,7 @@
       const sunday = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + 6);
 
       const fmt = (d) => d.toLocaleDateString("en-US", { day: "2-digit", month: "short" });
-      const yr = sunday.getFullYear();
-      badge.innerText = `${fmt(monday)} – ${fmt(sunday)}, ${yr}`;
+      badge.innerText = `${fmt(monday)} – ${fmt(sunday)}, ${sunday.getFullYear()}`;
     }
 
     function initGoogleSignIn(attempt = 1) {
@@ -730,6 +735,7 @@
       const googleBtn = document.getElementById("googleBtnWrapper");
       const sidebarBadge = document.getElementById("sidebarUserBadge");
       const settingsStatus = document.getElementById("settingsAuthStatus");
+      const greetingEl = document.getElementById("friendlyGreeting");
 
       if (currentUser) {
         const isAdmin = currentUser.role === "Admin";
@@ -740,7 +746,9 @@
         sidebarBadge.classList.add("flex");
         document.getElementById("sidebarUserName").innerText = currentUser.name;
         document.getElementById("sidebarUserRole").innerText = currentUser.role || "Member";
+        document.getElementById("sidebarUserInitial").innerText = (currentUser.name || "U").charAt(0).toUpperCase();
         settingsStatus.innerText = `${currentUser.name} (${currentUser.email})`;
+        greetingEl.innerText = `Welcome back, ${currentUser.name.split(" ")[0]}! Monitor active surveys, mapping routes & handovers.`;
       } else {
         actionWrap.classList.add("hidden");
         btnNew.classList.add("hidden");
@@ -748,17 +756,18 @@
         sidebarBadge.classList.add("hidden");
         sidebarBadge.classList.remove("flex");
         settingsStatus.innerText = "Viewer Mode (Not Signed In)";
+        greetingEl.innerText = "Monitor active field surveys, dark fiber mapping & installation handovers.";
       }
       applySidebarExpandUI();
     }
 
     function setActiveNav(navId) {
       document.querySelectorAll(".nav-btn").forEach(b => {
-        b.className = "nav-btn w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-medium text-zinc-400 hover:bg-zinc-800/80 hover:text-white text-left transition cursor-pointer";
+        b.className = "nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium text-slate-400 hover:bg-white/[0.05] hover:text-slate-100 border border-transparent text-left transition cursor-pointer";
       });
       const activeEl = document.getElementById(`nav-${navId}`);
       if (activeEl) {
-        activeEl.className = "nav-btn w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold bg-orange-600 text-white shadow-[0_0_14px_rgba(249,115,22,0.45)] text-left transition cursor-pointer";
+        activeEl.className = "nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-orange-500/20 to-amber-500/10 text-orange-300 border border-orange-500/35 text-left transition cursor-pointer";
       }
       applySidebarExpandUI();
     }
@@ -832,22 +841,27 @@
     }
 
     function syncDivisionButtonsUI() {
+      const activeAccents = {
+        All: "border-orange-500/70 bg-orange-500/[0.08] ring-1 ring-orange-500/30",
+        Mapping: "border-sky-500/70 bg-sky-500/[0.08] ring-1 ring-sky-500/30",
+        Survey: "border-emerald-500/70 bg-emerald-500/[0.08] ring-1 ring-emerald-500/30"
+      };
+
       ["All", "Mapping", "Survey"].forEach(type => {
         const btn = document.getElementById(`btn-div-${type}`);
         if (!btn) return;
+        const chev = btn.querySelector(".div-chevron");
         const isSelectedAndExpanded = needAttentionExpanded && activeTab === type;
 
-        if (isSelectedAndExpanded) {
-          btn.className = "group flex items-center gap-3.5 px-5 py-4 rounded-2xl border transition text-left bg-orange-600/15 border-orange-500 shadow-[0_0_18px_rgba(249,115,22,0.35)] cursor-pointer";
-        } else {
-          btn.className = "group flex items-center gap-3.5 px-5 py-4 rounded-2xl border transition text-left bg-zinc-900/90 border-white/15 hover:border-orange-500/75 hover:shadow-[0_0_16px_-2px_rgba(249,115,22,0.3)] cursor-pointer";
+        btn.className = `surface-card surface-card-hover group flex items-center justify-between p-5 rounded-2xl text-left cursor-pointer ${isSelectedAndExpanded ? activeAccents[type] : ""}`;
+        if (chev) {
+          chev.classList.toggle("rotate-180", isSelectedAndExpanded);
+          chev.classList.toggle("text-white", isSelectedAndExpanded);
         }
       });
 
       const panel = document.getElementById("needAttentionExpandedPanel");
-      if (panel) {
-        panel.classList.toggle("hidden", !needAttentionExpanded);
-      }
+      if (panel) panel.classList.toggle("hidden", !needAttentionExpanded);
     }
 
     function selectDivisionTab(type) {
@@ -864,11 +878,7 @@
     }
 
     function selectKpiCard(kpiKey) {
-      if (activeWeeklyKpi === kpiKey) {
-        activeWeeklyKpi = null;
-      } else {
-        activeWeeklyKpi = kpiKey;
-      }
+      activeWeeklyKpi = activeWeeklyKpi === kpiKey ? null : kpiKey;
       renderCombinedKpi();
       renderWeeklyPanel();
     }
@@ -924,14 +934,14 @@
       panel.classList.remove("hidden");
 
       const labelMap = {
-        ALL: "Total Work Orders",
+        ALL: "All Weekly Work Orders",
         Open: "Open Work Orders",
         "On Progress": "On Progress Work Orders",
         Pending: "Pending Work Orders",
-        Cancel: "Cancel Work Orders",
+        Cancel: "Cancelled Work Orders",
         Closed: "Closed Work Orders"
       };
-      titleEl.innerText = labelMap[activeWeeklyKpi] || `Weekly ${activeWeeklyKpi}`;
+      titleEl.innerText = labelMap[activeWeeklyKpi] || activeWeeklyKpi;
 
       const searchQuery = document.getElementById("searchInput").value.toLowerCase();
 
@@ -951,10 +961,10 @@
         return (db ? db.getTime() : 0) - (da ? da.getTime() : 0);
       });
 
-      countEl.innerText = `(${items.length} work orders)`;
+      countEl.innerText = `${items.length} items`;
 
       if (items.length === 0) {
-        tableContainer.innerHTML = `<div class="text-center py-10 text-zinc-500 text-xs">No weekly work orders match "${labelMap[activeWeeklyKpi]}".</div>`;
+        tableContainer.innerHTML = `<div class="text-center py-12 text-slate-500 text-xs">No work orders match "${labelMap[activeWeeklyKpi]}".</div>`;
         return;
       }
 
@@ -969,38 +979,33 @@
 
         const r = item.rowIndex;
         return `
-          <tr class="border-b border-white/15 hover:bg-zinc-900/30 align-top transition divide-x divide-white/10">
-            <td class="py-4 px-4 font-extrabold text-zinc-500 text-sm w-12 text-center">${displayNo}</td>
+          <tr class="border-b border-white/[0.06] hover:bg-white/[0.02] align-top transition">
+            <td class="py-4 px-4 font-mono-code font-bold text-slate-500 text-xs w-12 text-center">${displayNo}</td>
             <td class="py-4 px-4 whitespace-nowrap">
               ${getStatusPillHtml(item.unifiedStatus)}
               <div class="mt-1.5">
-                <span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded bg-sky-500/15 text-sky-400 border border-sky-500/35">Mapping</span>
+                <span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-sky-500/10 text-sky-400 border border-sky-500/25">Mapping</span>
               </div>
             </td>
             <td class="py-4 px-4 min-w-[210px]">
-              <div class="flex items-start gap-2.5">
-                <span class="text-zinc-400 shrink-0 mt-0.5">🏢</span>
-                <div class="overflow-hidden">
-                  <p class="font-extrabold text-white text-sm leading-snug">${item.customer || "-"}</p>
-                  <span class="text-[11px] font-mono text-orange-400 font-bold">${item.ticketId}</span>
-                </div>
-              </div>
+              <p class="font-bold text-white text-sm leading-snug">${item.customer || "-"}</p>
+              <span class="text-[11px] font-mono-code text-orange-400 font-semibold mt-0.5 inline-block">${item.ticketId}</span>
             </td>
             <td class="py-4 px-4">
-              <div class="bg-zinc-950/80 border border-white/15 rounded-xl p-3.5 text-xs space-y-2.5">
+              <div class="bg-[#0d1017] border border-white/[0.08] rounded-2xl p-3.5 text-xs space-y-2.5">
                 <div class="flex flex-wrap items-center justify-between gap-2">
                   <div class="flex items-center gap-2">
-                    <span class="text-[10px] uppercase tracking-wider text-zinc-400 font-bold">Mapping Status:</span>
+                    <span class="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Status:</span>
                     ${canEdit ? `
-                      <select id="wk-map-status-${r}" class="bg-zinc-900 border border-white/20 rounded-lg px-2.5 py-1 text-xs font-bold text-white focus:border-orange-500 focus:outline-none">
+                      <select id="wk-map-status-${r}" class="bg-[#151923] border border-white/15 rounded-lg px-2.5 py-1 text-xs font-bold text-white focus:border-orange-500 focus:outline-none">
                         ${["Open", "On Progress", "Pending", "Done"].map(opt => `<option value="${opt}" ${item.rawStatus === opt ? "selected" : ""}>${opt}</option>`).join("")}
                       </select>
                     ` : getStatusPillHtml(item.rawStatus)}
                   </div>
                   <div class="flex items-center gap-2">
-                    <span class="text-[10px] uppercase tracking-wider text-zinc-400 font-bold">Coverage:</span>
+                    <span class="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Coverage:</span>
                     ${canEdit ? `
-                      <select id="wk-map-cov-${r}" class="bg-zinc-900 border border-white/20 rounded-lg px-2.5 py-1 text-xs font-bold text-white focus:border-orange-500 focus:outline-none">
+                      <select id="wk-map-cov-${r}" class="bg-[#151923] border border-white/15 rounded-lg px-2.5 py-1 text-xs font-bold text-white focus:border-orange-500 focus:outline-none">
                         <option value="" ${!item.coverage ? "selected" : ""}>Not Yet</option>
                         <option value="Onet" ${item.coverage === "Onet" ? "selected" : ""}>Onet</option>
                         <option value="Partner" ${item.coverage === "Partner" ? "selected" : ""}>Partner</option>
@@ -1011,17 +1016,17 @@
                 </div>
                 ${canEdit ? `
                   <div class="flex flex-col sm:flex-row gap-2 items-stretch sm:items-end">
-                    <textarea id="wk-map-desc-${r}" rows="1" placeholder="Description..." class="flex-1 bg-zinc-900 border border-white/20 rounded-lg px-2.5 py-1.5 text-xs text-white focus:border-orange-500 focus:outline-none">${item.description || ""}</textarea>
-                    <button onclick="updateWeeklyMappingRow(${r}, this)" class="bg-orange-600 hover:bg-orange-500 text-white px-3.5 py-1.5 rounded-lg text-xs font-extrabold shadow shrink-0 transition cursor-pointer">Save &amp; Notify</button>
+                    <textarea id="wk-map-desc-${r}" rows="1" placeholder="Route notes..." class="flex-1 bg-[#151923] border border-white/15 rounded-lg px-2.5 py-1.5 text-xs text-white focus:border-orange-500 focus:outline-none">${item.description || ""}</textarea>
+                    <button onclick="updateWeeklyMappingRow(${r}, this)" class="bg-orange-500 hover:bg-orange-400 text-slate-950 px-3.5 py-1.5 rounded-lg text-xs font-extrabold shrink-0 transition cursor-pointer">Save &amp; Notify</button>
                   </div>
-                  <p class="text-[10.5px] text-zinc-400">PIC: <strong class="text-orange-400">👤 ${autoPicName}</strong></p>
-                ` : `<p class="text-zinc-300 whitespace-pre-line leading-relaxed">${item.description || "-"}</p>`}
+                  <p class="text-[10.5px] text-slate-400">PIC: <strong class="text-orange-400">${autoPicName}</strong></p>
+                ` : `<p class="text-slate-300 whitespace-pre-line leading-relaxed">${item.description || "-"}</p>`}
               </div>
             </td>
-            <td class="py-4 px-4 text-right text-xs font-medium text-zinc-300 whitespace-nowrap">${formatDisplayDate(item.lastUpdated)}</td>
+            <td class="py-4 px-4 text-right text-xs text-slate-300 whitespace-nowrap">${formatDisplayDate(item.lastUpdated)}</td>
             <td class="py-4 px-4 text-center whitespace-nowrap">
-              <button onclick="openHistoryModal('Mapping', '${item.ticketId}', null)" class="text-[11px] font-bold text-orange-400 hover:text-orange-300 bg-orange-500/10 hover:bg-orange-500/20 px-3 py-1.5 rounded-xl border border-orange-500/40 transition cursor-pointer">
-                📜 All Activity Log
+              <button onclick="openHistoryModal('Mapping', '${item.ticketId}', null)" class="text-[11px] font-bold text-slate-200 hover:text-orange-300 bg-white/[0.04] hover:bg-orange-500/15 px-3 py-1.5 rounded-xl border border-white/10 hover:border-orange-500/35 transition cursor-pointer">
+                Activity Log
               </button>
             </td>
           </tr>
@@ -1031,13 +1036,13 @@
       tableContainer.innerHTML = `
         <table class="w-full text-left border-collapse">
           <thead>
-            <tr class="table-header-dark text-xs uppercase tracking-wider divide-x divide-white/10">
+            <tr class="table-head-modern text-[11px] font-bold uppercase tracking-wider">
               <th class="py-3.5 px-4 text-center">#</th>
-              <th class="py-3.5 px-4">Work Order Status</th>
-              <th class="py-3.5 px-4">Work Order</th>
-              <th class="py-3.5 px-4 text-center min-w-[580px]">Workflow Progress</th>
+              <th class="py-3.5 px-4">Status</th>
+              <th class="py-3.5 px-4">Customer / ID</th>
+              <th class="py-3.5 px-4 text-center min-w-[580px]">Pipeline Progress</th>
               <th class="py-3.5 px-4 text-right">Last Update</th>
-              <th class="py-3.5 px-4 text-center">All Activity Log</th>
+              <th class="py-3.5 px-4 text-center">Logs</th>
             </tr>
           </thead>
           <tbody>${rowsHtml}</tbody>
@@ -1046,7 +1051,7 @@
     }
 
     async function updateWeeklyMappingRow(r, btn) {
-      if (!authToken || !currentUser) return alert("Please sign in with your Google account first to manage or update work orders.");
+      if (!authToken || !currentUser) return alert("Please sign in with your Google account first to update work orders.");
       const orig = btn.innerText;
       btn.innerText = "Saving...";
       btn.disabled = true;
@@ -1069,8 +1074,8 @@
           headers: { "Content-Type": "text/plain" },
           body: JSON.stringify(payload)
         });
-        btn.innerText = "✓ Saved!";
-        btn.classList.replace("bg-orange-600", "bg-emerald-600");
+        btn.innerText = "✓ Saved";
+        btn.classList.replace("bg-orange-500", "bg-emerald-400");
         setTimeout(() => fetchAllData(), 2200);
       } catch (err) {
         alert("Failed to save Mapping work order.");
@@ -1086,7 +1091,7 @@
 
     function renderFilterPills() {
       const pills = [
-        { key: "NEED_ATTENTION", label: "All" },
+        { key: "NEED_ATTENTION", label: "All Active" },
         { key: "Open", label: "Open" },
         { key: "On Progress", label: "On Progress" },
         { key: "Pending", label: "Pending" }
@@ -1095,7 +1100,7 @@
       document.getElementById("status-filter-pills").innerHTML = pills.map(p => {
         const isActive = currentStatusFilter === p.key;
         return `
-          <button onclick="setStatusFilter('${p.key}')" class="${isActive ? 'bg-orange-600 text-white border border-orange-400 shadow-[0_0_12px_rgba(249,115,22,0.35)]' : 'bg-zinc-900 text-zinc-400 hover:bg-zinc-800 hover:text-white border border-white/15'} px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition cursor-pointer">
+          <button onclick="setStatusFilter('${p.key}')" class="${isActive ? 'bg-orange-500 text-slate-950 font-extrabold shadow-md shadow-orange-500/25' : 'bg-white/[0.04] text-slate-400 hover:bg-white/[0.08] hover:text-white font-semibold'} px-3.5 py-1.5 rounded-xl text-xs whitespace-nowrap transition cursor-pointer">
             ${p.label}
           </button>
         `;
@@ -1120,11 +1125,7 @@
     function matchDateRange(lastUpdatedStr) {
       const startVal = document.getElementById("dateStart").value;
       const endVal = document.getElementById("dateEnd").value;
-
-      if (!startVal && !endVal) {
-        return true;
-      }
-
+      if (!startVal && !endVal) return true;
       if (!lastUpdatedStr || lastUpdatedStr === "-") return false;
       const d = parseLocalTimestamp(lastUpdatedStr);
       const itemDate = d
@@ -1140,14 +1141,7 @@
       const str = String(rawTs).trim();
       const m = str.match(/^(\d{4})-(\d{1,2})-(\d{1,2})[T ](\d{1,2}):(\d{1,2})(?::(\d{1,2}))?/);
       if (m) {
-        return new Date(
-          Number(m[1]),
-          Number(m[2]) - 1,
-          Number(m[3]),
-          Number(m[4]),
-          Number(m[5]),
-          Number(m[6] || 0)
-        );
+        return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), Number(m[4]), Number(m[5]), Number(m[6] || 0));
       }
       const d = new Date(str);
       return isNaN(d.getTime()) ? null : d;
@@ -1160,7 +1154,7 @@
         const datePart = d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
         const hh = String(d.getHours()).padStart(2, "0");
         const mm = String(d.getMinutes()).padStart(2, "0");
-        return `${datePart}<br><span class="text-zinc-500 text-[10.5px]">${hh}:${mm} WIB</span>`;
+        return `<span class="font-semibold text-slate-200">${datePart}</span><br><span class="font-mono-code text-slate-500 text-[10.5px]">${hh}:${mm} WIB</span>`;
       }
       return String(tsStr);
     }
@@ -1201,21 +1195,11 @@
       const activeSet = ["On Progress", "Waiting Approval"];
       const vals = stages.map(normalizeStageVal);
 
-      if (vals.includes("Cancel") || fallbackStatus === "Cancel") {
-        return "Cancel";
-      }
-      if (vals.every(v => v === "")) {
-        return "Open";
-      }
-      if (vals.every(v => doneSet.includes(v))) {
-        return "Closed";
-      }
-      if (vals.some(v => v === "Pending")) {
-        return "Pending";
-      }
-      if (vals.some(v => activeSet.includes(v) || doneSet.includes(v))) {
-        return "On Progress";
-      }
+      if (vals.includes("Cancel") || fallbackStatus === "Cancel") return "Cancel";
+      if (vals.every(v => v === "")) return "Open";
+      if (vals.every(v => doneSet.includes(v))) return "Closed";
+      if (vals.some(v => v === "Pending")) return "Pending";
+      if (vals.some(v => activeSet.includes(v) || doneSet.includes(v))) return "On Progress";
       return fallbackStatus || "Open";
     }
 
@@ -1259,12 +1243,8 @@
 
         if (transMatch) {
           const stageTitle = transMatch[1].trim();
-          if (stageOnlyObj && !matchStageTag(stageTitle, stageOnlyObj)) {
-            continue;
-          }
-          if (notePart && notePart !== "-" && !notes.includes(notePart)) {
-            notes.push(notePart);
-          }
+          if (stageOnlyObj && !matchStageTag(stageTitle, stageOnlyObj)) continue;
+          if (notePart && notePart !== "-" && !notes.includes(notePart)) notes.push(notePart);
           const transVal = transMatch[2].trim();
           const pair = transVal.split("→").map(x => x.trim());
           if (pair.length === 2 && pair[0] !== pair[1]) {
@@ -1274,9 +1254,7 @@
           }
         } else if (cleanMain.toLowerCase().startsWith("ticket status:")) {
           if (stageOnlyObj) continue;
-          if (notePart && notePart !== "-" && !notes.includes(notePart)) {
-            notes.push(notePart);
-          }
+          if (notePart && notePart !== "-" && !notes.includes(notePart)) notes.push(notePart);
           const stVal = cleanMain.replace(/^ticket status:\s*/i, "").trim();
           const pair = stVal.split("→").map(x => x.trim());
           if (pair.length === 2 && pair[0] !== pair[1]) {
@@ -1292,9 +1270,7 @@
               continue;
             }
           }
-          if (notePart && notePart !== "-" && !notes.includes(notePart)) {
-            notes.push(notePart);
-          }
+          if (notePart && notePart !== "-" && !notes.includes(notePart)) notes.push(notePart);
           changes.push(cleanMain);
         } else if (!stageOnlyObj && notePart && notePart !== "-" && !notes.includes(notePart)) {
           notes.push(notePart);
@@ -1319,37 +1295,33 @@
     function getStatusPillHtml(status) {
       const st = status || "Open";
       if (st === "Open") {
-        return `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-rose-500/15 text-rose-400 border border-rose-500/35"><span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>${st}</span>`;
+        return `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-rose-500/12 text-rose-400 border border-rose-500/25"><span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>${st}</span>`;
       }
       if (st === "On Progress" || st === "Waiting Approval") {
-        return `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/15 text-amber-400 border border-amber-500/35"><span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>${st}</span>`;
+        return `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-500/12 text-amber-300 border border-amber-500/25"><span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>${st}</span>`;
       }
       if (st === "Pending") {
-        return `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-purple-500/15 text-purple-400 border border-purple-500/35"><span class="w-1.5 h-1.5 rounded-full bg-purple-400"></span>${st}</span>`;
+        return `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-violet-500/12 text-violet-300 border border-violet-500/25"><span class="w-1.5 h-1.5 rounded-full bg-violet-400"></span>${st}</span>`;
       }
       if (st === "Closed" || st === "Done" || st === "Onet" || st === "Deal" || st === "Material Ready") {
-        return `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/35"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>${st}</span>`;
+        return `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-500/12 text-emerald-400 border border-emerald-500/25"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>${st}</span>`;
       }
       if (st === "Cancel" || st === "Not Cover" || st === "Not Deal") {
-        return `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-zinc-700/40 text-zinc-400 border border-zinc-500/35"><span class="w-1.5 h-1.5 rounded-full bg-zinc-400"></span>${st}</span>`;
+        return `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-700/40 text-slate-400 border border-slate-600/30"><span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>${st}</span>`;
       }
       if (st === "Partner") {
-        return `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-sky-500/15 text-sky-400 border border-sky-500/35"><span class="w-1.5 h-1.5 rounded-full bg-sky-400"></span>${st}</span>`;
+        return `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-sky-500/12 text-sky-400 border border-sky-500/25"><span class="w-1.5 h-1.5 rounded-full bg-sky-400"></span>${st}</span>`;
       }
-      return `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-zinc-800 text-zinc-400 border border-white/15">${st}</span>`;
+      return `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-white/[0.05] text-slate-400 border border-white/10">${st}</span>`;
     }
 
     function renderActiveTab() {
-      if (activeTab === "All") {
-        renderAllCombinedTable();
-      } else if (activeTab === "Survey") {
-        renderSurveyTable();
-      } else if (activeTab === "Mapping") {
-        renderMappingTable();
-      }
+      if (activeTab === "All") renderAllCombinedTable();
+      else if (activeTab === "Survey") renderSurveyTable();
+      else if (activeTab === "Mapping") renderMappingTable();
     }
 
-    // ================= 6 INTERACTIVE KPI CARDS (WEEKLY WORK ORDERS) =================
+    // ================= 6 MODERN BENTO KPI CARDS =================
     function renderCombinedKpi() {
       const surveyStatuses = (appData.survey || []).map(t => {
         const cascaded = cascadeStages([t.survey, t.reportSurvey, t.boq, t.materialEquip, t.forwardWo], t.status);
@@ -1359,6 +1331,7 @@
 
       const mapTotal = mappingStatuses.length;
       const srvTotal = surveyStatuses.length;
+      const grandTotal = mapTotal + srvTotal;
 
       const countSrv = (targetList) => surveyStatuses.filter(s => targetList.includes(s)).length;
       const countMap = (targetList) => mappingStatuses.filter(s => targetList.includes(s)).length;
@@ -1366,103 +1339,103 @@
       const cards = [
         {
           key: "ALL",
-          label: "Total Work Orders",
+          label: "Total Orders",
           mapCount: mapTotal,
           srvCount: srvTotal,
-          bgIcon: "bg-orange-500/15 text-orange-400 border border-orange-500/35",
-          strokeColor: "#f97316",
-          sparkPath: "M2 28 Q 20 18, 35 22 T 75 6",
-          icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/></svg>`
+          badgeBg: "bg-orange-500/15 text-orange-400",
+          barColor: "bg-gradient-to-r from-orange-500 to-amber-400",
+          icon: `<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>`
         },
         {
           key: "Open",
           label: "Open",
           mapCount: countMap(["Open"]),
           srvCount: countSrv(["Open"]),
-          bgIcon: "bg-rose-500/15 text-rose-400 border border-rose-500/35",
-          strokeColor: "#fb7185",
-          sparkPath: "M2 24 Q 22 14, 42 20 T 76 10",
-          icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v4m0 4h.01"/></svg>`
+          badgeBg: "bg-rose-500/15 text-rose-400",
+          barColor: "bg-rose-500",
+          icon: `<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" d="M12 8v4m0 4h.01"/></svg>`
         },
         {
           key: "On Progress",
           label: "On Progress",
           mapCount: countMap(["On Progress"]),
           srvCount: countSrv(["On Progress"]),
-          bgIcon: "bg-amber-500/15 text-amber-400 border border-amber-500/35",
-          strokeColor: "#fbbf24",
-          sparkPath: "M2 25 Q 25 28, 42 15 T 76 12",
-          icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>`
+          badgeBg: "bg-amber-500/15 text-amber-400",
+          barColor: "bg-amber-400",
+          icon: `<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" d="M12 7v5l3 3"/></svg>`
         },
         {
           key: "Pending",
           label: "Pending",
           mapCount: countMap(["Pending"]),
           srvCount: countSrv(["Pending"]),
-          bgIcon: "bg-purple-500/15 text-purple-400 border border-purple-500/35",
-          strokeColor: "#a855f7",
-          sparkPath: "M2 20 Q 25 15, 45 22 T 76 16",
-          icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 2h12M6 22h12M8 2v4l4 4 4-4V2M8 22v-4l4-4 4 4v4"/></svg>`
+          badgeBg: "bg-violet-500/15 text-violet-400",
+          barColor: "bg-violet-500",
+          icon: `<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`
         },
         {
           key: "Cancel",
-          label: "Cancel",
+          label: "Cancelled",
           mapCount: 0,
           srvCount: countSrv(["Cancel"]),
-          bgIcon: "bg-zinc-700/40 text-zinc-300 border border-zinc-500/35",
-          strokeColor: "#a1a1aa",
-          sparkPath: "M2 18 Q 25 22, 48 16 T 76 22",
-          icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/></svg>`
+          badgeBg: "bg-slate-500/15 text-slate-400",
+          barColor: "bg-slate-500",
+          icon: `<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" d="M15 9l-6 6M9 9l6 6"/></svg>`
         },
         {
           key: "Closed",
-          label: "Closed",
+          label: "Completed",
           mapCount: countMap(["Done", "Closed"]),
           srvCount: countSrv(["Closed"]),
-          bgIcon: "bg-emerald-500/15 text-emerald-400 border border-emerald-500/35",
-          strokeColor: "#10b981",
-          sparkPath: "M2 28 Q 22 14, 45 18 T 76 5",
-          icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>`
+          badgeBg: "bg-emerald-500/15 text-emerald-400",
+          barColor: "bg-emerald-400",
+          icon: `<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>`
         }
       ];
 
       document.getElementById("kpi-container").innerHTML = cards.map(c => {
         const totalVal = c.mapCount + c.srvCount;
-        const detailLine = `(${c.mapCount} Mapping, ${c.srvCount} Survey)`;
+        const pct = grandTotal > 0 ? Math.round((totalVal / grandTotal) * 100) : 0;
         const isSelected = activeWeeklyKpi === c.key;
-        const activeRing = isSelected
-          ? "border-orange-500 ring-2 ring-orange-500/35 bg-orange-600/10"
-          : "hover:border-orange-500/80 hover:shadow-[0_0_14px_-2px_rgba(249,115,22,0.3)]";
+        const activeClass = isSelected
+          ? "border-orange-500/80 bg-orange-500/[0.08] ring-1 ring-orange-500/35"
+          : "";
 
         return `
-          <button type="button" onclick="selectKpiCard('${c.key}')" class="card-dark rounded-2xl p-3.5 flex flex-col justify-between gap-2.5 text-left cursor-pointer transition ${activeRing}">
-            <div class="flex items-start justify-between gap-2 w-full">
-              <div class="flex items-center gap-2.5 min-w-0">
-                <div class="w-9 h-9 rounded-xl ${c.bgIcon} flex items-center justify-center shrink-0">
-                  ${c.icon}
-                </div>
-                <div class="min-w-0">
-                  <p class="text-xl font-extrabold text-white leading-none">${totalVal}</p>
-                  <p class="text-xs font-bold text-zinc-200 mt-1 truncate">${c.label}</p>
-                </div>
+          <button type="button" onclick="selectKpiCard('${c.key}')" class="surface-card surface-card-hover rounded-2xl p-4 flex flex-col justify-between gap-3 text-left cursor-pointer ${activeClass}">
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-xs font-bold text-slate-300 truncate">${c.label}</span>
+              <div class="w-8 h-8 rounded-xl ${c.badgeBg} flex items-center justify-center shrink-0">
+                ${c.icon}
               </div>
-              <svg class="w-11 h-5 shrink-0" viewBox="0 0 80 35" fill="none">
-                <path d="${c.sparkPath}" stroke="${c.strokeColor}" stroke-width="2" stroke-linecap="round" fill="none"/>
-              </svg>
             </div>
-            <p class="text-[11px] text-zinc-400 leading-snug" title="${detailLine}">${detailLine}</p>
+
+            <div>
+              <div class="flex items-baseline justify-between">
+                <span class="text-2xl font-extrabold text-white tracking-tight">${totalVal}</span>
+                <span class="text-[11px] font-mono-code font-semibold text-slate-400">${pct}%</span>
+              </div>
+              <div class="w-full h-1.5 bg-white/[0.06] rounded-full overflow-hidden mt-2">
+                <div class="h-full ${c.barColor} rounded-full transition-all duration-500" style="width: ${c.key === 'ALL' ? 100 : pct}%"></div>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between text-[10.5px] text-slate-400 pt-1 border-t border-white/[0.06]">
+              <span>Map: <strong class="text-sky-400">${c.mapCount}</strong></span>
+              <span>Survey: <strong class="text-emerald-400">${c.srvCount}</strong></span>
+            </div>
           </button>
         `;
       }).join("");
     }
 
-    // ================= HELPER BUILDER SURVEY ROW & STEPPER =================
+    // ================= SURVEY ROW & 5-STAGE STEPPER =================
     function buildSurveyRowHtml(t, displayNo, showDivBadge = false) {
       const stageDefs = SURVEY_STAGE_DEFS;
 
-      const checkSvg = `<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>`;
-      const clockSvg = `<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 7v5l3 2"/></svg>`;
-      const crossSvg = `<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>`;
+      const checkSvg = `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>`;
+      const dotSvg = `<span class="w-2 h-2 rounded-full bg-current"></span>`;
+      const crossSvg = `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>`;
 
       const canEdit = Boolean(currentUser);
       const isAdmin = currentUser && currentUser.role === "Admin";
@@ -1472,7 +1445,7 @@
       const activeStageKey = activeStagePerTicket[t.ticketId] || "survey";
 
       const stepperHtml = `
-        <div class="flex items-start justify-between min-w-[600px] py-1">
+        <div class="flex items-start justify-between min-w-[580px] py-1">
           ${stageDefs.map((st, sIdx) => {
             const val = normalizeStageVal(t[st.key]);
             const isSelectedStage = isExpanded && st.key === activeStageKey;
@@ -1491,60 +1464,60 @@
             }
 
             const prevStageDone = sIdx > 0 && ["Done", "Deal", "Material Ready"].includes(normalizeStageVal(t[stageDefs[sIdx - 1].key]));
-            const leftLineColor = prevStageDone ? "bg-emerald-500" : "bg-white/20";
-            const rightLineColor = isDone ? "bg-emerald-500" : "bg-white/20";
+            const leftLineColor = prevStageDone ? "bg-emerald-500/80" : "bg-white/10";
+            const rightLineColor = isDone ? "bg-emerald-500/80" : "bg-white/10";
 
-            let circleStyle = "bg-zinc-900 border-2 border-white/25 text-zinc-400";
-            let iconHtml = clockSvg;
-            let labelColor = "text-zinc-300";
-            let subText = "Not Yet";
-            let subColor = "text-zinc-500";
+            let circleStyle = "bg-[#0d1017] border border-white/15 text-slate-500";
+            let iconHtml = dotSvg;
+            let labelColor = "text-slate-400";
+            let subText = "Queued";
+            let subColor = "text-slate-500";
 
             if (isDone) {
-              circleStyle = "bg-emerald-500 border-2 border-emerald-400 text-zinc-950 shadow-md shadow-emerald-500/25";
+              circleStyle = "bg-emerald-500 border border-emerald-400 text-slate-950 shadow-md shadow-emerald-500/20";
               iconHtml = checkSvg;
-              labelColor = "text-white font-bold";
-              subText = val === "Done" ? "Completed" : val;
+              labelColor = "text-slate-100 font-bold";
+              subText = val === "Done" ? "Done" : val;
               subColor = "text-emerald-400 font-semibold";
             } else if (isCancel) {
-              circleStyle = "bg-zinc-800 border-2 border-zinc-500 text-zinc-400";
+              circleStyle = "bg-slate-800 border border-slate-600 text-slate-400";
               iconHtml = crossSvg;
-              labelColor = "text-zinc-400 font-bold";
+              labelColor = "text-slate-400 font-bold";
               subText = val;
-              subColor = "text-zinc-400 font-semibold";
+              subColor = "text-slate-500 font-semibold";
             } else if (isPending || isOngoingStep) {
-              circleStyle = "bg-orange-500/25 border-2 border-orange-500 text-orange-400 active-pulse";
-              iconHtml = clockSvg;
-              labelColor = "text-orange-400 font-bold";
-              subText = val || "Not Yet";
+              circleStyle = "bg-orange-500/20 border-2 border-orange-500 text-orange-400 step-active-ring";
+              iconHtml = dotSvg;
+              labelColor = "text-orange-300 font-bold";
+              subText = val || "Next";
               subColor = "text-orange-400 font-semibold";
             }
 
             if (isSelectedStage) {
-              circleStyle += " ring-4 ring-orange-500/35 scale-110";
-              labelColor = "text-orange-400 font-extrabold";
+              circleStyle += " ring-4 ring-orange-500/25 scale-110";
+              labelColor = "text-orange-300 font-extrabold";
             }
 
             return `
               <div class="flex-1 flex flex-col items-center text-center select-none">
                 <div class="w-full flex items-center">
-                  <div class="h-[2.5px] flex-1 ${sIdx === 0 ? 'opacity-0' : leftLineColor}"></div>
+                  <div class="h-[2px] flex-1 ${sIdx === 0 ? 'opacity-0' : leftLineColor}"></div>
                   <button onclick="clickStepperPoint('${t.ticketId}', '${st.key}')"
-                    title="Click to view & update ${st.fullLabel}"
-                    class="w-9 h-9 rounded-full shrink-0 flex items-center justify-center transition-all duration-300 cursor-pointer hover:scale-110 focus:outline-none ${circleStyle}">
+                    title="Manage ${st.fullLabel}"
+                    class="w-8 h-8 rounded-full shrink-0 flex items-center justify-center transition-all duration-200 cursor-pointer hover:scale-110 focus:outline-none ${circleStyle}">
                     ${iconHtml}
                   </button>
-                  <div class="h-[2.5px] flex-1 ${sIdx === stageDefs.length - 1 ? 'opacity-0' : rightLineColor}"></div>
+                  <div class="h-[2px] flex-1 ${sIdx === stageDefs.length - 1 ? 'opacity-0' : rightLineColor}"></div>
                 </div>
 
-                <span class="text-[11px] font-bold mt-2 leading-tight px-1 ${labelColor}">${st.label}</span>
+                <span class="text-[11px] font-semibold mt-2 leading-tight px-1 ${labelColor}">${st.label}</span>
                 <span class="text-[10px] mt-0.5 leading-tight ${subColor}">${subText}</span>
 
                 <button onclick="clickStepperPoint('${t.ticketId}', '${st.key}')"
-                  class="mt-1.5 px-2.5 py-1 rounded-lg hover:bg-orange-500/15 transition-transform duration-200 cursor-pointer ${isSelectedStage ? 'rotate-180 text-orange-400' : 'text-orange-500 hover:text-orange-400'}"
-                  title="Expand ${st.label} details">
-                  <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.6" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 7l6 5 6-5M6 13l6 5 6-5"/>
+                  class="mt-1 px-2 py-0.5 rounded-md hover:bg-white/[0.06] transition-transform duration-200 cursor-pointer ${isSelectedStage ? 'rotate-180 text-orange-400' : 'text-slate-500 hover:text-orange-400'}"
+                  title="Toggle ${st.label} drawer">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
                   </svg>
                 </button>
               </div>
@@ -1566,16 +1539,16 @@
           .filter(entry => entry.parsed.changes.length > 0);
 
         const updateMenuHtml = canEdit ? `
-          <div class="bg-zinc-950 border border-orange-500/40 rounded-2xl p-4 space-y-3">
-            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-white/15 pb-2.5">
+          <div class="bg-[#0d1017] border border-orange-500/30 rounded-2xl p-4 space-y-3">
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-white/[0.08] pb-2.5">
               <div class="flex items-center gap-2">
-                <span class="text-xs font-extrabold text-orange-400 uppercase tracking-wide">Update Stage: ${activeStageObj.fullLabel}</span>
+                <span class="text-xs font-extrabold text-orange-400">Stage: ${activeStageObj.fullLabel}</span>
                 ${getStatusPillHtml(headerDisplayStatus)}
               </div>
               ${isAdmin ? `
                 <div class="flex items-center gap-1.5 text-xs">
-                  <span class="text-zinc-400">Work Order Status:</span>
-                  <select id="exp-mainstatus-${t.rowIndex}" data-initial="${t.computedStatus}" class="bg-zinc-900 border border-white/20 rounded-lg px-2 py-1 text-[11px] font-bold text-white focus:border-orange-500 focus:outline-none">
+                  <span class="text-slate-400">Override Status:</span>
+                  <select id="exp-mainstatus-${t.rowIndex}" data-initial="${t.computedStatus}" class="bg-[#151923] border border-white/15 rounded-lg px-2 py-1 text-[11px] font-bold text-white focus:border-orange-500 focus:outline-none">
                     ${["Open", "On Progress", "Pending", "Closed", "Cancel"].map(s => `<option value="${s}" ${t.computedStatus === s ? "selected" : ""}>${s}</option>`).join("")}
                   </select>
                 </div>
@@ -1584,83 +1557,83 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs items-end">
               <div>
-                <label class="text-[10px] font-bold text-zinc-400 uppercase block mb-1">${activeStageObj.label} Status</label>
-                <select id="exp-stageval-${t.rowIndex}" class="w-full bg-zinc-900 border border-white/20 rounded-xl px-3 py-2 font-bold text-white focus:border-orange-500 focus:outline-none">
+                <label class="text-[10px] font-bold text-slate-400 uppercase block mb-1">${activeStageObj.label} Progress</label>
+                <select id="exp-stageval-${t.rowIndex}" class="w-full bg-[#151923] border border-white/15 rounded-xl px-3 py-2 font-bold text-white focus:border-orange-500 focus:outline-none">
                   ${activeStageObj.opts.map(o => {
                     const v = o === "Not Yet" ? "" : o;
                     return `<option value="${v}" ${currentStageVal === v ? "selected" : ""}>${o}</option>`;
                   }).join("")}
                 </select>
               </div>
-              <div class="bg-zinc-900/90 border border-white/15 rounded-xl px-3 py-2 flex items-center justify-between">
-                <span class="text-[10px] font-bold text-zinc-400 uppercase">PIC</span>
-                <span class="text-xs font-extrabold text-orange-400 flex items-center gap-1">👤 ${autoPicName}</span>
+              <div class="bg-[#151923] border border-white/[0.08] rounded-xl px-3 py-2 flex items-center justify-between">
+                <span class="text-[10px] font-bold text-slate-400 uppercase">Assigned PIC</span>
+                <span class="text-xs font-bold text-orange-300">${autoPicName}</span>
               </div>
             </div>
 
             <div>
-              <label class="text-[10px] font-bold text-zinc-400 uppercase block mb-1">Notes</label>
-              <textarea id="exp-note-${t.rowIndex}" rows="2" placeholder="Progress notes..." class="w-full bg-zinc-900 border border-white/20 rounded-xl px-3 py-1.5 text-white focus:border-orange-500 focus:outline-none">${stageDetailObj.note || ''}</textarea>
+              <label class="text-[10px] font-bold text-slate-400 uppercase block mb-1">Progress Notes</label>
+              <textarea id="exp-note-${t.rowIndex}" rows="2" placeholder="Add field notes, BOQ remarks, or handover details..." class="w-full bg-[#151923] border border-white/15 rounded-xl px-3 py-2 text-white focus:border-orange-500 focus:outline-none">${stageDetailObj.note || ''}</textarea>
             </div>
 
             <div class="flex justify-end pt-1">
-              <button onclick="saveExpandedSurveyStage(${t.rowIndex}, '${t.ticketId}', '${activeStageKey}', this)" class="bg-orange-600 hover:bg-orange-500 text-white px-5 py-2 rounded-xl text-xs font-bold shadow-md shadow-orange-600/20 transition cursor-pointer">
+              <button onclick="saveExpandedSurveyStage(${t.rowIndex}, '${t.ticketId}', '${activeStageKey}', this)" class="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-slate-950 px-5 py-2 rounded-xl text-xs font-extrabold shadow-md shadow-orange-500/20 transition cursor-pointer">
                 Save &amp; Notify Team
               </button>
             </div>
           </div>
         ` : `
-          <div class="bg-zinc-950/70 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-zinc-400">
-            Please sign in with your Google account first to manage or update work orders.
+          <div class="bg-[#0d1017] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-xs text-slate-400">
+            Sign in with your authorized Google account in the sidebar to update stage progress.
           </div>
         `;
 
         const resiItemsHtml = loadingHistoryTicket[t.ticketId]
-          ? `<div class="py-5 text-center"><div class="inline-block animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-orange-500"></div></div>`
+          ? `<div class="py-5 text-center"><div class="inline-block animate-spin rounded-full h-5 w-5 border-2 border-orange-500 border-t-transparent"></div></div>`
           : (stageEntries.length > 0
               ? stageEntries.map(({ log, parsed }, idx) => {
                   const isLatest = idx === 0;
                   return `
-                    <div class="relative pl-6 pb-3.5 last:pb-1 ${idx < stageEntries.length - 1 ? 'border-l border-dashed border-white/20 ml-2' : 'ml-2'}">
-                      <span class="w-2.5 h-2.5 rounded-full ${isLatest ? 'bg-orange-500 ring-4 ring-orange-500/20' : 'bg-zinc-500'} absolute -left-[5px] top-1.5"></span>
-                      <div class="bg-zinc-950 border border-white/15 rounded-xl p-3 text-xs space-y-1.5">
+                    <div class="relative pl-5 pb-3 last:pb-0 ${idx < stageEntries.length - 1 ? 'border-l border-white/10 ml-2' : 'ml-2'}">
+                      <span class="w-2.5 h-2.5 rounded-full ${isLatest ? 'bg-orange-400 ring-4 ring-orange-500/15' : 'bg-slate-600'} absolute -left-[5.5px] top-1.5"></span>
+                      <div class="bg-[#0d1017] border border-white/[0.07] rounded-xl p-3 text-xs space-y-1">
                         <div class="flex flex-wrap items-center justify-between gap-2">
-                          <span class="font-mono text-[11px] text-orange-300 font-semibold">${cleanTimestamp(log.timestamp)}</span>
-                          <span class="text-[11px] text-zinc-400">PIC: <strong class="text-white">${parsed.pic}</strong></span>
+                          <span class="font-mono-code text-[11px] text-orange-300 font-semibold">${cleanTimestamp(log.timestamp)}</span>
+                          <span class="text-[11px] text-slate-400">by <strong class="text-slate-200">${parsed.pic}</strong></span>
                         </div>
-                        <ul class="space-y-0.5 text-[11px] text-zinc-200">
+                        <ul class="space-y-0.5 text-[11px] text-slate-200">
                           ${parsed.changes.map(ch => `<li>• ${ch}</li>`).join("")}
                         </ul>
-                        <p class="text-[11px] text-zinc-400 pt-1 border-t border-white/10">
-                          <span class="text-zinc-500">Notes:</span> <span class="text-zinc-200">${parsed.note}</span>
+                        <p class="text-[11px] text-slate-400 pt-1 border-t border-white/[0.06]">
+                          <span class="text-slate-500">Note:</span> <span class="text-slate-300">${parsed.note}</span>
                         </p>
                       </div>
                     </div>
                   `;
                 }).join("")
-              : `<div class="bg-zinc-950 border border-white/15 rounded-xl p-3 text-xs text-zinc-400">
-                  No activity log recorded yet for <strong class="text-white">${activeStageObj.label}</strong> (${headerDisplayStatus}).
+              : `<div class="bg-[#0d1017] border border-white/[0.07] rounded-xl p-3 text-xs text-slate-400">
+                  No logged updates yet for <strong class="text-slate-200">${activeStageObj.label}</strong>.
                 </div>`
             );
 
         const historySectionHtml = `
-          <div class="bg-zinc-950/60 border border-white/15 rounded-2xl p-4 space-y-3">
-            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-white/15 pb-2.5">
-              <h4 class="text-xs font-extrabold text-orange-400 tracking-wide">
-                Activity Log • ${activeStageObj.fullLabel} • <span class="text-white font-mono">(${t.ticketId})</span>
+          <div class="bg-white/[0.02] border border-white/[0.07] rounded-2xl p-4 space-y-3">
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-white/[0.07] pb-2">
+              <h4 class="text-xs font-bold text-slate-200">
+                Stage History • <span class="text-orange-400">${activeStageObj.fullLabel}</span>
               </h4>
-              <button onclick="openHistoryModal('Survey', '${t.ticketId}', '${activeStageKey}')" class="text-[11px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/35 px-2.5 py-1 rounded-lg hover:bg-emerald-500/20 transition cursor-pointer">
-                📄 Export PDF
+              <button onclick="openHistoryModal('Survey', '${t.ticketId}', '${activeStageKey}')" class="text-[11px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/25 px-2.5 py-1 rounded-lg hover:bg-emerald-500/20 transition cursor-pointer">
+                Export PDF
               </button>
             </div>
-            <div class="max-h-56 overflow-y-auto pr-1 pt-1">
+            <div class="max-h-52 overflow-y-auto pr-1 pt-1">
               ${resiItemsHtml}
             </div>
           </div>
         `;
 
         expandedPanelHtml = `
-          <div class="bg-zinc-900/80 border border-orange-500/40 rounded-2xl p-4 mt-2 space-y-3.5 shadow-lg">
+          <div class="bg-[#131722] border border-white/10 rounded-2xl p-4 mt-3 space-y-3.5 shadow-xl">
             ${updateMenuHtml}
             ${historySectionHtml}
           </div>
@@ -1669,24 +1642,19 @@
 
       const workOrderName = String(t.customer || "").trim() || "-";
       const divBadgeHtml = showDivBadge
-        ? `<div class="mt-1.5"><span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded bg-orange-500/15 text-orange-400 border border-orange-500/35">Survey</span></div>`
+        ? `<div class="mt-1.5"><span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/25">Survey</span></div>`
         : "";
 
       return `
-        <tr class="border-b border-white/15 hover:bg-zinc-900/30 align-top transition divide-x divide-white/10">
-          <td class="py-4 px-4 font-extrabold text-zinc-500 text-sm w-12 text-center">${displayNo}</td>
+        <tr class="border-b border-white/[0.06] hover:bg-white/[0.02] align-top transition">
+          <td class="py-4 px-4 font-mono-code font-bold text-slate-500 text-xs w-12 text-center">${displayNo}</td>
           <td class="py-4 px-4 whitespace-nowrap">
             ${getStatusPillHtml(t.computedStatus)}
             ${divBadgeHtml}
           </td>
           <td class="py-4 px-4 min-w-[210px]">
-            <div class="flex items-start gap-2.5">
-              <span class="text-zinc-400 shrink-0 mt-0.5">🏢</span>
-              <div class="overflow-hidden">
-                <p class="font-extrabold text-white text-sm leading-snug">${workOrderName}</p>
-                <span class="text-[11px] font-mono text-orange-400 font-bold">${t.ticketId}</span>
-              </div>
-            </div>
+            <p class="font-bold text-white text-sm leading-snug">${workOrderName}</p>
+            <span class="text-[11px] font-mono-code text-orange-400 font-semibold mt-0.5 inline-block">${t.ticketId}</span>
           </td>
           <td class="py-4 px-4">
             <div class="flex flex-col">
@@ -1694,17 +1662,17 @@
               ${expandedPanelHtml}
             </div>
           </td>
-          <td class="py-4 px-4 text-right text-xs font-medium text-zinc-300 whitespace-nowrap">${formatDisplayDate(t.lastUpdated)}</td>
+          <td class="py-4 px-4 text-right text-xs text-slate-300 whitespace-nowrap">${formatDisplayDate(t.lastUpdated)}</td>
           <td class="py-4 px-4 text-center whitespace-nowrap">
-            <button onclick="openHistoryModal('Survey', '${t.ticketId}', null)" class="text-[11px] font-bold text-orange-400 hover:text-orange-300 bg-orange-500/10 hover:bg-orange-500/20 px-3 py-1.5 rounded-xl border border-orange-500/40 transition cursor-pointer">
-              📜 All Activity Log
+            <button onclick="openHistoryModal('Survey', '${t.ticketId}', null)" class="text-[11px] font-bold text-slate-200 hover:text-orange-300 bg-white/[0.04] hover:bg-orange-500/15 px-3 py-1.5 rounded-xl border border-white/10 hover:border-orange-500/35 transition cursor-pointer">
+              Activity Log
             </button>
           </td>
         </tr>
       `;
     }
 
-    // ================= RENDER ALL COMBINED TABLE =================
+    // ================= RENDER COMBINED TABLE =================
     function renderAllCombinedTable() {
       document.getElementById("coverageFilter").classList.add("hidden");
       renderFilterPills();
@@ -1729,7 +1697,7 @@
 
       const container = document.getElementById("main-table-container");
       if (merged.length === 0) {
-        container.innerHTML = `<div class="text-center py-14 text-zinc-500 text-sm">No work orders match the current filter.</div>`;
+        container.innerHTML = `<div class="text-center py-14 text-slate-500 text-xs font-medium">No active work orders match the current filter.</div>`;
         return;
       }
 
@@ -1744,38 +1712,33 @@
 
         const r = item.rowIndex;
         return `
-          <tr class="border-b border-white/15 hover:bg-zinc-900/30 align-top transition divide-x divide-white/10">
-            <td class="py-4 px-4 font-extrabold text-zinc-500 text-sm w-12 text-center">${displayNo}</td>
+          <tr class="border-b border-white/[0.06] hover:bg-white/[0.02] align-top transition">
+            <td class="py-4 px-4 font-mono-code font-bold text-slate-500 text-xs w-12 text-center">${displayNo}</td>
             <td class="py-4 px-4 whitespace-nowrap">
               ${getStatusPillHtml(item.unifiedStatus)}
               <div class="mt-1.5">
-                <span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded bg-sky-500/15 text-sky-400 border border-sky-500/35">Mapping</span>
+                <span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-sky-500/10 text-sky-400 border border-sky-500/25">Mapping</span>
               </div>
             </td>
             <td class="py-4 px-4 min-w-[210px]">
-              <div class="flex items-start gap-2.5">
-                <span class="text-zinc-400 shrink-0 mt-0.5">🏢</span>
-                <div class="overflow-hidden">
-                  <p class="font-extrabold text-white text-sm leading-snug">${item.customer || "-"}</p>
-                  <span class="text-[11px] font-mono text-orange-400 font-bold">${item.ticketId}</span>
-                </div>
-              </div>
+              <p class="font-bold text-white text-sm leading-snug">${item.customer || "-"}</p>
+              <span class="text-[11px] font-mono-code text-orange-400 font-semibold mt-0.5 inline-block">${item.ticketId}</span>
             </td>
             <td class="py-4 px-4">
-              <div class="bg-zinc-950/80 border border-white/15 rounded-xl p-3.5 text-xs space-y-2.5">
+              <div class="bg-[#0d1017] border border-white/[0.08] rounded-2xl p-3.5 text-xs space-y-2.5">
                 <div class="flex flex-wrap items-center justify-between gap-2">
                   <div class="flex items-center gap-2">
-                    <span class="text-[10px] uppercase tracking-wider text-zinc-400 font-bold">Mapping Status:</span>
+                    <span class="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Status:</span>
                     ${canEdit ? `
-                      <select id="cmb-map-status-${r}" class="bg-zinc-900 border border-white/20 rounded-lg px-2.5 py-1 text-xs font-bold text-white focus:border-orange-500 focus:outline-none">
+                      <select id="cmb-map-status-${r}" class="bg-[#151923] border border-white/15 rounded-lg px-2.5 py-1 text-xs font-bold text-white focus:border-orange-500 focus:outline-none">
                         ${["Open", "On Progress", "Pending", "Done"].map(opt => `<option value="${opt}" ${item.rawStatus === opt ? "selected" : ""}>${opt}</option>`).join("")}
                       </select>
                     ` : getStatusPillHtml(item.rawStatus)}
                   </div>
                   <div class="flex items-center gap-2">
-                    <span class="text-[10px] uppercase tracking-wider text-zinc-400 font-bold">Coverage:</span>
+                    <span class="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Coverage:</span>
                     ${canEdit ? `
-                      <select id="cmb-map-cov-${r}" class="bg-zinc-900 border border-white/20 rounded-lg px-2.5 py-1 text-xs font-bold text-white focus:border-orange-500 focus:outline-none">
+                      <select id="cmb-map-cov-${r}" class="bg-[#151923] border border-white/15 rounded-lg px-2.5 py-1 text-xs font-bold text-white focus:border-orange-500 focus:outline-none">
                         <option value="" ${!item.coverage ? "selected" : ""}>Not Yet</option>
                         <option value="Onet" ${item.coverage === "Onet" ? "selected" : ""}>Onet</option>
                         <option value="Partner" ${item.coverage === "Partner" ? "selected" : ""}>Partner</option>
@@ -1786,17 +1749,17 @@
                 </div>
                 ${canEdit ? `
                   <div class="flex flex-col sm:flex-row gap-2 items-stretch sm:items-end">
-                    <textarea id="cmb-map-desc-${r}" rows="1" placeholder="Description..." class="flex-1 bg-zinc-900 border border-white/20 rounded-lg px-2.5 py-1.5 text-xs text-white focus:border-orange-500 focus:outline-none">${item.description || ""}</textarea>
-                    <button onclick="updateCombinedMappingRow(${r}, this)" class="bg-orange-600 hover:bg-orange-500 text-white px-3.5 py-1.5 rounded-lg text-xs font-extrabold shadow shrink-0 transition cursor-pointer">Save &amp; Notify</button>
+                    <textarea id="cmb-map-desc-${r}" rows="1" placeholder="Route notes..." class="flex-1 bg-[#151923] border border-white/15 rounded-lg px-2.5 py-1.5 text-xs text-white focus:border-orange-500 focus:outline-none">${item.description || ""}</textarea>
+                    <button onclick="updateCombinedMappingRow(${r}, this)" class="bg-orange-500 hover:bg-orange-400 text-slate-950 px-3.5 py-1.5 rounded-lg text-xs font-extrabold shrink-0 transition cursor-pointer">Save &amp; Notify</button>
                   </div>
-                  <p class="text-[10.5px] text-zinc-400">PIC: <strong class="text-orange-400">👤 ${autoPicName}</strong></p>
-                ` : `<p class="text-zinc-300 whitespace-pre-line leading-relaxed">${item.description || "-"}</p>`}
+                  <p class="text-[10.5px] text-slate-400">PIC: <strong class="text-orange-400">${autoPicName}</strong></p>
+                ` : `<p class="text-slate-300 whitespace-pre-line leading-relaxed">${item.description || "-"}</p>`}
               </div>
             </td>
-            <td class="py-4 px-4 text-right text-xs font-medium text-zinc-300 whitespace-nowrap">${formatDisplayDate(item.lastUpdated)}</td>
+            <td class="py-4 px-4 text-right text-xs text-slate-300 whitespace-nowrap">${formatDisplayDate(item.lastUpdated)}</td>
             <td class="py-4 px-4 text-center whitespace-nowrap">
-              <button onclick="openHistoryModal('Mapping', '${item.ticketId}', null)" class="text-[11px] font-bold text-orange-400 hover:text-orange-300 bg-orange-500/10 hover:bg-orange-500/20 px-3 py-1.5 rounded-xl border border-orange-500/40 transition cursor-pointer">
-                📜 All Activity Log
+              <button onclick="openHistoryModal('Mapping', '${item.ticketId}', null)" class="text-[11px] font-bold text-slate-200 hover:text-orange-300 bg-white/[0.04] hover:bg-orange-500/15 px-3 py-1.5 rounded-xl border border-white/10 hover:border-orange-500/35 transition cursor-pointer">
+                Activity Log
               </button>
             </td>
           </tr>
@@ -1806,13 +1769,13 @@
       container.innerHTML = `
         <table class="w-full text-left border-collapse">
           <thead>
-            <tr class="table-header-dark text-xs uppercase tracking-wider divide-x divide-white/10">
+            <tr class="table-head-modern text-[11px] font-bold uppercase tracking-wider">
               <th class="py-3.5 px-4 text-center">#</th>
-              <th class="py-3.5 px-4">Work Order Status</th>
-              <th class="py-3.5 px-4">Work Order</th>
-              <th class="py-3.5 px-4 text-center min-w-[580px]">Workflow Progress</th>
+              <th class="py-3.5 px-4">Status</th>
+              <th class="py-3.5 px-4">Customer / ID</th>
+              <th class="py-3.5 px-4 text-center min-w-[580px]">Pipeline Progress</th>
               <th class="py-3.5 px-4 text-right">Last Update</th>
-              <th class="py-3.5 px-4 text-center">All Activity Log</th>
+              <th class="py-3.5 px-4 text-center">Logs</th>
             </tr>
           </thead>
           <tbody>${rowsHtml}</tbody>
@@ -1821,7 +1784,7 @@
     }
 
     async function updateCombinedMappingRow(r, btn) {
-      if (!authToken || !currentUser) return alert("Please sign in with your Google account first to manage or update work orders.");
+      if (!authToken || !currentUser) return alert("Please sign in with your Google account first to update work orders.");
       const orig = btn.innerText;
       btn.innerText = "Saving...";
       btn.disabled = true;
@@ -1844,8 +1807,8 @@
           headers: { "Content-Type": "text/plain" },
           body: JSON.stringify(payload)
         });
-        btn.innerText = "✓ Saved!";
-        btn.classList.replace("bg-orange-600", "bg-emerald-600");
+        btn.innerText = "✓ Saved";
+        btn.classList.replace("bg-orange-500", "bg-emerald-400");
         setTimeout(() => fetchAllData(), 2200);
       } catch (err) {
         alert("Failed to save Mapping work order.");
@@ -1884,7 +1847,7 @@
 
       const container = document.getElementById("main-table-container");
       if (filtered.length === 0) {
-        container.innerHTML = `<div class="text-center py-14 text-zinc-500 text-sm">No Survey work orders match the current filter.</div>`;
+        container.innerHTML = `<div class="text-center py-14 text-slate-500 text-xs font-medium">No Survey work orders match the current filter.</div>`;
         return;
       }
 
@@ -1893,13 +1856,13 @@
       container.innerHTML = `
         <table class="w-full text-left border-collapse">
           <thead>
-            <tr class="table-header-dark text-xs uppercase tracking-wider divide-x divide-white/10">
+            <tr class="table-head-modern text-[11px] font-bold uppercase tracking-wider">
               <th class="py-3.5 px-4 text-center">#</th>
-              <th class="py-3.5 px-4">Work Order Status</th>
-              <th class="py-3.5 px-4">Work Order</th>
-              <th class="py-3.5 px-4 text-center min-w-[580px]">Workflow Progress</th>
+              <th class="py-3.5 px-4">Status</th>
+              <th class="py-3.5 px-4">Customer / ID</th>
+              <th class="py-3.5 px-4 text-center min-w-[580px]">Pipeline Progress</th>
               <th class="py-3.5 px-4 text-right">Last Update</th>
-              <th class="py-3.5 px-4 text-center">All Activity Log</th>
+              <th class="py-3.5 px-4 text-center">Logs</th>
             </tr>
           </thead>
           <tbody>${rowsHtml}</tbody>
@@ -1924,7 +1887,7 @@
     }
 
     async function saveExpandedSurveyStage(rowIndex, ticketId, stageKey, btn) {
-      if (!authToken || !currentUser) return alert("Please sign in with your Google account first to manage or update work orders.");
+      if (!authToken || !currentUser) return alert("Please sign in with your Google account first to update work orders.");
       const ticket = (appData.survey || []).find(item => item.rowIndex === rowIndex);
       if (!ticket) return;
 
@@ -1980,8 +1943,9 @@
           headers: { "Content-Type": "text/plain" },
           body: JSON.stringify(payload)
         });
-        btn.innerText = "✓ Saved!";
-        btn.classList.replace("bg-orange-600", "bg-emerald-600");
+        btn.innerText = "✓ Saved";
+        btn.classList.remove("from-orange-500", "to-amber-500");
+        btn.classList.add("bg-emerald-400");
         setTimeout(() => fetchAllData(), 2200);
       } catch (err) {
         alert("Failed to save changes.");
@@ -2013,7 +1977,7 @@
 
       const container = document.getElementById("main-table-container");
       if (filtered.length === 0) {
-        container.innerHTML = `<div class="text-center py-14 text-zinc-500 text-sm">No Mapping work orders match the current filter.</div>`;
+        container.innerHTML = `<div class="text-center py-14 text-slate-500 text-xs font-medium">No Mapping work orders match the current filter.</div>`;
         return;
       }
 
@@ -2025,31 +1989,26 @@
         const stNorm = normalizeMappingStatus(t.status);
         const effSt = getEffectiveMappingStatus(t.status);
         return `
-          <tr class="border-b border-white/15 hover:bg-zinc-900/30 align-top transition divide-x divide-white/10">
-            <td class="py-4 px-4 font-extrabold text-zinc-500 text-sm w-12 text-center">${idx + 1}</td>
+          <tr class="border-b border-white/[0.06] hover:bg-white/[0.02] align-top transition">
+            <td class="py-4 px-4 font-mono-code font-bold text-slate-500 text-xs w-12 text-center">${idx + 1}</td>
             <td class="py-4 px-4 whitespace-nowrap font-semibold">
               ${canEdit ? `
-                <select id="map-status-${r}" class="bg-zinc-900 border border-white/20 rounded-lg px-2.5 py-1 text-xs font-bold text-white focus:border-orange-500 focus:outline-none">
+                <select id="map-status-${r}" class="bg-[#151923] border border-white/15 rounded-lg px-2.5 py-1 text-xs font-bold text-white focus:border-orange-500 focus:outline-none">
                   ${["Open", "On Progress", "Pending", "Done"].map(opt => `<option value="${opt}" ${stNorm === opt ? "selected" : ""}>${opt}</option>`).join("")}
                 </select>
               ` : getStatusPillHtml(effSt)}
             </td>
             <td class="py-4 px-4 min-w-[200px]">
-              <div class="flex items-start gap-2.5">
-                <span class="text-zinc-400 shrink-0 mt-0.5">🏢</span>
-                <div class="overflow-hidden">
-                  <p class="font-extrabold text-white text-sm leading-snug">${t.customer || "-"}</p>
-                  <span class="text-[11px] font-mono text-orange-400 font-bold">${t.ticketId}</span>
-                </div>
-              </div>
+              <p class="font-bold text-white text-sm leading-snug">${t.customer || "-"}</p>
+              <span class="text-[11px] font-mono-code text-orange-400 font-semibold mt-0.5 inline-block">${t.ticketId}</span>
             </td>
             <td class="py-4 px-4 min-w-[340px]">
-              <div class="bg-zinc-950/80 border border-white/15 rounded-xl p-3.5 text-xs space-y-2.5">
+              <div class="bg-[#0d1017] border border-white/[0.08] rounded-2xl p-3.5 text-xs space-y-2.5">
                 <div class="flex flex-wrap items-center justify-between gap-2">
                   <div class="flex items-center gap-2">
-                    <span class="text-[10px] uppercase tracking-wider text-zinc-400 font-bold">Coverage:</span>
+                    <span class="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Coverage:</span>
                     ${canEdit ? `
-                      <select id="map-cov-${r}" class="bg-zinc-900 border border-white/20 rounded-lg px-2.5 py-1 text-xs font-bold text-white focus:border-orange-500 focus:outline-none">
+                      <select id="map-cov-${r}" class="bg-[#151923] border border-white/15 rounded-lg px-2.5 py-1 text-xs font-bold text-white focus:border-orange-500 focus:outline-none">
                         <option value="" ${!t.coverage ? "selected" : ""}>Not Yet</option>
                         <option value="Onet" ${t.coverage === "Onet" ? "selected" : ""}>Onet</option>
                         <option value="Partner" ${t.coverage === "Partner" ? "selected" : ""}>Partner</option>
@@ -2057,20 +2016,20 @@
                       </select>
                     ` : getStatusPillHtml(t.coverage || "Not Yet")}
                   </div>
-                  ${canEdit ? `<span class="text-[10.5px] text-zinc-400">PIC: <strong class="text-orange-400">👤 ${autoPicName}</strong></span>` : ""}
+                  ${canEdit ? `<span class="text-[10.5px] text-slate-400">PIC: <strong class="text-orange-400">${autoPicName}</strong></span>` : ""}
                 </div>
                 ${canEdit ? `
                   <div class="flex flex-col sm:flex-row gap-2 items-stretch sm:items-end">
-                    <textarea id="map-desc-${r}" rows="2" placeholder="Description..." class="flex-1 bg-zinc-900 border border-white/20 rounded-lg px-2.5 py-1.5 text-xs text-white focus:border-orange-500 focus:outline-none">${t.description || ''}</textarea>
-                    <button onclick="updateMappingRow(${r}, this)" class="bg-orange-600 hover:bg-orange-500 text-white px-3.5 py-1.5 rounded-lg text-xs font-extrabold shadow shrink-0 transition cursor-pointer">Save &amp; Notify</button>
+                    <textarea id="map-desc-${r}" rows="2" placeholder="Route details..." class="flex-1 bg-[#151923] border border-white/15 rounded-lg px-2.5 py-1.5 text-xs text-white focus:border-orange-500 focus:outline-none">${t.description || ''}</textarea>
+                    <button onclick="updateMappingRow(${r}, this)" class="bg-orange-500 hover:bg-orange-400 text-slate-950 px-3.5 py-1.5 rounded-lg text-xs font-extrabold shrink-0 transition cursor-pointer">Save &amp; Notify</button>
                   </div>
-                ` : `<p class="text-[12px] text-zinc-300 whitespace-pre-line leading-relaxed font-medium">${t.description || "-"}</p>`}
+                ` : `<p class="text-[12px] text-slate-300 whitespace-pre-line leading-relaxed">${t.description || "-"}</p>`}
               </div>
             </td>
-            <td class="py-4 px-4 text-right text-xs font-medium text-zinc-300 whitespace-nowrap">${formatDisplayDate(t.lastUpdated)}</td>
+            <td class="py-4 px-4 text-right text-xs text-slate-300 whitespace-nowrap">${formatDisplayDate(t.lastUpdated)}</td>
             <td class="py-4 px-4 text-center whitespace-nowrap">
-              <button onclick="openHistoryModal('Mapping', '${t.ticketId}', null)" class="text-[11px] font-bold text-orange-400 hover:text-orange-300 bg-orange-500/10 hover:bg-orange-500/20 px-3 py-1.5 rounded-xl border border-orange-500/40 transition cursor-pointer">
-                📜 All Activity Log
+              <button onclick="openHistoryModal('Mapping', '${t.ticketId}', null)" class="text-[11px] font-bold text-slate-200 hover:text-orange-300 bg-white/[0.04] hover:bg-orange-500/15 px-3 py-1.5 rounded-xl border border-white/10 hover:border-orange-500/35 transition cursor-pointer">
+                Activity Log
               </button>
             </td>
           </tr>
@@ -2080,13 +2039,13 @@
       container.innerHTML = `
         <table class="w-full text-left border-collapse">
           <thead>
-            <tr class="table-header-dark text-xs uppercase tracking-wider divide-x divide-white/10">
+            <tr class="table-head-modern text-[11px] font-bold uppercase tracking-wider">
               <th class="py-3.5 px-4 w-12 text-center">#</th>
-              <th class="py-3.5 px-4">Work Order Status</th>
-              <th class="py-3.5 px-4">Work Order</th>
-              <th class="py-3.5 px-4">Workflow Progress</th>
+              <th class="py-3.5 px-4">Status</th>
+              <th class="py-3.5 px-4">Customer / ID</th>
+              <th class="py-3.5 px-4">Mapping Details</th>
               <th class="py-3.5 px-4 text-right">Last Update</th>
-              <th class="py-3.5 px-4 text-center">All Activity Log</th>
+              <th class="py-3.5 px-4 text-center">Logs</th>
             </tr>
           </thead>
           <tbody>${rowsHtml}</tbody>
@@ -2095,7 +2054,7 @@
     }
 
     async function updateMappingRow(r, btn) {
-      if (!authToken || !currentUser) return alert("Please sign in with your Google account first to manage or update work orders.");
+      if (!authToken || !currentUser) return alert("Please sign in with your Google account first to update work orders.");
       const orig = btn.innerText;
       btn.innerText = "Saving...";
       btn.disabled = true;
@@ -2118,8 +2077,8 @@
           headers: { "Content-Type": "text/plain" },
           body: JSON.stringify(payload)
         });
-        btn.innerText = "✓ Saved!";
-        btn.classList.replace("bg-orange-600", "bg-emerald-600");
+        btn.innerText = "✓ Saved";
+        btn.classList.replace("bg-orange-500", "bg-emerald-400");
         setTimeout(() => fetchAllData(), 2200);
       } catch (err) {
         alert("Failed to save Mapping work order.");
@@ -2128,7 +2087,7 @@
       }
     }
 
-    // ================= ACTIVITY LOG & ALL ACTIVITY LOG MODAL + VERTICAL PDF =================
+    // ================= ACTIVITY LOG MODAL & PDF EXPORT =================
     async function openHistoryModal(type, selectedTicketId, stageKey = null) {
       historyTypeActive = type;
       historyStageFilterKey = type === "Survey" ? stageKey : null;
@@ -2137,12 +2096,12 @@
       const stageObj = historyStageFilterKey ? SURVEY_STAGE_DEFS.find(s => s.key === historyStageFilterKey) : null;
 
       document.getElementById("historyTypeLabel").innerText = stageObj
-        ? `Work Order Type: ${type} • Activity Log (${stageObj.fullLabel})`
-        : `Work Order Type: ${type} • All Activity Log`;
+        ? `${type} • ${stageObj.fullLabel}`
+        : `${type} • Complete Audit Trail`;
 
       document.getElementById("historyModalTitle").innerText = stageObj
-        ? `Activity Log • ${stageObj.fullLabel}${selectedTicketId && selectedTicketId !== "ALL" ? ` • (${selectedTicketId})` : ""}`
-        : `All Activity Log${selectedTicketId && selectedTicketId !== "ALL" ? ` • (${selectedTicketId})` : ""}`;
+        ? `Stage Log: ${stageObj.fullLabel}${selectedTicketId && selectedTicketId !== "ALL" ? ` (${selectedTicketId})` : ""}`
+        : `All Activity Log${selectedTicketId && selectedTicketId !== "ALL" ? ` • ${selectedTicketId}` : ""}`;
 
       document.getElementById("historyListContainer").innerHTML = "";
       document.getElementById("historyLoader").classList.remove("hidden");
@@ -2177,8 +2136,8 @@
       const stageObj = historyStageFilterKey ? SURVEY_STAGE_DEFS.find(s => s.key === historyStageFilterKey) : null;
 
       document.getElementById("historyModalTitle").innerText = stageObj
-        ? `Activity Log • ${stageObj.fullLabel}${selectedId && selectedId !== "ALL" ? ` • (${selectedId})` : ""}`
-        : `All Activity Log${selectedId && selectedId !== "ALL" ? ` • (${selectedId})` : ""}`;
+        ? `Stage Log: ${stageObj.fullLabel}${selectedId && selectedId !== "ALL" ? ` (${selectedId})` : ""}`
+        : `All Activity Log${selectedId && selectedId !== "ALL" ? ` • ${selectedId}` : ""}`;
 
       filteredHistoryLogs = allHistoryForType.filter(log => {
         const matchTicket = selectedId === "ALL" || String(log.ticketId).trim() === String(selectedId).trim();
@@ -2196,7 +2155,7 @@
     function renderHistoryTimeline() {
       const container = document.getElementById("historyListContainer");
       if (filteredHistoryLogs.length === 0) {
-        container.innerHTML = `<div class="text-center py-12 text-zinc-500 text-xs font-semibold">No activity log entries match the selected filter.</div>`;
+        container.innerHTML = `<div class="text-center py-12 text-slate-500 text-xs font-semibold">No activity log entries match the selected filter.</div>`;
         return;
       }
 
@@ -2208,36 +2167,36 @@
 
         return `
           <div class="relative pl-7 pb-4 ${isLast ? 'pb-1' : ''}">
-            ${!isLast ? `<span class="w-[2px] bg-white/15 absolute left-[9px] top-5 bottom-0"></span>` : ""}
-            <span class="w-4 h-4 rounded-full bg-orange-500/20 border-2 border-orange-500 flex items-center justify-center absolute left-0.5 top-1">
+            ${!isLast ? `<span class="w-[2px] bg-white/10 absolute left-[9px] top-5 bottom-0"></span>` : ""}
+            <span class="w-4 h-4 rounded-full bg-orange-500/20 border-2 border-orange-400 flex items-center justify-center absolute left-0.5 top-1">
               <span class="w-1.5 h-1.5 rounded-full bg-orange-400"></span>
             </span>
 
-            <div class="bg-zinc-900/80 border border-white/15 rounded-2xl p-4 text-xs space-y-2.5">
-              <div class="flex flex-wrap justify-between items-center gap-2 pb-2 border-b border-white/15">
+            <div class="bg-[#0d1017] border border-white/[0.08] rounded-2xl p-4 text-xs space-y-2.5">
+              <div class="flex flex-wrap justify-between items-center gap-2 pb-2 border-b border-white/[0.08]">
                 <div class="flex items-center gap-2 flex-wrap">
-                  <span class="font-mono text-[11px] text-orange-400 bg-orange-500/15 border border-orange-500/40 px-2.5 py-0.5 rounded font-extrabold">${item.ticketId}</span>
-                  <span class="font-extrabold text-white text-sm">${item.customer || "-"}</span>
-                  <span class="text-[10px] px-2 py-0.5 rounded bg-zinc-800 border border-white/10 text-zinc-300 font-bold uppercase">${item.action || "Updated"}</span>
+                  <span class="font-mono-code text-[11px] text-orange-400 bg-orange-500/10 border border-orange-500/30 px-2 py-0.5 rounded-md font-bold">${item.ticketId}</span>
+                  <span class="font-bold text-white text-sm">${item.customer || "-"}</span>
+                  <span class="text-[10px] px-2 py-0.5 rounded-md bg-white/[0.05] text-slate-300 font-bold uppercase">${item.action || "Updated"}</span>
                 </div>
-                <span class="font-mono text-[11px] text-zinc-400">🕒 ${cleanTimestamp(item.timestamp)}</span>
+                <span class="font-mono-code text-[11px] text-slate-400">${cleanTimestamp(item.timestamp)}</span>
               </div>
 
               ${parsed.changes.length > 0 ? `
-                <div class="bg-zinc-950/90 border border-white/10 rounded-xl px-3.5 py-2.5 space-y-1">
-                  <p class="text-[10px] uppercase tracking-wider text-zinc-500 font-bold">${stageObj ? `Activity Log • ${stageObj.label}` : "All Activity Log (Survey → Forward WO Installation)"}</p>
-                  <ul class="space-y-1 text-xs text-zinc-200">
-                    ${parsed.changes.map(c => `<li class="flex items-start gap-1.5"><span class="text-orange-400 font-bold">▸</span><span>${c}</span></li>`).join("")}
+                <div class="bg-white/[0.02] border border-white/[0.06] rounded-xl px-3.5 py-2.5 space-y-1">
+                  <p class="text-[10px] uppercase tracking-wider text-slate-500 font-bold">${stageObj ? `Changes • ${stageObj.label}` : "Pipeline Updates"}</p>
+                  <ul class="space-y-1 text-xs text-slate-200">
+                    ${parsed.changes.map(c => `<li class="flex items-start gap-1.5"><span class="text-orange-400 font-bold">›</span><span>${c}</span></li>`).join("")}
                   </ul>
                 </div>
               ` : ""}
 
-              <div class="bg-zinc-950 border border-white/15 rounded-xl px-3.5 py-2.5 text-xs text-zinc-300">
-                <span class="text-[10px] uppercase tracking-wider text-zinc-500 font-bold block mb-0.5">Notes</span>
-                <p class="whitespace-pre-line leading-relaxed text-zinc-200">${parsed.note}</p>
+              <div class="bg-white/[0.02] border border-white/[0.06] rounded-xl px-3.5 py-2.5 text-xs text-slate-300">
+                <span class="text-[10px] uppercase tracking-wider text-slate-500 font-bold block mb-0.5">Notes</span>
+                <p class="whitespace-pre-line leading-relaxed text-slate-200">${parsed.note}</p>
               </div>
 
-              <div class="flex flex-wrap justify-between items-center gap-2 text-[11px] text-zinc-400 pt-1">
+              <div class="flex flex-wrap justify-between items-center gap-2 text-[11px] text-slate-400 pt-1">
                 <span>PIC: <strong class="text-amber-300">${parsed.pic}</strong></span>
                 ${!stageObj && item.status ? getStatusPillHtml(item.status) : ""}
               </div>
@@ -2270,7 +2229,7 @@
       let y = 0;
 
       function drawHeaderBanner() {
-        doc.setFillColor(18, 18, 23);
+        doc.setFillColor(15, 18, 26);
         doc.rect(0, 0, pageW, 28, "F");
 
         doc.setTextColor(249, 115, 22);
@@ -2281,7 +2240,7 @@
           : `BLiP — ALL ACTIVITY LOG (${historyTypeActive.toUpperCase()})`;
         doc.text(headingTitle, marginX, 11);
 
-        doc.setTextColor(220, 220, 225);
+        doc.setTextColor(226, 232, 240);
         doc.setFont("helvetica", "normal");
         doc.setFontSize(8.5);
         doc.text(`Filter: ${targetLabel}`, marginX, 18);
@@ -2386,7 +2345,7 @@
       doc.save(`BLiP_All_Activity_Log_${safeFile}.pdf`);
     }
 
-    // ================= ADD WORK ORDER & SETTINGS CONTROL =================
+    // ================= MODALS & CREATE NEW =================
     function openAddModal() {
       if (!currentUser || currentUser.role !== "Admin") return alert("Admin access only.");
       document.getElementById("newTicketType").value = activeTab === "Mapping" ? "Mapping" : "Survey";
