@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BLiP Work Order Monitoring Dashboard v4.0.0 — Horizontal Dark Edition</title>
+  <title>BLiP Work Order Monitoring Dashboard v4.1.0 — Dark Sidebar Edition</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     body {
       background-color: #070709;
-      background-image: radial-gradient(circle at 50% 0%, rgba(249, 115, 22, 0.06), transparent 55%);
+      background-image: radial-gradient(circle at 60% 0%, rgba(249, 115, 22, 0.06), transparent 55%);
       color: #f4f4f5;
       font-family: 'Inter', system-ui, -apple-system, sans-serif;
     }
@@ -66,183 +66,237 @@
     ::-webkit-scrollbar-thumb { background: rgba(249, 115, 22, 0.35); border-radius: 3px; }
   </style>
 </head>
-<body class="min-h-screen flex flex-col p-4 md:p-6 lg:px-8">
+<body class="min-h-screen bg-[#070709] text-zinc-100">
 
-  <!-- Zone 1: Sticky Top Horizontal Brand Bar & Navigation -->
-  <header class="zone-3d sticky top-3 z-40 rounded-2xl p-3.5 md:p-4 mb-7 flex flex-col gap-3 backdrop-blur-md">
-    <div class="flex flex-col xl:flex-row justify-between items-center gap-3.5">
-      <!-- Left: Brand + Navigation -->
-      <div class="flex flex-col md:flex-row items-center gap-4 md:gap-5 w-full xl:w-auto">
-        <div class="flex items-center gap-2.5 shrink-0 select-none">
-          <span class="tracking-tighter font-extrabold text-3xl text-white">BL<span class="text-orange-500">i</span>P</span>
-          <span class="text-[10px] bg-orange-500/20 border border-orange-500/50 px-2 py-0.5 rounded text-orange-400 font-mono font-bold">v4.0.0</span>
+  <div class="min-h-screen flex flex-col lg:flex-row">
+    <!-- Left Sidebar (Sticky Full Height + Google Sign-In pinned at bottom) -->
+    <aside class="zone-3d w-full lg:w-72 shrink-0 lg:sticky lg:top-0 lg:h-screen flex flex-col justify-between p-4 lg:p-5 z-40">
+      <div class="space-y-6 overflow-y-auto pr-0.5">
+        <!-- Brand -->
+        <div class="flex items-center justify-between pb-4 border-b border-white/10">
+          <div class="flex items-center gap-2.5 select-none">
+            <span class="tracking-tighter font-extrabold text-3xl text-white">BL<span class="text-orange-500">i</span>P</span>
+            <span class="text-[10px] bg-orange-500/20 border border-orange-500/50 px-2 py-0.5 rounded text-orange-400 font-mono font-bold">v4.1.0</span>
+          </div>
+          <button onclick="fetchAllData()" title="Refresh Data" class="bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-white/15 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer">
+            ↻ Refresh
+          </button>
         </div>
 
-        <nav class="flex gap-1.5 overflow-x-auto w-full md:w-auto pb-1 md:pb-0">
-          <button onclick="setActiveNav('dashboard')" id="nav-dashboard" class="nav-btn flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold bg-orange-600 text-white shadow shadow-orange-600/20 whitespace-nowrap">
+        <!-- Navigation Menus -->
+        <div class="space-y-1.5">
+          <p class="text-[10px] font-extrabold uppercase tracking-wider text-zinc-500 px-2 mb-2">Navigation</p>
+          <button onclick="setActiveNav('dashboard')" id="nav-dashboard" class="nav-btn w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-bold bg-orange-600 text-white shadow shadow-orange-600/20 text-left transition cursor-pointer">
+            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
             <span>Dashboard Monitoring Work Orders</span>
           </button>
-          <button onclick="openHistoryModal(activeTab === 'Mapping' ? 'Mapping' : 'Survey', 'ALL', null)" id="nav-report" class="nav-btn flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:bg-zinc-800/80 hover:text-white transition whitespace-nowrap">
+
+          <button onclick="openHistoryModal(activeTab === 'Mapping' ? 'Mapping' : 'Survey', 'ALL', null)" id="nav-report" class="nav-btn w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-medium text-zinc-400 hover:bg-zinc-800/80 hover:text-white text-left transition cursor-pointer">
+            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
             <span>Report Activity Log</span>
           </button>
-          <button onclick="openSettingsModal()" id="nav-settings" class="nav-btn flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:bg-zinc-800/80 hover:text-white transition whitespace-nowrap">
+
+          <button onclick="openSettingsModal()" id="nav-settings" class="nav-btn w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-medium text-zinc-400 hover:bg-zinc-800/80 hover:text-white text-left transition cursor-pointer">
+            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
             <span>Settings</span>
           </button>
-        </nav>
-      </div>
-
-      <!-- Right: Auth + Action Buttons -->
-      <div class="flex flex-wrap items-center gap-2.5 w-full xl:w-auto justify-end">
-        <div id="googleBtnWrapper"></div>
-        <div id="headerUserBadge" class="hidden items-center gap-2 bg-zinc-900 border border-orange-500/40 px-3 py-1.5 rounded-xl text-xs">
-          <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
-          <span id="headerUserName" class="font-semibold text-white"></span>
-          <button onclick="logoutUser()" class="text-rose-400 hover:underline ml-1">Sign Out</button>
         </div>
 
-        <button onclick="fetchAllData()" class="bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-white/15 px-3 py-1.5 rounded-xl text-xs font-semibold transition">↻ Refresh</button>
-        <button id="btnNewTicket" onclick="openAddModal()" class="hidden bg-orange-600 hover:bg-orange-500 text-white px-4 py-1.5 rounded-xl text-xs font-bold shadow-md shadow-orange-600/20 transition">+ New Work Order</button>
-      </div>
-    </div>
-
-    <!-- Bottom Row of Top Bar: Search Work Orders By Date | Search Work Orders By Name/ID -->
-    <div class="pt-2.5 border-t border-white/10 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-2.5">
-      <div class="flex flex-wrap items-center gap-2 bg-zinc-950/90 border border-white/15 rounded-xl px-3 py-1.5 text-xs">
-        <span class="text-[11px] font-bold text-orange-400 whitespace-nowrap">Search Work Orders By Date:</span>
-        <div class="flex items-center gap-1.5">
-          <input type="date" id="dateStart" onchange="onGlobalSearchChange()" title="Start Date" class="bg-transparent text-zinc-200 font-medium focus:outline-none text-xs">
-          <span class="text-zinc-500">–</span>
-          <input type="date" id="dateEnd" onchange="onGlobalSearchChange()" title="End Date" class="bg-transparent text-zinc-200 font-medium focus:outline-none text-xs">
-          <button onclick="clearDateFilter()" id="btnClearDate" class="hidden text-[10px] text-rose-400 hover:text-rose-300 font-semibold ml-1">Reset</button>
+        <!-- Primary Action -->
+        <div id="sidebarActionWrap" class="hidden pt-2 border-t border-white/10">
+          <button id="btnNewTicket" onclick="openAddModal()" class="w-full bg-orange-600 hover:bg-orange-500 text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-md shadow-orange-600/20 transition cursor-pointer">
+            + New Work Order
+          </button>
         </div>
       </div>
 
-      <div class="relative flex-1 lg:max-w-sm">
-        <input type="text" id="searchInput" oninput="onGlobalSearchChange()" placeholder="Search Work Orders By Name/ID..." class="w-full bg-zinc-950/90 border border-white/15 text-zinc-100 rounded-xl pl-8 pr-3 py-1.5 text-xs focus:outline-none focus:border-orange-500">
-        <svg class="w-3.5 h-3.5 text-orange-400 absolute left-2.5 top-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-      </div>
-    </div>
-  </header>
-
-  <!-- Zone 2: WEEKLY WORK ORDERS (6 Interactive KPI Cards + Auto-Expanded Weekly Panel) -->
-  <section class="zone-3d rounded-2xl p-4 md:p-5 mb-7 space-y-4">
-    <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-white/10">
-      <div class="flex items-center gap-2">
-        <span class="w-2 h-2 rounded-full bg-orange-500"></span>
-        <h2 class="text-xs font-extrabold uppercase tracking-wider text-zinc-200">WEEKLY WORK ORDERS</h2>
-      </div>
-      <span id="weekRangeBadge" class="text-[11px] font-mono text-zinc-400 bg-zinc-900 border border-white/15 px-2.5 py-0.5 rounded-lg"></span>
-    </div>
-
-    <div id="kpi-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3.5"></div>
-
-    <!-- Auto-Expanded Weekly Data Panel when a KPI card is clicked -->
-    <div id="weeklyExpandedPanel" class="hidden card-dark rounded-2xl overflow-hidden shadow-xl border-orange-500/60">
-      <div class="px-4 py-3 bg-zinc-900/90 border-b border-white/15 flex flex-wrap items-center justify-between gap-2">
-        <div class="flex items-center gap-2.5">
-          <span class="px-2 py-0.5 rounded bg-orange-500/20 border border-orange-500/40 text-orange-400 text-[10px] font-extrabold uppercase tracking-wider">Weekly View</span>
-          <h3 id="weeklyExpandedTitle" class="text-xs sm:text-sm font-extrabold text-white"></h3>
-          <span id="weeklyExpandedCount" class="text-[11px] font-mono text-zinc-400"></span>
+      <!-- Bottom of Sidebar: Google Sign-In / Account Badge -->
+      <div class="pt-4 mt-6 border-t border-white/15">
+        <div id="googleBtnWrapper" class="flex justify-center"></div>
+        <div id="sidebarUserBadge" class="hidden items-center justify-between gap-2 bg-zinc-950/90 border border-orange-500/40 px-3 py-2.5 rounded-xl text-xs">
+          <div class="flex items-center gap-2 min-w-0">
+            <span class="h-2.5 w-2.5 rounded-full bg-emerald-500 shrink-0"></span>
+            <div class="truncate">
+              <p id="sidebarUserName" class="font-bold text-white truncate"></p>
+              <p id="sidebarUserRole" class="text-[10px] text-orange-400 font-semibold"></p>
+            </div>
+          </div>
+          <button onclick="logoutUser()" class="text-rose-400 hover:text-rose-300 font-semibold shrink-0 cursor-pointer">Sign Out</button>
         </div>
-        <button type="button" onclick="clearWeeklyKpiFilter()" class="text-xs font-semibold text-zinc-300 hover:text-white bg-zinc-800 hover:bg-zinc-700 border border-white/15 px-3 py-1 rounded-lg transition">
-          ✕ Close Weekly View
-        </button>
       </div>
-      <div class="overflow-x-auto" id="weekly-table-container"></div>
-    </div>
-  </section>
+    </aside>
 
-  <!-- Zone 3: NEED ATTENTION WORK ORDERS -->
-  <div id="workOrderControlPanel" class="zone-3d-amber rounded-2xl p-4 md:p-5 mb-6 space-y-4">
-    <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-white/10">
-      <div class="flex items-center gap-2">
-        <span class="w-2 h-2 rounded-full bg-amber-400"></span>
-        <h2 class="text-xs font-extrabold uppercase tracking-wider text-zinc-200">NEED ATTENTION WORK ORDERS</h2>
-      </div>
-      <span class="text-[10.5px] text-zinc-400">Active items only (excludes Closed &amp; Cancel)</span>
-    </div>
+    <!-- Main Content Column -->
+    <div class="flex-1 min-w-0 p-4 md:p-6 lg:px-8 space-y-7">
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <!-- All -->
-      <button onclick="selectDivisionTab('All')" id="btn-div-All" class="group flex items-center justify-between px-5 py-4 rounded-2xl border transition text-left bg-orange-600/15 border-orange-500 shadow-lg shadow-orange-600/10">
-        <div class="flex items-center gap-3.5">
-          <span class="w-11 h-11 rounded-xl bg-zinc-950 border border-orange-500/40 flex items-center justify-center text-orange-400 transition">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <rect x="3" y="3" width="7" height="7" rx="1.5"/>
-              <rect x="14" y="3" width="7" height="7" rx="1.5"/>
-              <rect x="3" y="14" width="7" height="7" rx="1.5"/>
-              <rect x="14" y="14" width="7" height="7" rx="1.5"/>
+      <!-- Sticky Top Search Bar (Matching Style: Name/ID & Date Popover Start - End + Reset) -->
+      <header class="zone-3d sticky top-3 z-30 rounded-2xl p-3.5 md:p-4 backdrop-blur-md">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <!-- Search Work Orders By Name/ID -->
+          <div class="relative flex items-center bg-zinc-950/95 border border-white/15 focus-within:border-orange-500 rounded-xl px-3.5 py-2 transition">
+            <svg class="w-4 h-4 text-orange-500 shrink-0 mr-2.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <circle cx="11" cy="11" r="8"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35"/>
             </svg>
-          </span>
-          <div>
-            <p class="text-base font-extrabold text-white tracking-tight">All</p>
-            <p class="text-xs text-zinc-400 font-medium"><span id="count-All">0</span> Need Attention</p>
+            <input type="text" id="searchInput" oninput="onGlobalSearchChange()" placeholder="Search Work Orders By Name/ID..." class="w-full bg-transparent text-xs sm:text-sm text-zinc-100 placeholder-zinc-400 focus:outline-none">
+          </div>
+
+          <!-- Search Work Orders By Date (Popover: Start - End + Reset) -->
+          <div id="dateSearchWrapper" class="relative">
+            <button type="button" onclick="toggleDatePopover(event)" class="w-full flex items-center justify-between gap-2 bg-zinc-950/95 border border-white/15 hover:border-orange-500/70 rounded-xl px-3.5 py-2 text-left transition cursor-pointer">
+              <div class="flex items-center min-w-0">
+                <svg class="w-4 h-4 text-orange-500 shrink-0 mr-2.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                  <line x1="16" y1="2" x2="16" y2="6"/>
+                  <line x1="8" y1="2" x2="8" y2="6"/>
+                  <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+                <span id="dateSearchSummary" class="text-xs sm:text-sm text-zinc-400 truncate">Search Work Orders By Date...</span>
+              </div>
+              <span id="dateActiveBadge" class="hidden text-[10px] font-bold bg-orange-500/20 text-orange-400 border border-orange-500/40 px-2 py-0.5 rounded shrink-0">Filtered</span>
+            </button>
+
+            <!-- Popover: Start - End + Reset -->
+            <div id="datePopover" onclick="event.stopPropagation()" class="hidden absolute right-0 mt-2 w-full sm:w-96 card-dark rounded-2xl p-4 z-50 shadow-2xl space-y-3">
+              <div class="flex items-center justify-between border-b border-white/10 pb-2">
+                <span class="text-xs font-bold text-orange-400">Filter Date Range</span>
+                <button type="button" onclick="clearDateFilter()" class="text-xs font-bold text-rose-400 hover:text-rose-300 cursor-pointer">Reset</button>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                <div>
+                  <label class="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block mb-1">Start</label>
+                  <input type="date" id="dateStart" onchange="onDateRangeChanged()" class="w-full bg-zinc-900 border border-white/20 rounded-xl px-3 py-2 text-zinc-100 focus:border-orange-500 focus:outline-none">
+                </div>
+                <div>
+                  <label class="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block mb-1">End</label>
+                  <input type="date" id="dateEnd" onchange="onDateRangeChanged()" class="w-full bg-zinc-900 border border-white/20 rounded-xl px-3 py-2 text-zinc-100 focus:border-orange-500 focus:outline-none">
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </button>
+      </header>
 
-      <!-- Mapping (Antique Scroll Map Icon) -->
-      <button onclick="selectDivisionTab('Mapping')" id="btn-div-Mapping" class="group flex items-center justify-between px-5 py-4 rounded-2xl border transition text-left bg-zinc-900/90 border-white/15 hover:border-orange-500/60">
-        <div class="flex items-center gap-3.5">
-          <span class="w-11 h-11 rounded-xl bg-zinc-950 border border-white/15 flex items-center justify-center text-amber-400 group-hover:border-orange-500/50 transition">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M6 4h11a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V4z"/>
-              <path stroke-linecap="round" stroke-linejoin="round" d="M6 4a2 2 0 0 0-2 2v1a1 1 0 0 0 1 1h1"/>
-              <path stroke-linecap="round" stroke-linejoin="round" d="M19 17h1a1 1 0 0 1 1 1v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2"/>
-              <path stroke-linecap="round" stroke-linejoin="round" d="M9.5 9.5l2 2m0-2l-2 2"/>
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12.5 13.5c1.2-.8 2.2-.3 3 0"/>
-              <circle cx="15.5" cy="9" r="1" fill="currentColor"/>
-            </svg>
-          </span>
-          <div>
-            <p class="text-base font-extrabold text-white tracking-tight">Mapping</p>
-            <p class="text-xs text-zinc-400 font-medium"><span id="count-Mapping">0</span> Need Attention</p>
+      <!-- Zone 2: WEEKLY WORK ORDERS (6 Interactive KPI Cards + Auto-Expanded Weekly Panel) -->
+      <section class="zone-3d rounded-2xl p-4 md:p-5 space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-white/10">
+          <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-orange-500"></span>
+            <h2 class="text-xs font-extrabold uppercase tracking-wider text-zinc-200">WEEKLY WORK ORDERS</h2>
+          </div>
+          <span id="weekRangeBadge" class="text-[11px] font-mono text-zinc-400 bg-zinc-900 border border-white/15 px-2.5 py-0.5 rounded-lg"></span>
+        </div>
+
+        <div id="kpi-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3.5"></div>
+
+        <!-- Auto-Expanded Weekly Data Panel when a KPI card is clicked -->
+        <div id="weeklyExpandedPanel" class="hidden card-dark rounded-2xl overflow-hidden shadow-xl border-orange-500/60">
+          <div class="px-4 py-3 bg-zinc-900/90 border-b border-white/15 flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-2.5">
+              <span class="px-2 py-0.5 rounded bg-orange-500/20 border border-orange-500/40 text-orange-400 text-[10px] font-extrabold uppercase tracking-wider">Weekly View</span>
+              <h3 id="weeklyExpandedTitle" class="text-xs sm:text-sm font-extrabold text-white"></h3>
+              <span id="weeklyExpandedCount" class="text-[11px] font-mono text-zinc-400"></span>
+            </div>
+            <button type="button" onclick="clearWeeklyKpiFilter()" class="text-xs font-semibold text-zinc-300 hover:text-white bg-zinc-800 hover:bg-zinc-700 border border-white/15 px-3 py-1 rounded-lg transition cursor-pointer">
+              ✕ Close Weekly View
+            </button>
+          </div>
+          <div class="overflow-x-auto" id="weekly-table-container"></div>
+        </div>
+      </section>
+
+      <!-- Zone 3: NEED ATTENTION WORK ORDERS -->
+      <div id="workOrderControlPanel" class="zone-3d-amber rounded-2xl p-4 md:p-5 space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-white/10">
+          <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+            <h2 class="text-xs font-extrabold uppercase tracking-wider text-zinc-200">NEED ATTENTION WORK ORDERS</h2>
+          </div>
+          <span class="text-[10.5px] text-zinc-400">Active items only (excludes Closed &amp; Cancel)</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <!-- All -->
+          <button onclick="selectDivisionTab('All')" id="btn-div-All" class="group flex items-center justify-between px-5 py-4 rounded-2xl border transition text-left bg-orange-600/15 border-orange-500 shadow-lg shadow-orange-600/10 cursor-pointer">
+            <div class="flex items-center gap-3.5">
+              <span class="w-11 h-11 rounded-xl bg-zinc-950 border border-orange-500/40 flex items-center justify-center text-orange-400 transition">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <rect x="3" y="3" width="7" height="7" rx="1.5"/>
+                  <rect x="14" y="3" width="7" height="7" rx="1.5"/>
+                  <rect x="3" y="14" width="7" height="7" rx="1.5"/>
+                  <rect x="14" y="14" width="7" height="7" rx="1.5"/>
+                </svg>
+              </span>
+              <div>
+                <p class="text-base font-extrabold text-white tracking-tight">All</p>
+                <p class="text-xs text-zinc-400 font-medium"><span id="count-All">0</span> Need Attention</p>
+              </div>
+            </div>
+          </button>
+
+          <!-- Mapping -->
+          <button onclick="selectDivisionTab('Mapping')" id="btn-div-Mapping" class="group flex items-center justify-between px-5 py-4 rounded-2xl border transition text-left bg-zinc-900/90 border-white/15 hover:border-orange-500/60 cursor-pointer">
+            <div class="flex items-center gap-3.5">
+              <span class="w-11 h-11 rounded-xl bg-zinc-950 border border-white/15 flex items-center justify-center text-amber-400 group-hover:border-orange-500/50 transition">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 4h11a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V4z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 4a2 2 0 0 0-2 2v1a1 1 0 0 0 1 1h1"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 17h1a1 1 0 0 1 1 1v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9.5 9.5l2 2m0-2l-2 2"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12.5 13.5c1.2-.8 2.2-.3 3 0"/>
+                  <circle cx="15.5" cy="9" r="1" fill="currentColor"/>
+                </svg>
+              </span>
+              <div>
+                <p class="text-base font-extrabold text-white tracking-tight">Mapping</p>
+                <p class="text-xs text-zinc-400 font-medium"><span id="count-Mapping">0</span> Need Attention</p>
+              </div>
+            </div>
+          </button>
+
+          <!-- Survey -->
+          <button onclick="selectDivisionTab('Survey')" id="btn-div-Survey" class="group flex items-center justify-between px-5 py-4 rounded-2xl border transition text-left bg-zinc-900/90 border-white/15 hover:border-orange-500/60 cursor-pointer">
+            <div class="flex items-center gap-3.5">
+              <span class="w-11 h-11 rounded-xl bg-zinc-950 border border-white/15 flex items-center justify-center text-orange-400 group-hover:border-orange-500/50 transition">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <circle cx="6" cy="19" r="3"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/>
+                  <circle cx="18" cy="5" r="3"/>
+                </svg>
+              </span>
+              <div>
+                <p class="text-base font-extrabold text-white tracking-tight">Survey</p>
+                <p class="text-xs text-zinc-400 font-medium"><span id="count-Survey">0</span> Need Attention</p>
+              </div>
+            </div>
+          </button>
+        </div>
+
+        <!-- Sub-Filter Bar (Status Pills + Coverage Filter) -->
+        <div id="divisionFilterPanel" class="pt-4 border-t border-white/15 flex flex-wrap justify-between items-center gap-3">
+          <div id="status-filter-pills" class="flex gap-1.5 overflow-x-auto pb-1 sm:pb-0"></div>
+
+          <div class="flex items-center gap-2">
+            <select id="coverageFilter" onchange="renderActiveTab()" class="hidden bg-zinc-900 border border-white/20 text-zinc-200 rounded-xl px-3 py-1.5 text-xs font-medium focus:outline-none focus:border-orange-500">
+              <option value="ALL">Coverage: All</option>
+              <option value="Onet">Onet</option>
+              <option value="Partner">Partner</option>
+              <option value="Not Cover">Not Cover</option>
+            </select>
           </div>
         </div>
-      </button>
+      </div>
 
-      <!-- Survey (Route Icon) -->
-      <button onclick="selectDivisionTab('Survey')" id="btn-div-Survey" class="group flex items-center justify-between px-5 py-4 rounded-2xl border transition text-left bg-zinc-900/90 border-white/15 hover:border-orange-500/60">
-        <div class="flex items-center gap-3.5">
-          <span class="w-11 h-11 rounded-xl bg-zinc-950 border border-white/15 flex items-center justify-center text-orange-400 group-hover:border-orange-500/50 transition">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <circle cx="6" cy="19" r="3"/>
-              <path stroke-linecap="round" stroke-linejoin="round" d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/>
-              <circle cx="18" cy="5" r="3"/>
-            </svg>
-          </span>
-          <div>
-            <p class="text-base font-extrabold text-white tracking-tight">Survey</p>
-            <p class="text-xs text-zinc-400 font-medium"><span id="count-Survey">0</span> Need Attention</p>
-          </div>
-        </div>
-      </button>
-    </div>
+      <!-- Loader -->
+      <div id="loader" class="text-center py-16 hidden">
+        <div class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-orange-500 mb-3"></div>
+        <p class="text-sm text-zinc-400 font-medium">Loading work orders...</p>
+      </div>
 
-    <!-- Sub-Filter Bar (Status Pills + Coverage Filter only) -->
-    <div id="divisionFilterPanel" class="pt-4 border-t border-white/15 flex flex-wrap justify-between items-center gap-3">
-      <div id="status-filter-pills" class="flex gap-1.5 overflow-x-auto pb-1 sm:pb-0"></div>
-
-      <div class="flex items-center gap-2">
-        <select id="coverageFilter" onchange="renderActiveTab()" class="hidden bg-zinc-900 border border-white/20 text-zinc-200 rounded-xl px-3 py-1.5 text-xs font-medium focus:outline-none focus:border-orange-500">
-          <option value="ALL">Coverage: All</option>
-          <option value="Onet">Onet</option>
-          <option value="Partner">Partner</option>
-          <option value="Not Cover">Not Cover</option>
-        </select>
+      <!-- Main Data Table Wrapper -->
+      <div id="table-wrapper" class="zone-3d rounded-2xl overflow-hidden shadow-xl">
+        <div class="overflow-x-auto" id="main-table-container"></div>
       </div>
     </div>
-  </div>
-
-  <!-- Loader -->
-  <div id="loader" class="text-center py-16 hidden">
-    <div class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-orange-500 mb-3"></div>
-    <p class="text-sm text-zinc-400 font-medium">Loading work orders...</p>
-  </div>
-
-  <!-- Main Data Table Wrapper (Need Attention Work Orders) -->
-  <div id="table-wrapper" class="zone-3d rounded-2xl overflow-hidden shadow-xl">
-    <div class="overflow-x-auto" id="main-table-container"></div>
   </div>
 
   <!-- Modal New Work Order -->
@@ -250,7 +304,7 @@
     <div class="card-dark rounded-2xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl">
       <div class="flex justify-between items-center mb-4 border-b border-white/15 pb-3">
         <h2 class="text-lg font-bold text-white">Create New Work Order</h2>
-        <button onclick="closeAddModal()" class="text-zinc-400 hover:text-white text-xl">&times;</button>
+        <button onclick="closeAddModal()" class="text-zinc-400 hover:text-white text-xl cursor-pointer">&times;</button>
       </div>
 
       <div class="space-y-3.5 text-xs">
@@ -367,8 +421,8 @@
       </div>
 
       <div class="flex justify-end gap-2 mt-6 pt-3 border-t border-white/15">
-        <button onclick="closeAddModal()" class="px-4 py-2 text-xs text-zinc-400 hover:text-white font-medium">Cancel</button>
-        <button onclick="submitNewTicket()" id="btnSubmitNew" class="bg-orange-600 hover:bg-orange-500 text-white px-5 py-2 rounded-xl text-xs font-bold shadow">Create &amp; Notify</button>
+        <button onclick="closeAddModal()" class="px-4 py-2 text-xs text-zinc-400 hover:text-white font-medium cursor-pointer">Cancel</button>
+        <button onclick="submitNewTicket()" id="btnSubmitNew" class="bg-orange-600 hover:bg-orange-500 text-white px-5 py-2 rounded-xl text-xs font-bold shadow cursor-pointer">Create &amp; Notify</button>
       </div>
     </div>
   </div>
@@ -384,10 +438,10 @@
 
         <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
           <select id="historyCustomerFilter" onchange="onHistoryFilterChange()" class="bg-zinc-900 border border-white/20 text-zinc-200 rounded-xl px-3 py-1.5 text-xs font-medium max-w-[220px]"></select>
-          <button onclick="exportHistoryPDF()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-lg shadow-emerald-600/20">
+          <button onclick="exportHistoryPDF()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-lg shadow-emerald-600/20 cursor-pointer">
             <span>📄</span> Export PDF (Portrait)
           </button>
-          <button onclick="closeHistoryModal()" class="bg-zinc-800 hover:bg-zinc-700 border border-white/15 text-zinc-200 px-3 py-1 rounded-xl text-sm font-bold">&times;</button>
+          <button onclick="closeHistoryModal()" class="bg-zinc-800 hover:bg-zinc-700 border border-white/15 text-zinc-200 px-3 py-1 rounded-xl text-sm font-bold cursor-pointer">&times;</button>
         </div>
       </div>
 
@@ -405,7 +459,7 @@
     <div class="card-dark rounded-2xl p-6 w-full max-w-md shadow-2xl">
       <div class="flex justify-between items-center mb-4 border-b border-white/15 pb-3">
         <h2 class="text-base font-bold text-white">System &amp; Access Info</h2>
-        <button onclick="closeSettingsModal()" class="text-zinc-400 hover:text-white text-xl">&times;</button>
+        <button onclick="closeSettingsModal()" class="text-zinc-400 hover:text-white text-xl cursor-pointer">&times;</button>
       </div>
       <div class="space-y-3 text-xs text-zinc-300">
         <div class="bg-zinc-950 p-3.5 rounded-xl border border-white/15">
@@ -414,12 +468,12 @@
         </div>
         <div class="bg-zinc-950 p-3.5 rounded-xl border border-white/15">
           <p class="text-zinc-500 text-[10px]">Application Version</p>
-          <p class="font-semibold text-white mt-0.5">BLiP Work Order Monitoring Dashboard v4.0.0 (Horizontal Edition)</p>
+          <p class="font-semibold text-white mt-0.5">BLiP Work Order Monitoring Dashboard v4.1.0 (Dark Sidebar Edition)</p>
           <p class="text-[10px] text-zinc-500 mt-1">Weekly Work Orders • Need Attention Work Orders • Activity Log &amp; All Activity Log</p>
         </div>
       </div>
       <div class="mt-5 flex justify-end">
-        <button onclick="closeSettingsModal()" class="bg-orange-600 hover:bg-orange-500 text-white px-4 py-2 rounded-xl text-xs font-semibold shadow">Close</button>
+        <button onclick="closeSettingsModal()" class="bg-orange-600 hover:bg-orange-500 text-white px-4 py-2 rounded-xl text-xs font-semibold shadow cursor-pointer">Close</button>
       </div>
     </div>
   </div>
@@ -457,6 +511,45 @@
     let allHistoryForType = [];
     let filteredHistoryLogs = [];
 
+    function toggleDatePopover(event) {
+      event.stopPropagation();
+      const pop = document.getElementById("datePopover");
+      pop.classList.toggle("hidden");
+    }
+
+    document.addEventListener("click", function (e) {
+      const pop = document.getElementById("datePopover");
+      const wrap = document.getElementById("dateSearchWrapper");
+      if (pop && !pop.classList.contains("hidden") && wrap && !wrap.contains(e.target)) {
+        pop.classList.add("hidden");
+      }
+    });
+
+    function updateDateSearchDisplay() {
+      const startVal = document.getElementById("dateStart").value;
+      const endVal = document.getElementById("dateEnd").value;
+      const summaryEl = document.getElementById("dateSearchSummary");
+      const badgeEl = document.getElementById("dateActiveBadge");
+
+      if (!startVal && !endVal) {
+        summaryEl.innerText = "Search Work Orders By Date...";
+        summaryEl.className = "text-xs sm:text-sm text-zinc-400 truncate";
+        badgeEl.classList.add("hidden");
+      } else {
+        const sTxt = startVal || "...";
+        const eTxt = endVal || "...";
+        summaryEl.innerText = `${sTxt} – ${eTxt}`;
+        summaryEl.className = "text-xs sm:text-sm text-zinc-100 font-semibold truncate";
+        badgeEl.classList.remove("hidden");
+      }
+    }
+
+    function onDateRangeChanged() {
+      updateDateSearchDisplay();
+      renderWeeklyPanel();
+      renderActiveTab();
+    }
+
     function renderWeekRangeBadge() {
       const badge = document.getElementById("weekRangeBadge");
       if (!badge) return;
@@ -492,6 +585,7 @@
 
     document.addEventListener("DOMContentLoaded", function () {
       renderWeekRangeBadge();
+      updateDateSearchDisplay();
       initGoogleSignIn();
       syncDivisionButtonsUI();
       if (authToken) {
@@ -539,35 +633,39 @@
     }
 
     function updateAuthUI() {
+      const actionWrap = document.getElementById("sidebarActionWrap");
       const btnNew = document.getElementById("btnNewTicket");
       const googleBtn = document.getElementById("googleBtnWrapper");
-      const headerBadge = document.getElementById("headerUserBadge");
+      const sidebarBadge = document.getElementById("sidebarUserBadge");
       const settingsStatus = document.getElementById("settingsAuthStatus");
 
       if (currentUser) {
         const isAdmin = currentUser.role === "Admin";
+        actionWrap.classList.toggle("hidden", !isAdmin);
         btnNew.classList.toggle("hidden", !isAdmin);
         googleBtn.classList.add("hidden");
-        headerBadge.classList.remove("hidden");
-        headerBadge.classList.add("flex");
-        document.getElementById("headerUserName").innerText = currentUser.name;
+        sidebarBadge.classList.remove("hidden");
+        sidebarBadge.classList.add("flex");
+        document.getElementById("sidebarUserName").innerText = currentUser.name;
+        document.getElementById("sidebarUserRole").innerText = currentUser.role || "Member";
         settingsStatus.innerText = `${currentUser.name} (${currentUser.email})`;
       } else {
+        actionWrap.classList.add("hidden");
         btnNew.classList.add("hidden");
         googleBtn.classList.remove("hidden");
-        headerBadge.classList.add("hidden");
-        headerBadge.classList.remove("flex");
+        sidebarBadge.classList.add("hidden");
+        sidebarBadge.classList.remove("flex");
         settingsStatus.innerText = "Viewer Mode (Not Signed In)";
       }
     }
 
     function setActiveNav(navId) {
       document.querySelectorAll(".nav-btn").forEach(b => {
-        b.className = "nav-btn flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:bg-zinc-800/80 hover:text-white transition whitespace-nowrap";
+        b.className = "nav-btn w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-medium text-zinc-400 hover:bg-zinc-800/80 hover:text-white text-left transition cursor-pointer";
       });
       const activeEl = document.getElementById(`nav-${navId}`);
       if (activeEl) {
-        activeEl.className = "nav-btn flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold bg-orange-600 text-white shadow shadow-orange-600/20 whitespace-nowrap";
+        activeEl.className = "nav-btn w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-bold bg-orange-600 text-white shadow shadow-orange-600/20 text-left transition cursor-pointer";
       }
     }
 
@@ -644,9 +742,9 @@
         const isSelected = activeTab === type;
 
         if (isSelected) {
-          btn.className = "group flex items-center justify-between px-5 py-4 rounded-2xl border transition text-left bg-orange-600/15 border-orange-500 shadow-lg shadow-orange-600/10";
+          btn.className = "group flex items-center justify-between px-5 py-4 rounded-2xl border transition text-left bg-orange-600/15 border-orange-500 shadow-lg shadow-orange-600/10 cursor-pointer";
         } else {
-          btn.className = "group flex items-center justify-between px-5 py-4 rounded-2xl border transition text-left bg-zinc-900/90 border-white/15 hover:border-orange-500/60";
+          btn.className = "group flex items-center justify-between px-5 py-4 rounded-2xl border transition text-left bg-zinc-900/90 border-white/15 hover:border-orange-500/60 cursor-pointer";
         }
       });
     }
@@ -807,7 +905,7 @@
                 ${canEdit ? `
                   <div class="flex flex-col sm:flex-row gap-2 items-stretch sm:items-end">
                     <textarea id="wk-map-desc-${r}" rows="1" placeholder="Description..." class="flex-1 bg-zinc-900 border border-white/20 rounded-lg px-2.5 py-1.5 text-xs text-white focus:border-orange-500 focus:outline-none">${item.description || ""}</textarea>
-                    <button onclick="updateWeeklyMappingRow(${r}, this)" class="bg-orange-600 hover:bg-orange-500 text-white px-3.5 py-1.5 rounded-lg text-xs font-extrabold shadow shrink-0 transition">Save &amp; Notify</button>
+                    <button onclick="updateWeeklyMappingRow(${r}, this)" class="bg-orange-600 hover:bg-orange-500 text-white px-3.5 py-1.5 rounded-lg text-xs font-extrabold shadow shrink-0 transition cursor-pointer">Save &amp; Notify</button>
                   </div>
                   <p class="text-[10.5px] text-zinc-400">PIC: <strong class="text-orange-400">👤 ${autoPicName}</strong></p>
                 ` : `<p class="text-zinc-300 whitespace-pre-line leading-relaxed">${item.description || "-"}</p>`}
@@ -890,7 +988,7 @@
       document.getElementById("status-filter-pills").innerHTML = pills.map(p => {
         const isActive = currentStatusFilter === p.key;
         return `
-          <button onclick="setStatusFilter('${p.key}')" class="${isActive ? 'bg-orange-600 text-white border border-orange-400' : 'bg-zinc-900 text-zinc-400 hover:bg-zinc-800 hover:text-white border border-white/15'} px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition">
+          <button onclick="setStatusFilter('${p.key}')" class="${isActive ? 'bg-orange-600 text-white border border-orange-400' : 'bg-zinc-900 text-zinc-400 hover:bg-zinc-800 hover:text-white border border-white/15'} px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition cursor-pointer">
             ${p.label}
           </button>
         `;
@@ -907,6 +1005,7 @@
     function clearDateFilter() {
       document.getElementById("dateStart").value = "";
       document.getElementById("dateEnd").value = "";
+      updateDateSearchDisplay();
       renderWeeklyPanel();
       renderActiveTab();
     }
@@ -914,13 +1013,10 @@
     function matchDateRange(lastUpdatedStr) {
       const startVal = document.getElementById("dateStart").value;
       const endVal = document.getElementById("dateEnd").value;
-      const btnClear = document.getElementById("btnClearDate");
 
       if (!startVal && !endVal) {
-        btnClear.classList.add("hidden");
         return true;
       }
-      btnClear.classList.remove("hidden");
 
       if (!lastUpdatedStr || lastUpdatedStr === "-") return false;
       const d = parseLocalTimestamp(lastUpdatedStr);
@@ -1357,7 +1453,6 @@
         const stageDetailObj = (t.stageDetails && t.stageDetails[activeStageKey]) || { pic: "", note: "" };
         const headerDisplayStatus = currentStageVal || "Not Yet";
 
-        // Strictly filter logs that have parsed changes belonging ONLY to activeStageObj
         const ticketLogs = (cachedHistory.Survey || []).filter(log => String(log.ticketId).trim() === String(t.ticketId).trim());
         const stageEntries = ticketLogs
           .map(log => ({ log, parsed: parseResiLogEntry(log, stageDetailObj.pic, stageDetailObj.note, activeStageObj) }))
@@ -1402,7 +1497,7 @@
             </div>
 
             <div class="flex justify-end pt-1">
-              <button onclick="saveExpandedSurveyStage(${t.rowIndex}, '${t.ticketId}', '${activeStageKey}', this)" class="bg-orange-600 hover:bg-orange-500 text-white px-5 py-2 rounded-xl text-xs font-bold shadow-md shadow-orange-600/20 transition">
+              <button onclick="saveExpandedSurveyStage(${t.rowIndex}, '${t.ticketId}', '${activeStageKey}', this)" class="bg-orange-600 hover:bg-orange-500 text-white px-5 py-2 rounded-xl text-xs font-bold shadow-md shadow-orange-600/20 transition cursor-pointer">
                 Save &amp; Notify Team
               </button>
             </div>
@@ -1447,7 +1542,7 @@
               <h4 class="text-xs font-extrabold text-orange-400 tracking-wide">
                 Activity Log • ${activeStageObj.fullLabel} • <span class="text-white font-mono">(${t.ticketId})</span>
               </h4>
-              <button onclick="openHistoryModal('Survey', '${t.ticketId}', '${activeStageKey}')" class="text-[11px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/35 px-2.5 py-1 rounded-lg hover:bg-emerald-500/20 transition">
+              <button onclick="openHistoryModal('Survey', '${t.ticketId}', '${activeStageKey}')" class="text-[11px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/35 px-2.5 py-1 rounded-lg hover:bg-emerald-500/20 transition cursor-pointer">
                 📄 Export PDF
               </button>
             </div>
@@ -1502,7 +1597,7 @@
       `;
     }
 
-    // ================= RENDER ALL COMBINED TABLE (NEED ATTENTION: MAPPING + SURVEY) =================
+    // ================= RENDER ALL COMBINED TABLE =================
     function renderAllCombinedTable() {
       document.getElementById("coverageFilter").classList.add("hidden");
       renderFilterPills();
@@ -1585,7 +1680,7 @@
                 ${canEdit ? `
                   <div class="flex flex-col sm:flex-row gap-2 items-stretch sm:items-end">
                     <textarea id="cmb-map-desc-${r}" rows="1" placeholder="Description..." class="flex-1 bg-zinc-900 border border-white/20 rounded-lg px-2.5 py-1.5 text-xs text-white focus:border-orange-500 focus:outline-none">${item.description || ""}</textarea>
-                    <button onclick="updateCombinedMappingRow(${r}, this)" class="bg-orange-600 hover:bg-orange-500 text-white px-3.5 py-1.5 rounded-lg text-xs font-extrabold shadow shrink-0 transition">Save &amp; Notify</button>
+                    <button onclick="updateCombinedMappingRow(${r}, this)" class="bg-orange-600 hover:bg-orange-500 text-white px-3.5 py-1.5 rounded-lg text-xs font-extrabold shadow shrink-0 transition cursor-pointer">Save &amp; Notify</button>
                   </div>
                   <p class="text-[10.5px] text-zinc-400">PIC: <strong class="text-orange-400">👤 ${autoPicName}</strong></p>
                 ` : `<p class="text-zinc-300 whitespace-pre-line leading-relaxed">${item.description || "-"}</p>`}
@@ -1860,7 +1955,7 @@
                 ${canEdit ? `
                   <div class="flex flex-col sm:flex-row gap-2 items-stretch sm:items-end">
                     <textarea id="map-desc-${r}" rows="2" placeholder="Description..." class="flex-1 bg-zinc-900 border border-white/20 rounded-lg px-2.5 py-1.5 text-xs text-white focus:border-orange-500 focus:outline-none">${t.description || ''}</textarea>
-                    <button onclick="updateMappingRow(${r}, this)" class="bg-orange-600 hover:bg-orange-500 text-white px-3.5 py-1.5 rounded-lg text-xs font-extrabold shadow shrink-0 transition">Save &amp; Notify</button>
+                    <button onclick="updateMappingRow(${r}, this)" class="bg-orange-600 hover:bg-orange-500 text-white px-3.5 py-1.5 rounded-lg text-xs font-extrabold shadow shrink-0 transition cursor-pointer">Save &amp; Notify</button>
                   </div>
                 ` : `<p class="text-[12px] text-zinc-300 whitespace-pre-line leading-relaxed font-medium">${t.description || "-"}</p>`}
               </div>
