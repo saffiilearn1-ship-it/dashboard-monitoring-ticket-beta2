@@ -3,21 +3,52 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BLiP Work Order Monitoring Dashboard v3.9.7 — Horizontal Dark Edition</title>
+  <title>BLiP Work Order Monitoring Dashboard v3.9.8 — Horizontal Dark Edition</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
-    body { background-color: #09090b; color: #f4f4f5; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
-    .card-dark {
-      background-color: #141418;
-      border: 1px solid rgba(249, 115, 22, 0.35);
-      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.03);
+    body {
+      background-color: #070709;
+      background-image: radial-gradient(circle at 50% 0%, rgba(249, 115, 22, 0.06), transparent 55%);
+      color: #f4f4f5;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
     }
+
+    .card-dark {
+      background: linear-gradient(180deg, #18181e 0%, #121216 100%);
+      border: 1.5px solid rgba(249, 115, 22, 0.42);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.11),
+        0 8px 20px -4px rgba(0, 0, 0, 0.85),
+        0 2px 0 rgba(249, 115, 22, 0.22);
+    }
+
+    .zone-3d {
+      background: linear-gradient(180deg, #17171c 0%, #101014 100%);
+      border: 1.5px solid rgba(249, 115, 22, 0.55);
+      box-shadow:
+        inset 0 1.5px 0 rgba(255, 255, 255, 0.14),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.75),
+        0 14px 28px -8px rgba(0, 0, 0, 0.92),
+        0 3px 0 rgba(249, 115, 22, 0.35);
+    }
+
+    .zone-3d-amber {
+      background: linear-gradient(180deg, #17171c 0%, #101014 100%);
+      border: 1.5px solid rgba(251, 191, 36, 0.52);
+      box-shadow:
+        inset 0 1.5px 0 rgba(255, 255, 255, 0.14),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.75),
+        0 14px 28px -8px rgba(0, 0, 0, 0.92),
+        0 3px 0 rgba(251, 191, 36, 0.28);
+    }
+
     .table-header-dark {
-      background-color: #18181f;
+      background: linear-gradient(180deg, #1e1e26 0%, #16161c 100%);
       color: #e4e4e7;
-      border-bottom: 1px solid rgba(249, 115, 22, 0.35);
+      border-bottom: 1.5px solid rgba(249, 115, 22, 0.45);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
     }
 
     @keyframes pulse-glow-orange {
@@ -37,12 +68,12 @@
 </head>
 <body class="min-h-screen flex flex-col p-4 md:p-6 lg:px-8">
 
-  <!-- Top Horizontal Brand Bar & Navigation -->
-  <header class="card-dark rounded-2xl p-4 mb-6 flex flex-col lg:flex-row justify-between items-center gap-4">
+  <!-- Zone 1: Top Horizontal Brand Bar & Navigation -->
+  <header class="zone-3d rounded-2xl p-4 mb-7 flex flex-col lg:flex-row justify-between items-center gap-4">
     <div class="flex flex-col md:flex-row items-center gap-6 w-full lg:w-auto">
       <div class="flex items-center gap-2.5 shrink-0 select-none">
         <span class="tracking-tighter font-extrabold text-3xl text-white">BL<span class="text-orange-500">i</span>P</span>
-        <span class="text-[10px] bg-orange-500/20 border border-orange-500/50 px-2 py-0.5 rounded text-orange-400 font-mono font-bold">v3.9.7</span>
+        <span class="text-[10px] bg-orange-500/20 border border-orange-500/50 px-2 py-0.5 rounded text-orange-400 font-mono font-bold">v3.9.8</span>
       </div>
 
       <nav class="flex gap-1.5 overflow-x-auto w-full md:w-auto pb-1 md:pb-0">
@@ -83,20 +114,20 @@
     </div>
   </header>
 
-  <!-- Section 1: WEEKLY WORK ORDERS (6 Interactive KPI Cards + Auto-Expanded Weekly Panel) -->
-  <section class="mb-6 space-y-4">
-    <div class="flex flex-wrap items-center justify-between gap-2">
+  <!-- Zone 2: WEEKLY WORK ORDERS (6 Interactive KPI Cards + Auto-Expanded Weekly Panel) -->
+  <section class="zone-3d rounded-2xl p-4 md:p-5 mb-7 space-y-4">
+    <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-white/10">
       <div class="flex items-center gap-2">
         <span class="w-2 h-2 rounded-full bg-orange-500"></span>
         <h2 class="text-xs font-extrabold uppercase tracking-wider text-zinc-200">WEEKLY WORK ORDERS</h2>
       </div>
-      <span id="weekRangeBadge" class="text-[11px] font-mono text-zinc-400 bg-zinc-900 border border-white/10 px-2.5 py-0.5 rounded-lg"></span>
+      <span id="weekRangeBadge" class="text-[11px] font-mono text-zinc-400 bg-zinc-900 border border-white/15 px-2.5 py-0.5 rounded-lg"></span>
     </div>
 
     <div id="kpi-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3.5"></div>
 
     <!-- Auto-Expanded Weekly Data Panel when a KPI card is clicked -->
-    <div id="weeklyExpandedPanel" class="hidden card-dark rounded-2xl overflow-hidden shadow-xl border-orange-500/50">
+    <div id="weeklyExpandedPanel" class="hidden card-dark rounded-2xl overflow-hidden shadow-xl border-orange-500/60">
       <div class="px-4 py-3 bg-zinc-900/90 border-b border-white/15 flex flex-wrap items-center justify-between gap-2">
         <div class="flex items-center gap-2.5">
           <span class="px-2 py-0.5 rounded bg-orange-500/20 border border-orange-500/40 text-orange-400 text-[10px] font-extrabold uppercase tracking-wider">Weekly View</span>
@@ -111,9 +142,9 @@
     </div>
   </section>
 
-  <!-- Section 2: NEED ATTENTION WORK ORDERS -->
-  <div id="workOrderControlPanel" class="card-dark rounded-2xl p-4 md:p-5 mb-6 space-y-4">
-    <div class="flex flex-wrap items-center justify-between gap-2">
+  <!-- Zone 3: NEED ATTENTION WORK ORDERS -->
+  <div id="workOrderControlPanel" class="zone-3d-amber rounded-2xl p-4 md:p-5 mb-6 space-y-4">
+    <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-white/10">
       <div class="flex items-center gap-2">
         <span class="w-2 h-2 rounded-full bg-amber-400"></span>
         <h2 class="text-xs font-extrabold uppercase tracking-wider text-zinc-200">NEED ATTENTION WORK ORDERS</h2>
@@ -205,7 +236,7 @@
   </div>
 
   <!-- Main Data Table Wrapper (Need Attention Work Orders) -->
-  <div id="table-wrapper" class="card-dark rounded-2xl overflow-hidden shadow-xl">
+  <div id="table-wrapper" class="zone-3d rounded-2xl overflow-hidden shadow-xl">
     <div class="overflow-x-auto" id="main-table-container"></div>
   </div>
 
@@ -378,7 +409,7 @@
         </div>
         <div class="bg-zinc-950 p-3.5 rounded-xl border border-white/15">
           <p class="text-zinc-500 text-[10px]">Application Version</p>
-          <p class="font-semibold text-white mt-0.5">BLiP Work Order Monitoring Dashboard v3.9.7 (Horizontal Edition)</p>
+          <p class="font-semibold text-white mt-0.5">BLiP Work Order Monitoring Dashboard v3.9.8 (Horizontal Edition)</p>
           <p class="text-[10px] text-zinc-500 mt-1">Weekly Work Orders • Need Attention Work Orders • Workflow Progress &amp; Activity Log</p>
         </div>
       </div>
@@ -394,11 +425,17 @@
     const GOOGLE_CLIENT_ID = "478985076311-eh3rsa1o4m9od56egthrj15o6pog0sta.apps.googleusercontent.com";
     // =================================================
 
+    const SURVEY_STAGE_DEFS = [
+      { key: "survey", label: "Survey", fullLabel: "Survey", bracketTags: ["survey"], opts: ["Not Yet", "Done", "On Progress", "Pending", "Cancel"] },
+      { key: "reportSurvey", label: "Report Survey", fullLabel: "Report Survey", bracketTags: ["report survey", "staging"], opts: ["Not Yet", "Done", "On Progress", "Pending", "Cancel"] },
+      { key: "boq", label: "BOQ", fullLabel: "BOQ", bracketTags: ["boq", "po procurement", "po"], opts: ["Not Yet", "Done", "On Progress", "Pending", "Cancel"] },
+      { key: "materialEquip", label: "Preparing Network Materials and Equipment", fullLabel: "Preparing Network Materials and Equipment", bracketTags: ["preparing network materials and equipment", "material & equipment", "material", "procurement"], opts: ["Not Yet", "Done", "On Progress", "Pending", "Waiting Approval", "Cancel"] },
+      { key: "forwardWo", label: "Forward WO Installation", fullLabel: "Forward WO Installation", bracketTags: ["forward wo installation", "forward wo", "installation wo"], opts: ["Not Yet", "Done", "On Progress", "Pending", "Cancel"] }
+    ];
+
     let appData = { survey: [], mapping: [] };
     let activeTab = "All";
     let currentStatusFilter = "NEED_ATTENTION";
-
-    // Independent Weekly KPI filter state (auto-expands weekly panel on click)
     let activeWeeklyKpi = null;
 
     let authToken = "";
@@ -603,7 +640,6 @@
       });
     }
 
-    // Click [All] | [Mapping] | [Survey] under Need Attention Work Orders
     function selectDivisionTab(type) {
       activeTab = type;
       currentStatusFilter = "NEED_ATTENTION";
@@ -612,7 +648,6 @@
       renderActiveTab();
     }
 
-    // Click one of the 6 WEEKLY WORK ORDERS KPI cards -> auto-expand weekly data panel
     function selectKpiCard(kpiKey) {
       if (activeWeeklyKpi === kpiKey) {
         activeWeeklyKpi = null;
@@ -828,7 +863,6 @@
     }
 
     function renderFilterPills() {
-      // Only All (Need Attention), Open, On Progress, Pending — no Closed or Cancel pills
       const pills = [
         { key: "NEED_ATTENTION", label: "All" },
         { key: "Open", label: "Open" },
@@ -975,7 +1009,15 @@
       return (s === "Done" || s === "Closed") ? "Closed" : s;
     }
 
-    function parseResiLogEntry(log, fallbackPic, fallbackNote) {
+    function matchStageTag(titleText, stageObj) {
+      if (!stageObj) return true;
+      const lowerTitle = String(titleText || "").toLowerCase().trim();
+      const targetNames = [stageObj.label, stageObj.fullLabel, ...(stageObj.bracketTags || [])].map(x => x.toLowerCase());
+      return targetNames.some(tag => lowerTitle === tag || lowerTitle.includes(tag));
+    }
+
+    // stageOnlyObj: when passed (from expanded stepper stage), strictly shows only changes for that stage
+    function parseResiLogEntry(log, fallbackPic, fallbackNote, stageOnlyObj = null) {
       const detail = String(log.detail || "").trim();
       const blocks = detail.split(";").map(s => s.trim()).filter(Boolean);
 
@@ -999,8 +1041,12 @@
 
         const cleanMain = mainPart.replace(/\s*\|\s*PIC:[^|;]+/i, "").trim();
         const transMatch = cleanMain.match(/^\[([^\]]+)\]\s*[^:]+:\s*(.+)$/);
+
         if (transMatch) {
           const stageTitle = transMatch[1].trim();
+          if (stageOnlyObj && !matchStageTag(stageTitle, stageOnlyObj)) {
+            continue;
+          }
           const transVal = transMatch[2].trim();
           const pair = transVal.split("→").map(x => x.trim());
           if (pair.length === 2 && pair[0] !== pair[1]) {
@@ -1009,12 +1055,22 @@
             changes.push(`${stageTitle}: ${pair[1]}`);
           }
         } else if (cleanMain.toLowerCase().startsWith("ticket status:")) {
+          if (stageOnlyObj) continue;
           const stVal = cleanMain.replace(/^ticket status:\s*/i, "").trim();
           const pair = stVal.split("→").map(x => x.trim());
           if (pair.length === 2 && pair[0] !== pair[1]) {
             changes.unshift(`Work Order Status: ${pair[0]} → ${pair[1]}`);
           }
         } else if (cleanMain && !cleanMain.toLowerCase().startsWith("update dicatat")) {
+          if (stageOnlyObj) {
+            const colonIdx = cleanMain.indexOf(":");
+            if (colonIdx > 0) {
+              const prefixTitle = cleanMain.slice(0, colonIdx).trim();
+              if (!matchStageTag(prefixTitle, stageOnlyObj)) continue;
+            } else {
+              continue;
+            }
+          }
           changes.push(cleanMain);
         }
       }
@@ -1025,7 +1081,7 @@
 
       const finalNoteText = notes.length > 0
         ? notes.join(" | ")
-        : (changes.length === 0 && detail ? detail : "-");
+        : (changes.length === 0 && detail && !stageOnlyObj ? detail : "-");
 
       return {
         pic: formatPicLabel(detectedPic || log.pic || log.updatedBy || fallbackPic || "-"),
@@ -1176,13 +1232,7 @@
 
     // ================= HELPER BUILDER SURVEY ROW & STEPPER =================
     function buildSurveyRowHtml(t, displayNo, showDivBadge = false) {
-      const stageDefs = [
-        { key: "survey", label: "Survey", fullLabel: "Survey", bracketTags: ["survey"], opts: ["Not Yet", "Done", "On Progress", "Pending", "Cancel"] },
-        { key: "reportSurvey", label: "Report Survey", fullLabel: "Report Survey", bracketTags: ["report survey", "staging"], opts: ["Not Yet", "Done", "On Progress", "Pending", "Cancel"] },
-        { key: "boq", label: "BOQ", fullLabel: "BOQ", bracketTags: ["boq", "po procurement", "po"], opts: ["Not Yet", "Done", "On Progress", "Pending", "Cancel"] },
-        { key: "materialEquip", label: "Preparing Network Materials and Equipment", fullLabel: "Preparing Network Materials and Equipment", bracketTags: ["preparing network materials and equipment", "material & equipment", "material", "procurement"], opts: ["Not Yet", "Done", "On Progress", "Pending", "Waiting Approval", "Cancel"] },
-        { key: "forwardWo", label: "Forward WO Installation", fullLabel: "Forward WO Installation", bracketTags: ["forward wo installation", "forward wo", "installation wo"], opts: ["Not Yet", "Done", "On Progress", "Pending", "Cancel"] }
-      ];
+      const stageDefs = SURVEY_STAGE_DEFS;
 
       const checkSvg = `<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>`;
       const clockSvg = `<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 7v5l3 2"/></svg>`;
@@ -1289,7 +1339,6 @@
           const dLower = (log.detail || "").toLowerCase();
           return activeStageObj.bracketTags.some(tag => dLower.includes(`[${tag}]`) || dLower.includes(`${tag}:`));
         });
-        const logsToShow = stageLogs.length > 0 ? stageLogs : ticketLogs.slice(0, 3);
 
         const updateMenuHtml = canEdit ? `
           <div class="bg-zinc-950 border border-orange-500/40 rounded-2xl p-4 space-y-3">
@@ -1343,12 +1392,12 @@
 
         const resiItemsHtml = loadingHistoryTicket[t.ticketId]
           ? `<div class="py-5 text-center"><div class="inline-block animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-orange-500"></div></div>`
-          : (logsToShow.length > 0
-              ? logsToShow.map((log, idx) => {
-                  const parsed = parseResiLogEntry(log, stageDetailObj.pic, stageDetailObj.note);
+          : (stageLogs.length > 0
+              ? stageLogs.map((log, idx) => {
+                  const parsed = parseResiLogEntry(log, stageDetailObj.pic, stageDetailObj.note, activeStageObj);
                   const isLatest = idx === 0;
                   return `
-                    <div class="relative pl-6 pb-3.5 last:pb-1 ${idx < logsToShow.length - 1 ? 'border-l border-dashed border-white/20 ml-2' : 'ml-2'}">
+                    <div class="relative pl-6 pb-3.5 last:pb-1 ${idx < stageLogs.length - 1 ? 'border-l border-dashed border-white/20 ml-2' : 'ml-2'}">
                       <span class="w-2.5 h-2.5 rounded-full ${isLatest ? 'bg-orange-500 ring-4 ring-orange-500/20' : 'bg-zinc-500'} absolute -left-[5px] top-1.5"></span>
                       <div class="bg-zinc-950 border border-white/15 rounded-xl p-3 text-xs space-y-1.5">
                         <div class="flex flex-wrap items-center justify-between gap-2">
@@ -1379,7 +1428,7 @@
                 <span class="text-[10px] uppercase tracking-wider text-orange-400 font-bold">Activity Log • ${activeStageObj.fullLabel}</span>
                 <h4 class="text-xs font-extrabold text-white">Progress History (${t.ticketId})</h4>
               </div>
-              <button onclick="openHistoryModal('Survey', '${t.ticketId}')" class="text-[11px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/35 px-2.5 py-1 rounded-lg hover:bg-emerald-500/20 transition">
+              <button onclick="openHistoryModal('Survey', '${t.ticketId}', '${activeStageKey}')" class="text-[11px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/35 px-2.5 py-1 rounded-lg hover:bg-emerald-500/20 transition">
                 📄 Export PDF History
               </button>
             </div>
@@ -1848,10 +1897,18 @@
     }
 
     // ================= ACTIVITY LOG & VERTICAL PDF =================
-    async function openHistoryModal(type, selectedTicketId) {
+    let historyStageFilterKey = null;
+
+    async function openHistoryModal(type, selectedTicketId, stageKey = null) {
       historyTypeActive = type;
+      historyStageFilterKey = type === "Survey" ? stageKey : null;
+
       const prefix = type === "Survey" ? "SRV-" : "MAP-";
-      document.getElementById("historyTypeLabel").innerText = `Work Order Type: ${type} • Activity Log`;
+      const stageObj = historyStageFilterKey ? SURVEY_STAGE_DEFS.find(s => s.key === historyStageFilterKey) : null;
+
+      document.getElementById("historyTypeLabel").innerText = stageObj
+        ? `Work Order Type: ${type} • ${stageObj.fullLabel} Log`
+        : `Work Order Type: ${type} • Activity Log`;
       document.getElementById("historyListContainer").innerHTML = "";
       document.getElementById("historyLoader").classList.remove("hidden");
       document.getElementById("historyModal").classList.remove("hidden");
@@ -1875,15 +1932,23 @@
     }
 
     function closeHistoryModal() {
+      historyStageFilterKey = null;
       document.getElementById("historyModal").classList.add("hidden");
       document.getElementById("historyModal").classList.remove("flex");
     }
 
     function onHistoryFilterChange() {
       const selectedId = document.getElementById("historyCustomerFilter").value;
-      filteredHistoryLogs = selectedId === "ALL"
-        ? allHistoryForType
-        : allHistoryForType.filter(log => String(log.ticketId).trim() === String(selectedId).trim());
+      filteredHistoryLogs = allHistoryForType.filter(log => {
+        const matchTicket = selectedId === "ALL" || String(log.ticketId).trim() === String(selectedId).trim();
+        if (!matchTicket) return false;
+        if (historyStageFilterKey) {
+          const stObj = SURVEY_STAGE_DEFS.find(s => s.key === historyStageFilterKey);
+          const dLower = String(log.detail || "").toLowerCase();
+          return stObj ? stObj.bracketTags.some(tag => dLower.includes(`[${tag}]`) || dLower.includes(`${tag}:`)) : true;
+        }
+        return true;
+      });
 
       renderHistoryTimeline();
     }
@@ -1895,8 +1960,10 @@
         return;
       }
 
+      const stageObj = historyStageFilterKey ? SURVEY_STAGE_DEFS.find(s => s.key === historyStageFilterKey) : null;
+
       container.innerHTML = filteredHistoryLogs.map((item, idx) => {
-        const parsed = parseResiLogEntry(item, "-", "");
+        const parsed = parseResiLogEntry(item, "-", "", stageObj);
         const isLast = idx === filteredHistoryLogs.length - 1;
 
         return `
@@ -1932,7 +1999,7 @@
 
               <div class="flex flex-wrap justify-between items-center gap-2 text-[11px] text-zinc-400 pt-1">
                 <span>PIC: <strong class="text-amber-300">${parsed.pic}</strong></span>
-                ${item.status ? getStatusPillHtml(item.status) : ""}
+                ${!stageObj && item.status ? getStatusPillHtml(item.status) : ""}
               </div>
             </div>
           </div>
@@ -1955,6 +2022,7 @@
 
       const filterSelect = document.getElementById("historyCustomerFilter");
       const targetLabel = filterSelect.options[filterSelect.selectedIndex].text;
+      const stageObj = historyStageFilterKey ? SURVEY_STAGE_DEFS.find(s => s.key === historyStageFilterKey) : null;
       const printedAt = new Date().toLocaleString("en-US", {
         day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit"
       }) + " WIB";
@@ -1968,7 +2036,10 @@
         doc.setTextColor(249, 115, 22);
         doc.setFont("helvetica", "bold");
         doc.setFontSize(13);
-        doc.text(`BLiP — WORK ORDER PROGRESS HISTORY (${historyTypeActive.toUpperCase()})`, marginX, 11);
+        const headingTitle = stageObj
+          ? `BLiP — ${stageObj.fullLabel.toUpperCase()} HISTORY (${historyTypeActive.toUpperCase()})`
+          : `BLiP — WORK ORDER PROGRESS HISTORY (${historyTypeActive.toUpperCase()})`;
+        doc.text(headingTitle, marginX, 11);
 
         doc.setTextColor(220, 220, 225);
         doc.setFont("helvetica", "normal");
@@ -1988,9 +2059,9 @@
       drawHeaderBanner();
 
       filteredHistoryLogs.forEach((log, index) => {
-        const parsed = parseResiLogEntry(log, "-", "");
+        const parsed = parseResiLogEntry(log, "-", "", stageObj);
         const tsText = cleanTimestamp(log.timestamp);
-        const statusText = log.status || "-";
+        const statusText = stageObj ? "" : (log.status || "-");
         const changeLines = parsed.changes.length > 0
           ? parsed.changes.flatMap(ch => doc.splitTextToSize(`• ${ch}`, contentW - 12))
           : [];
@@ -2017,10 +2088,12 @@
         const titleStr = `#${index + 1}  ${log.ticketId} — ${log.customer || "-"}`;
         doc.text(doc.splitTextToSize(titleStr, contentW - 56)[0], marginX + 5, cy);
 
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(8.5);
-        doc.setTextColor(194, 65, 12);
-        doc.text(statusText, pageW - marginX - 4, cy, { align: "right" });
+        if (statusText) {
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(8.5);
+          doc.setTextColor(194, 65, 12);
+          doc.text(statusText, pageW - marginX - 4, cy, { align: "right" });
+        }
 
         cy += 4.5;
         doc.setFont("helvetica", "normal");
