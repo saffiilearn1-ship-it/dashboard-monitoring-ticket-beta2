@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BLiP Ticket Monitoring Dashboard v3.9.4 — Horizontal Dark Edition</title>
+  <title>BLiP Ticket Monitoring Dashboard v3.9.5 — Horizontal Dark Edition</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -42,7 +42,7 @@
     <div class="flex flex-col md:flex-row items-center gap-6 w-full lg:w-auto">
       <div class="flex items-center gap-2.5 shrink-0 select-none">
         <span class="tracking-tighter font-extrabold text-3xl text-white">BL<span class="text-orange-500">i</span>P</span>
-        <span class="text-[10px] bg-orange-500/20 border border-orange-500/50 px-2 py-0.5 rounded text-orange-400 font-mono font-bold">v3.9.4</span>
+        <span class="text-[10px] bg-orange-500/20 border border-orange-500/50 px-2 py-0.5 rounded text-orange-400 font-mono font-bold">v3.9.5</span>
       </div>
 
       <nav class="flex gap-1.5 overflow-x-auto w-full md:w-auto pb-1 md:pb-0">
@@ -83,11 +83,28 @@
     </div>
   </header>
 
-  <!-- 6 KPI Cards Gabungan (Total Ticket - Open - On Progress - Pending - Cancel - Closed) -->
-  <div id="kpi-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3.5 mb-6"></div>
+  <!-- Section 1: Work Order This Week (6 KPI Cards) -->
+  <section class="mb-6">
+    <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-orange-500"></span>
+        <h2 class="text-xs font-extrabold uppercase tracking-wider text-zinc-200">Work Order This Week</h2>
+      </div>
+      <span id="weekRangeBadge" class="text-[11px] font-mono text-zinc-400 bg-zinc-900 border border-white/10 px-2.5 py-0.5 rounded-lg"></span>
+    </div>
+    <div id="kpi-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3.5"></div>
+  </section>
 
-  <!-- 3 Tombol Sejajar [All] | [Mapping] | [Survey] + Sub-Filter (Selalu Terbuka) -->
+  <!-- Section 2: Need Attention Work Order (3 Tombol Sejajar [All] | [Mapping] | [Survey] + Sub-Filter) -->
   <div class="card-dark rounded-2xl p-4 md:p-5 mb-6 space-y-4">
+    <div class="flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+        <h2 class="text-xs font-extrabold uppercase tracking-wider text-zinc-200">Need Attention Work Order</h2>
+      </div>
+      <span class="text-[10.5px] text-zinc-400">Menghitung tiket aktif (tanpa Closed & Cancel)</span>
+    </div>
+
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
       <!-- All -->
       <button onclick="selectDivisionTab('All')" id="btn-div-All" class="group flex items-center justify-between px-5 py-4 rounded-2xl border transition text-left bg-orange-600/15 border-orange-500 shadow-lg shadow-orange-600/10">
@@ -102,7 +119,7 @@
           </span>
           <div>
             <p class="text-base font-extrabold text-white tracking-tight">All</p>
-            <p class="text-xs text-zinc-400 font-medium"><span id="count-All">0</span> Total Ticket</p>
+            <p class="text-xs text-zinc-400 font-medium"><span id="count-All">0</span> Need Attention</p>
           </div>
         </div>
       </button>
@@ -122,7 +139,7 @@
           </span>
           <div>
             <p class="text-base font-extrabold text-white tracking-tight">Mapping</p>
-            <p class="text-xs text-zinc-400 font-medium"><span id="count-Mapping">0</span> Ticket Mapping</p>
+            <p class="text-xs text-zinc-400 font-medium"><span id="count-Mapping">0</span> Need Attention</p>
           </div>
         </div>
       </button>
@@ -139,7 +156,7 @@
           </span>
           <div>
             <p class="text-base font-extrabold text-white tracking-tight">Survey</p>
-            <p class="text-xs text-zinc-400 font-medium"><span id="count-Survey">0</span> Ticket Survey</p>
+            <p class="text-xs text-zinc-400 font-medium"><span id="count-Survey">0</span> Need Attention</p>
           </div>
         </div>
       </button>
@@ -345,8 +362,8 @@
         </div>
         <div class="bg-zinc-950 p-3.5 rounded-xl border border-white/15">
           <p class="text-zinc-500 text-[10px]">Versi Aplikasi</p>
-          <p class="font-semibold text-white mt-0.5">BLiP Ticket Monitoring Dashboard v3.9.4 (Horizontal Edition)</p>
-          <p class="text-[10px] text-zinc-500 mt-1">6 KPI Cards • Tab All / Mapping / Survey Langsung Terbuka • Stepper → Update → History Resi</p>
+          <p class="font-semibold text-white mt-0.5">BLiP Ticket Monitoring Dashboard v3.9.5 (Horizontal Edition)</p>
+          <p class="text-[10px] text-zinc-500 mt-1">Work Order This Week • Need Attention Work Order • Stepper → Update → History Resi</p>
         </div>
       </div>
       <div class="mt-5 flex justify-end">
@@ -362,7 +379,6 @@
     // ===============================================
 
     let appData = { survey: [], mapping: [] };
-    // Default langsung 'All' dan tabel langsung terbuka tanpa collapse
     let activeTab = "All";
     let currentStatusFilter = "ALL";
     let authToken = "";
@@ -377,6 +393,20 @@
     let historyTypeActive = "Survey";
     let allHistoryForType = [];
     let filteredHistoryLogs = [];
+
+    function renderWeekRangeBadge() {
+      const badge = document.getElementById("weekRangeBadge");
+      if (!badge) return;
+      const now = new Date();
+      const dayOfWeek = now.getDay(); // 0 = Sun, 1 = Mon
+      const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+      const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + diffToMonday);
+      const sunday = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + 6);
+
+      const fmt = (d) => d.toLocaleDateString("id-ID", { day: "2-digit", month: "short" });
+      const yr = sunday.getFullYear();
+      badge.innerText = `${fmt(monday)} – ${fmt(sunday)} ${yr}`;
+    }
 
     function initGoogleSignIn(attempt = 1) {
       try {
@@ -398,6 +428,7 @@
     }
 
     document.addEventListener("DOMContentLoaded", function () {
+      renderWeekRangeBadge();
       initGoogleSignIn();
       syncDivisionButtonsUI();
       if (authToken) {
@@ -484,6 +515,21 @@
       }
     }
 
+    function updateNeedAttentionCounts() {
+      const surveyStatuses = (appData.survey || []).map(t => {
+        const cascaded = cascadeStages([t.survey, t.reportSurvey, t.boq, t.materialEquip, t.forwardWo], t.status);
+        return computeAutoSurveyStatus(cascaded, t.status);
+      });
+      const mappingStatuses = (appData.mapping || []).map(t => normalizeMappingStatus(t.status));
+
+      const srvNeedAttention = surveyStatuses.filter(s => !["Closed", "Cancel"].includes(s)).length;
+      const mapNeedAttention = mappingStatuses.filter(s => !["Done", "Closed", "Cancel"].includes(s)).length;
+
+      document.getElementById("count-Survey").innerText = srvNeedAttention;
+      document.getElementById("count-Mapping").innerText = mapNeedAttention;
+      document.getElementById("count-All").innerText = srvNeedAttention + mapNeedAttention;
+    }
+
     async function fetchAllData() {
       document.getElementById("loader").classList.remove("hidden");
       document.getElementById("table-wrapper").classList.add("hidden");
@@ -495,10 +541,7 @@
           survey: Array.isArray(parsed.survey) ? parsed.survey : [],
           mapping: Array.isArray(parsed.mapping) ? parsed.mapping : []
         };
-        document.getElementById("count-Survey").innerText = appData.survey.length;
-        document.getElementById("count-Mapping").innerText = appData.mapping.length;
-        document.getElementById("count-All").innerText = appData.survey.length + appData.mapping.length;
-
+        updateNeedAttentionCounts();
         renderCombinedKpi();
         syncDivisionButtonsUI();
         renderActiveTab();
@@ -510,6 +553,7 @@
         });
       } catch (err) {
         console.error("Fetch error:", err);
+        updateNeedAttentionCounts();
         renderCombinedKpi();
         syncDivisionButtonsUI();
         renderActiveTab();
@@ -663,7 +707,6 @@
       return s || "Open";
     }
 
-    // Done pada Mapping dipetakan sebagai Closed saat filter/KPI Closed
     function getEffectiveMappingStatus(rawStatus) {
       const s = normalizeMappingStatus(rawStatus);
       return (s === "Done" || s === "Closed") ? "Closed" : s;
