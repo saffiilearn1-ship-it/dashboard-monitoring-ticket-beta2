@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BLiP Work Order Monitoring Dashboard v3.9.6 — Horizontal Dark Edition</title>
+  <title>BLiP Work Order Monitoring Dashboard v3.9.7 — Horizontal Dark Edition</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -42,7 +42,7 @@
     <div class="flex flex-col md:flex-row items-center gap-6 w-full lg:w-auto">
       <div class="flex items-center gap-2.5 shrink-0 select-none">
         <span class="tracking-tighter font-extrabold text-3xl text-white">BL<span class="text-orange-500">i</span>P</span>
-        <span class="text-[10px] bg-orange-500/20 border border-orange-500/50 px-2 py-0.5 rounded text-orange-400 font-mono font-bold">v3.9.6</span>
+        <span class="text-[10px] bg-orange-500/20 border border-orange-500/50 px-2 py-0.5 rounded text-orange-400 font-mono font-bold">v3.9.7</span>
       </div>
 
       <nav class="flex gap-1.5 overflow-x-auto w-full md:w-auto pb-1 md:pb-0">
@@ -83,16 +83,32 @@
     </div>
   </header>
 
-  <!-- Section 1: WEEKLY WORK ORDERS (6 Interactive KPI Cards) -->
-  <section class="mb-6">
-    <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+  <!-- Section 1: WEEKLY WORK ORDERS (6 Interactive KPI Cards + Auto-Expanded Weekly Panel) -->
+  <section class="mb-6 space-y-4">
+    <div class="flex flex-wrap items-center justify-between gap-2">
       <div class="flex items-center gap-2">
         <span class="w-2 h-2 rounded-full bg-orange-500"></span>
         <h2 class="text-xs font-extrabold uppercase tracking-wider text-zinc-200">WEEKLY WORK ORDERS</h2>
       </div>
       <span id="weekRangeBadge" class="text-[11px] font-mono text-zinc-400 bg-zinc-900 border border-white/10 px-2.5 py-0.5 rounded-lg"></span>
     </div>
+
     <div id="kpi-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3.5"></div>
+
+    <!-- Auto-Expanded Weekly Data Panel when a KPI card is clicked -->
+    <div id="weeklyExpandedPanel" class="hidden card-dark rounded-2xl overflow-hidden shadow-xl border-orange-500/50">
+      <div class="px-4 py-3 bg-zinc-900/90 border-b border-white/15 flex flex-wrap items-center justify-between gap-2">
+        <div class="flex items-center gap-2.5">
+          <span class="px-2 py-0.5 rounded bg-orange-500/20 border border-orange-500/40 text-orange-400 text-[10px] font-extrabold uppercase tracking-wider">Weekly View</span>
+          <h3 id="weeklyExpandedTitle" class="text-xs sm:text-sm font-extrabold text-white"></h3>
+          <span id="weeklyExpandedCount" class="text-[11px] font-mono text-zinc-400"></span>
+        </div>
+        <button type="button" onclick="clearWeeklyKpiFilter()" class="text-xs font-semibold text-zinc-300 hover:text-white bg-zinc-800 hover:bg-zinc-700 border border-white/15 px-3 py-1 rounded-lg transition">
+          ✕ Close Weekly View
+        </button>
+      </div>
+      <div class="overflow-x-auto" id="weekly-table-container"></div>
+    </div>
   </section>
 
   <!-- Section 2: NEED ATTENTION WORK ORDERS -->
@@ -188,7 +204,7 @@
     <p class="text-sm text-zinc-400 font-medium">Loading work orders...</p>
   </div>
 
-  <!-- Main Data Table Wrapper -->
+  <!-- Main Data Table Wrapper (Need Attention Work Orders) -->
   <div id="table-wrapper" class="card-dark rounded-2xl overflow-hidden shadow-xl">
     <div class="overflow-x-auto" id="main-table-container"></div>
   </div>
@@ -362,7 +378,7 @@
         </div>
         <div class="bg-zinc-950 p-3.5 rounded-xl border border-white/15">
           <p class="text-zinc-500 text-[10px]">Application Version</p>
-          <p class="font-semibold text-white mt-0.5">BLiP Work Order Monitoring Dashboard v3.9.6 (Horizontal Edition)</p>
+          <p class="font-semibold text-white mt-0.5">BLiP Work Order Monitoring Dashboard v3.9.7 (Horizontal Edition)</p>
           <p class="text-[10px] text-zinc-500 mt-1">Weekly Work Orders • Need Attention Work Orders • Workflow Progress &amp; Activity Log</p>
         </div>
       </div>
@@ -381,7 +397,9 @@
     let appData = { survey: [], mapping: [] };
     let activeTab = "All";
     let currentStatusFilter = "NEED_ATTENTION";
-    let activeKpiFilter = null;
+
+    // Independent Weekly KPI filter state (auto-expands weekly panel on click)
+    let activeWeeklyKpi = null;
 
     let authToken = "";
     try { authToken = localStorage.getItem("ticket_auth_token") || ""; } catch (e) {}
@@ -471,7 +489,10 @@
       currentUser = null;
       try { localStorage.removeItem("ticket_auth_token"); } catch (e) {}
       updateAuthUI();
-      if (reload) renderActiveTab();
+      if (reload) {
+        renderWeeklyPanel();
+        renderActiveTab();
+      }
     }
 
     function updateAuthUI() {
@@ -545,11 +566,13 @@
         };
         updateNeedAttentionCounts();
         renderCombinedKpi();
+        renderWeeklyPanel();
         syncDivisionButtonsUI();
         renderActiveTab();
 
         refreshSurveyHistoryCache().then(() => {
-          if (Object.values(expandedRows).some(Boolean) && (activeTab === "Survey" || activeTab === "All")) {
+          if (Object.values(expandedRows).some(Boolean)) {
+            renderWeeklyPanel();
             renderActiveTab();
           }
         });
@@ -557,6 +580,7 @@
         console.error("Fetch error:", err);
         updateNeedAttentionCounts();
         renderCombinedKpi();
+        renderWeeklyPanel();
         syncDivisionButtonsUI();
         renderActiveTab();
       } finally {
@@ -579,51 +603,227 @@
       });
     }
 
-    // Click [All] | [Mapping] | [Survey] under Need Attention
+    // Click [All] | [Mapping] | [Survey] under Need Attention Work Orders
     function selectDivisionTab(type) {
       activeTab = type;
-      activeKpiFilter = null;
       currentStatusFilter = "NEED_ATTENTION";
       document.getElementById("searchInput").value = "";
-      renderCombinedKpi();
       syncDivisionButtonsUI();
       renderActiveTab();
     }
 
-    // Click one of the 6 WEEKLY WORK ORDERS KPI cards
+    // Click one of the 6 WEEKLY WORK ORDERS KPI cards -> auto-expand weekly data panel
     function selectKpiCard(kpiKey) {
-      activeKpiFilter = kpiKey;
-      activeTab = "All";
-      document.getElementById("searchInput").value = "";
+      if (activeWeeklyKpi === kpiKey) {
+        activeWeeklyKpi = null;
+      } else {
+        activeWeeklyKpi = kpiKey;
+      }
+      renderCombinedKpi();
+      renderWeeklyPanel();
+    }
 
-      if (kpiKey === "ALL") {
-        currentStatusFilter = "ALL_INCLUDING_CLOSED";
-      } else if (kpiKey === "Open") {
-        currentStatusFilter = "Open";
-      } else if (kpiKey === "On Progress") {
-        currentStatusFilter = "On Progress";
-      } else if (kpiKey === "Pending") {
-        currentStatusFilter = "Pending";
-      } else if (kpiKey === "Cancel") {
-        currentStatusFilter = "Cancel";
-      } else if (kpiKey === "Closed") {
-        currentStatusFilter = "Closed";
+    function clearWeeklyKpiFilter() {
+      activeWeeklyKpi = null;
+      renderCombinedKpi();
+      renderWeeklyPanel();
+    }
+
+    function getNormalizedAllWorkOrders() {
+      const surveyNormalized = (appData.survey || []).map(t => {
+        const cascaded = cascadeStages([t.survey, t.reportSurvey, t.boq, t.materialEquip, t.forwardWo], t.status);
+        const computedSt = computeAutoSurveyStatus(cascaded, t.status);
+        return {
+          _kind: "Survey",
+          ...t,
+          survey: cascaded[0],
+          reportSurvey: cascaded[1],
+          boq: cascaded[2],
+          materialEquip: cascaded[3],
+          forwardWo: cascaded[4],
+          computedStatus: computedSt,
+          unifiedStatus: computedSt
+        };
+      });
+
+      const mappingNormalized = (appData.mapping || []).map(t => {
+        const rawSt = normalizeMappingStatus(t.status);
+        return {
+          _kind: "Mapping",
+          ...t,
+          rawStatus: rawSt,
+          unifiedStatus: getEffectiveMappingStatus(rawSt)
+        };
+      });
+
+      return [...surveyNormalized, ...mappingNormalized];
+    }
+
+    function renderWeeklyPanel() {
+      const panel = document.getElementById("weeklyExpandedPanel");
+      const tableContainer = document.getElementById("weekly-table-container");
+      const titleEl = document.getElementById("weeklyExpandedTitle");
+      const countEl = document.getElementById("weeklyExpandedCount");
+
+      if (!activeWeeklyKpi) {
+        panel.classList.add("hidden");
+        tableContainer.innerHTML = "";
+        return;
       }
 
-      renderCombinedKpi();
-      syncDivisionButtonsUI();
-      renderActiveTab();
+      panel.classList.remove("hidden");
 
-      const panelEl = document.getElementById("workOrderControlPanel");
-      if (panelEl) {
-        panelEl.scrollIntoView({ behavior: "smooth", block: "start" });
+      const labelMap = {
+        ALL: "Total Work Orders",
+        Open: "Open Work Orders",
+        "On Progress": "On Progress Work Orders",
+        Pending: "Pending Work Orders",
+        Cancel: "Cancel Work Orders",
+        Closed: "Closed Work Orders"
+      };
+      titleEl.innerText = labelMap[activeWeeklyKpi] || `Weekly ${activeWeeklyKpi}`;
+
+      const items = getNormalizedAllWorkOrders().filter(item => {
+        const matchKpi = activeWeeklyKpi === "ALL" || item.unifiedStatus === activeWeeklyKpi;
+        const matchDate = matchDateRange(item.lastUpdated);
+        return matchKpi && matchDate;
+      });
+
+      items.sort((a, b) => {
+        const da = parseLocalTimestamp(a.lastUpdated);
+        const db = parseLocalTimestamp(b.lastUpdated);
+        return (db ? db.getTime() : 0) - (da ? da.getTime() : 0);
+      });
+
+      countEl.innerText = `(${items.length} work orders)`;
+
+      if (items.length === 0) {
+        tableContainer.innerHTML = `<div class="text-center py-10 text-zinc-500 text-xs">No weekly work orders match "${labelMap[activeWeeklyKpi]}".</div>`;
+        return;
+      }
+
+      const canEdit = Boolean(currentUser);
+      const autoPicName = currentUser ? formatPicLabel(currentUser.name) : "";
+
+      const rowsHtml = items.map((item, idx) => {
+        const displayNo = idx + 1;
+        if (item._kind === "Survey") {
+          return buildSurveyRowHtml(item, displayNo, true);
+        }
+
+        const r = item.rowIndex;
+        return `
+          <tr class="border-b border-white/15 hover:bg-zinc-900/30 align-top transition divide-x divide-white/10">
+            <td class="py-4 px-4 font-extrabold text-zinc-500 text-sm w-12 text-center">${displayNo}</td>
+            <td class="py-4 px-4 whitespace-nowrap">
+              ${getStatusPillHtml(item.unifiedStatus)}
+              <div class="mt-1.5">
+                <span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded bg-sky-500/15 text-sky-400 border border-sky-500/35">Mapping</span>
+              </div>
+            </td>
+            <td class="py-4 px-4 min-w-[210px]">
+              <div class="flex items-start gap-2.5">
+                <span class="text-zinc-400 shrink-0 mt-0.5">🏢</span>
+                <div class="overflow-hidden">
+                  <p class="font-extrabold text-white text-sm leading-snug">${item.customer || "-"}</p>
+                  <span class="text-[11px] font-mono text-orange-400 font-bold">${item.ticketId}</span>
+                  <div class="mt-2">
+                    <button onclick="openHistoryModal('Mapping', '${item.ticketId}')" class="text-[10.5px] font-semibold text-amber-400 hover:text-amber-300 bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/35 transition">
+                      🕒 Activity Log
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </td>
+            <td class="py-4 px-4">
+              <div class="bg-zinc-950/80 border border-white/15 rounded-xl p-3.5 text-xs space-y-2.5">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                  <div class="flex items-center gap-2">
+                    <span class="text-[10px] uppercase tracking-wider text-zinc-400 font-bold">Mapping Status:</span>
+                    ${canEdit ? `
+                      <select id="wk-map-status-${r}" class="bg-zinc-900 border border-white/20 rounded-lg px-2.5 py-1 text-xs font-bold text-white focus:border-orange-500 focus:outline-none">
+                        ${["Open", "On Progress", "Pending", "Done"].map(opt => `<option value="${opt}" ${item.rawStatus === opt ? "selected" : ""}>${opt}</option>`).join("")}
+                      </select>
+                    ` : getStatusPillHtml(item.rawStatus)}
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <span class="text-[10px] uppercase tracking-wider text-zinc-400 font-bold">Coverage:</span>
+                    ${canEdit ? `
+                      <select id="wk-map-cov-${r}" class="bg-zinc-900 border border-white/20 rounded-lg px-2.5 py-1 text-xs font-bold text-white focus:border-orange-500 focus:outline-none">
+                        <option value="" ${!item.coverage ? "selected" : ""}>Not Yet</option>
+                        <option value="Onet" ${item.coverage === "Onet" ? "selected" : ""}>Onet</option>
+                        <option value="Partner" ${item.coverage === "Partner" ? "selected" : ""}>Partner</option>
+                        <option value="Not Cover" ${item.coverage === "Not Cover" ? "selected" : ""}>Not Cover</option>
+                      </select>
+                    ` : getStatusPillHtml(item.coverage || "Not Yet")}
+                  </div>
+                </div>
+                ${canEdit ? `
+                  <div class="flex flex-col sm:flex-row gap-2 items-stretch sm:items-end">
+                    <textarea id="wk-map-desc-${r}" rows="1" placeholder="Description..." class="flex-1 bg-zinc-900 border border-white/20 rounded-lg px-2.5 py-1.5 text-xs text-white focus:border-orange-500 focus:outline-none">${item.description || ""}</textarea>
+                    <button onclick="updateWeeklyMappingRow(${r}, this)" class="bg-orange-600 hover:bg-orange-500 text-white px-3.5 py-1.5 rounded-lg text-xs font-extrabold shadow shrink-0 transition">Save &amp; Notify</button>
+                  </div>
+                  <p class="text-[10.5px] text-zinc-400">PIC: <strong class="text-orange-400">👤 ${autoPicName}</strong></p>
+                ` : `<p class="text-zinc-300 whitespace-pre-line leading-relaxed">${item.description || "-"}</p>`}
+              </div>
+            </td>
+            <td class="py-4 px-4 text-right text-xs font-medium text-zinc-300 whitespace-nowrap">${formatDisplayDate(item.lastUpdated)}</td>
+          </tr>
+        `;
+      }).join("");
+
+      tableContainer.innerHTML = `
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="table-header-dark text-xs uppercase tracking-wider divide-x divide-white/10">
+              <th class="py-3.5 px-4 text-center">#</th>
+              <th class="py-3.5 px-4">Work Order Status</th>
+              <th class="py-3.5 px-4">Work Order</th>
+              <th class="py-3.5 px-4 text-center min-w-[580px]">Workflow Progress</th>
+              <th class="py-3.5 px-4 text-right">Last Update</th>
+            </tr>
+          </thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>
+      `;
+    }
+
+    async function updateWeeklyMappingRow(r, btn) {
+      if (!authToken || !currentUser) return alert("Please sign in with your Google account first to manage or update work orders.");
+      const orig = btn.innerText;
+      btn.innerText = "Saving...";
+      btn.disabled = true;
+
+      const payload = {
+        ticketType: "Mapping",
+        action: "update",
+        token: authToken,
+        rowIndex: r,
+        status: document.getElementById(`wk-map-status-${r}`).value,
+        coverage: document.getElementById(`wk-map-cov-${r}`).value,
+        pic: formatPicLabel(currentUser.name),
+        description: document.getElementById(`wk-map-desc-${r}`).value.trim()
+      };
+
+      try {
+        await fetch(API_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "text/plain" },
+          body: JSON.stringify(payload)
+        });
+        btn.innerText = "✓ Saved!";
+        btn.classList.replace("bg-orange-600", "bg-emerald-600");
+        setTimeout(() => fetchAllData(), 2200);
+      } catch (err) {
+        alert("Failed to save Mapping work order.");
+        btn.innerText = orig;
+        btn.disabled = false;
       }
     }
 
     function setStatusFilter(status) {
-      activeKpiFilter = null;
       currentStatusFilter = status;
-      renderCombinedKpi();
       renderActiveTab();
     }
 
@@ -646,10 +846,7 @@
       }).join("");
     }
 
-    function matchWorkOrderStatus(effectiveStatus) {
-      if (currentStatusFilter === "ALL_INCLUDING_CLOSED") {
-        return true;
-      }
+    function matchNeedAttentionStatus(effectiveStatus) {
       if (currentStatusFilter === "NEED_ATTENTION") {
         return !["Closed", "Cancel"].includes(effectiveStatus);
       }
@@ -659,6 +856,7 @@
     function clearDateFilter() {
       document.getElementById("dateStart").value = "";
       document.getElementById("dateEnd").value = "";
+      renderWeeklyPanel();
       renderActiveTab();
     }
 
@@ -949,7 +1147,7 @@
       document.getElementById("kpi-container").innerHTML = cards.map(c => {
         const totalVal = c.mapCount + c.srvCount;
         const detailLine = `(${c.mapCount} Mapping, ${c.srvCount} Survey)`;
-        const isSelected = activeKpiFilter === c.key;
+        const isSelected = activeWeeklyKpi === c.key;
         const activeRing = isSelected
           ? "border-orange-500 ring-2 ring-orange-500/35 bg-orange-600/10"
           : "hover:border-orange-500/70";
@@ -1231,41 +1429,15 @@
       `;
     }
 
-    // ================= RENDER ALL COMBINED TABLE (MAPPING + SURVEY) =================
+    // ================= RENDER ALL COMBINED TABLE (NEED ATTENTION: MAPPING + SURVEY) =================
     function renderAllCombinedTable() {
       document.getElementById("coverageFilter").classList.add("hidden");
       renderFilterPills();
 
       const searchQuery = document.getElementById("searchInput").value.toLowerCase();
 
-      const surveyNormalized = (appData.survey || []).map(t => {
-        const cascaded = cascadeStages([t.survey, t.reportSurvey, t.boq, t.materialEquip, t.forwardWo], t.status);
-        const computedSt = computeAutoSurveyStatus(cascaded, t.status);
-        return {
-          _kind: "Survey",
-          ...t,
-          survey: cascaded[0],
-          reportSurvey: cascaded[1],
-          boq: cascaded[2],
-          materialEquip: cascaded[3],
-          forwardWo: cascaded[4],
-          computedStatus: computedSt,
-          unifiedStatus: computedSt
-        };
-      });
-
-      const mappingNormalized = (appData.mapping || []).map(t => {
-        const rawSt = normalizeMappingStatus(t.status);
-        return {
-          _kind: "Mapping",
-          ...t,
-          rawStatus: rawSt,
-          unifiedStatus: getEffectiveMappingStatus(rawSt)
-        };
-      });
-
-      const merged = [...surveyNormalized, ...mappingNormalized].filter(item => {
-        const matchStatus = matchWorkOrderStatus(item.unifiedStatus);
+      const merged = getNormalizedAllWorkOrders().filter(item => {
+        const matchStatus = matchNeedAttentionStatus(item.unifiedStatus);
         const matchSearch =
           (item.customer || "").toLowerCase().includes(searchQuery) ||
           (item.ticketId || "").toLowerCase().includes(searchQuery) ||
@@ -1428,7 +1600,7 @@
 
       const searchQuery = document.getElementById("searchInput").value.toLowerCase();
       const filtered = normalizedList.filter(t => {
-        const matchStatus = matchWorkOrderStatus(t.computedStatus);
+        const matchStatus = matchNeedAttentionStatus(t.computedStatus);
         const matchSearch = (t.customer || "").toLowerCase().includes(searchQuery) || (t.ticketId || "").toLowerCase().includes(searchQuery);
         const matchDate = matchDateRange(t.lastUpdated);
         return matchStatus && matchSearch && matchDate;
@@ -1465,10 +1637,12 @@
         expandedRows[ticketId] = true;
         activeStagePerTicket[ticketId] = stageKey;
         loadingHistoryTicket[ticketId] = true;
+        renderWeeklyPanel();
         renderActiveTab();
         await refreshSurveyHistoryCache();
         loadingHistoryTicket[ticketId] = false;
       }
+      renderWeeklyPanel();
       renderActiveTab();
     }
 
@@ -1550,7 +1724,7 @@
 
       const filtered = list.filter(t => {
         const effSt = getEffectiveMappingStatus(t.status);
-        const matchStatus = matchWorkOrderStatus(effSt);
+        const matchStatus = matchNeedAttentionStatus(effSt);
         const matchCov = covQuery === "ALL" || t.coverage === covQuery;
         const matchSearch = (t.customer || "").toLowerCase().includes(searchQuery) || (t.description || "").toLowerCase().includes(searchQuery);
         const matchDate = matchDateRange(t.lastUpdated);
